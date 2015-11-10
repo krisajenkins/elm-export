@@ -1,8 +1,8 @@
 {-# LANGUAGE DefaultSignatures   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE FlexibleInstances   #-}
 {-# LANGUAGE GADTs               #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators       #-}
 module Elm.Type where
 
@@ -50,8 +50,11 @@ instance ToElmType Day where
 instance ToElmType Double where
     toElmType _ = Primitive "Float"
 
+instance ToElmType Int where
+    toElmType _ = Primitive "Int"
+
 instance ToElmType Integer where
-    toElmType _ = Primitive "Integer"
+    toElmType _ = Primitive "Int"
 
 instance ToElmType a => ToElmType [a] where
     toElmType _ = Product (Primitive "List") (toElmType (undefined :: a))
