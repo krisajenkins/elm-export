@@ -27,10 +27,10 @@ data ElmType where
         Primitive :: String -> ElmType
     deriving (Eq,Show)
 
-class ToElmType a where
+class ToElmType a  where
   toElmType :: a -> ElmType
   default toElmType :: (Generic a,GenericToElmType (Rep a)) => a -> ElmType
-  toElmType x = genericToElmType (from x)
+  toElmType = genericToElmType . from
 
 instance ToElmType String where
     toElmType _ = Primitive "String"
