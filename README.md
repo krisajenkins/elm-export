@@ -4,7 +4,10 @@ Create Elm classes and JSON decoders from Haskell DataTypes.
 
 ## Usage
 
-To use this library, you must first make the types you want to export implement `ToElmType`. This is easy. Just derive `Generic`, and then we can automatically generate the `ToElmType` instance. Here's an example with a `Person` type:
+To use this library, you must first make the types you want to export
+implement `ToElmType`. This is easy. Just derive `Generic`, and then
+we can automatically generate the `ToElmType` instance for you. Here's
+an example with a `Person` type:
 
 ```haskell
 {-# LANGUAGE DeriveGeneric #-}
@@ -21,8 +24,8 @@ data Person =
 instance ToElmType Person
 ```
 
-That's it for the type. Now you'll want to create some Elm source code:
-
+That's it for the type. Now you'll want to write a main that generates
+the Elm source code:
 
 ```haskell
 module Main where
@@ -42,12 +45,13 @@ main :: IO ()
 main = specsToDir "some/where/output" [spec]
 ```
 
-When run, the directory `some/where/output` will be created, and under
-that the Elm source file `Db.Types.elm` can be found.
+Run this and the directory `some/where/output` will be created, and
+under that the Elm source file `Db/Types.elm` will be found.
 
 All the hard work here is done by `toElmTypeSource` and
-`toElmDecoderSource`. The Specs are just wrappers to make it easy to
-create a whole Elm file from those important strings.
+`toElmDecoderSource`. The `Spec` code is just wrapping to make it easy
+to create a complete Elm file from the meat that `ToElmType` gives
+you.
 
 ## Development
 
@@ -62,7 +66,7 @@ stack build
 ### Testing
 
 ```sh
-stack test
+stack test --file-watch
 ```
 
 ## Status
