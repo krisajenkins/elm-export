@@ -23,6 +23,7 @@ library
   default-language:    Haskell2010
   other-modules: Elm.Type
                , Elm.Decoder
+               , Elm.File
                , Elm.Record
 
 test-suite elm-export-test
