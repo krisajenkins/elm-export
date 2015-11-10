@@ -1,0 +1,5 @@
+decodePost : Decoder Post
+decodePost = Post
+  `map`   ("id" := int)
+  `apply` ("name" := string)
+  `apply` ("age" := maybe float)
