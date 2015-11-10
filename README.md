@@ -84,3 +84,9 @@ examples, PRs and code-suggestions!
 Copyright © 2015 Kris Jenkins
 
 Distributed under the Eclipse Public License.
+
+## See Also
+
+[Elm Bridge](https://hackage.haskell.org/package/elm-bridge) is a
+different implementation of the same goal. That project uses Template
+Haskell, this one uses GHC Generics.
