@@ -1,0 +1,2 @@
+type alias Post =
+  {id : Int}
