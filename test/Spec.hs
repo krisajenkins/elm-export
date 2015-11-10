@@ -9,7 +9,9 @@ import           Test.Framework.Providers.HUnit
 import           Test.HUnit
 
 data Post =
-  Post {id :: Int}
+  Post {id   :: Int
+       ,name :: String
+       ,age  :: Maybe Double}
   deriving Generic
 
 instance ToElmType Post
