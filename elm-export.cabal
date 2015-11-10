@@ -1,0 +1,38 @@
+name:                elm-export
+version:             0.1.0.0
+synopsis:            Initial project template from stack
+description:         Please see README.md
+homepage:            http://github.com/krisajenkins/elm-export
+license:             OtherLicense
+license-file:        LICENSE.txt
+author:              Kris Jenkins
+maintainer:          kris.jenkins@clearercode.com
+copyright:           2015 Kris Jenkins
+category:            Web
+build-type:          Simple
+-- extra-source-files:
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Elm
+  build-depends:       base >= 4.7 && < 5
+                     , text
+                     , time
+  default-language:    Haskell2010
+  other-modules: Elm.Type
+               , Elm.Decoder
+               , Elm.Record
+
+test-suite elm-export-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , elm-export
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/krisajenkins/elm-export
