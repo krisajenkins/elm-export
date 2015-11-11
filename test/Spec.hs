@@ -2,6 +2,7 @@
 
 import           Data.Monoid
 import           Data.Proxy
+import           Data.Text
 import           Elm
 import           GHC.Generics
 import           Test.Framework
@@ -9,12 +10,19 @@ import           Test.Framework.Providers.HUnit
 import           Test.HUnit
 
 data Post =
-  Post {id   :: Int
-       ,name :: String
-       ,age  :: Maybe Double}
+  Post {id       :: Int
+       ,name     :: String
+       ,age      :: Maybe Double
+       ,comments :: [Comment]}
   deriving Generic
 
+data Comment =
+  Comment {postId :: Int
+          ,text   :: Text}
+  deriving (Generic)
+
 instance ToElmType Post
+instance ToElmType Comment
 
 main :: IO ()
 main =
@@ -25,12 +33,18 @@ main =
 
 testToElmTypeSource :: Assertion
 testToElmTypeSource =
-  do source <- readFile "test/PostType.txt"
-     assertEqual "Encoding a Post type" source $
+  do postSource <- readFile "test/PostType.txt"
+     assertEqual "Encoding a Post type" postSource $
        (toElmTypeSource (Proxy :: Proxy Post)) ++ "\n"
+     commentSource <- readFile "test/CommentType.txt"
+     assertEqual "Encoding a Comment type" commentSource $
+       (toElmTypeSource (Proxy :: Proxy Comment)) ++ "\n"
 
 testToElmDecoderSource :: Assertion
 testToElmDecoderSource =
-  do source <- readFile "test/PostDecoder.txt"
-     assertEqual "Encoding a Post decoder" source $
+  do postSource <- readFile "test/PostDecoder.txt"
+     assertEqual "Encoding a Post decoder" postSource $
        (toElmDecoderSource (Proxy :: Proxy Post)) ++ "\n"
+     commentSource <- readFile "test/CommentDecoder.txt"
+     assertEqual "Encoding a Comment decoder" commentSource $
+       (toElmDecoderSource (Proxy :: Proxy Comment)) ++ "\n"

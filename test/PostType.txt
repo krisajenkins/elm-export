@@ -1,4 +1,5 @@
 type alias Post =
   {id : Int
   ,name : String
-  ,age : Maybe Float}
+  ,age : Maybe Float
+  ,comments : List Comment}
