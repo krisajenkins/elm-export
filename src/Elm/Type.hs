@@ -69,7 +69,9 @@ class GenericToElmType f  where
   genericToElmType :: f a -> ElmType
 
 instance (GenericToElmType f,Datatype d) => GenericToElmType (D1 d f) where
-  genericToElmType d@(M1 x) = DataType (datatypeName d) (genericToElmType x)
+  genericToElmType d@(M1 x) =
+    DataType (datatypeName d)
+             (genericToElmType x)
 
 instance (Constructor c,GenericToElmType f) => GenericToElmType (C1 c f) where
   genericToElmType c@(M1 x) =
