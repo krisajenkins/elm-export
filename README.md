@@ -33,6 +33,8 @@ decodePost = Post
   `apply` ("postPublished" := maybe date)
 ```
 
+Looks just like hand-written code, doesn't it?
+
 ## Usage
 
 To use this library, you must first make the types you want to export
