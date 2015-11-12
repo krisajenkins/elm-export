@@ -35,6 +35,21 @@ decodePost = Post
 
 Looks just like hand-written code, doesn't it?
 
+## Installation
+
+For now, elm-export requires stack. Add `elm-export` to your cabal
+file's `build-depends` list, and this to your `stack.yaml` file:
+
+```yaml
+...
+packages:
+  ...
+  - location:
+      git: https://www.github.com/krisajenkins/elm-export
+      commit: 2a026e4c3a93a18006595636e783955223f9b98e
+...
+```
+
 ## Usage
 
 To use this library, you must first make the types you want to export
@@ -85,21 +100,6 @@ All the hard work here is done by `toElmTypeSource` and
 `toElmDecoderSource`. The `Spec` code is just wrapping to make it easy
 to create a complete Elm file from the meat that `ToElmType` gives
 you.
-
-## Installation
-
-For now, elm-export requires stack. Add `elm-export` to your cabal
-file's `build-depends` list, and this to your `stack.yaml` file:
-
-```yaml
-...
-packages:
-  ...
-  - location:
-      git: https://www.github.com/krisajenkins/elm-export
-      commit: 2a026e4c3a93a18006595636e783955223f9b98e
-...
-```
 
 ## Development
 
