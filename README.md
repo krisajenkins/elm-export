@@ -2,6 +2,37 @@
 
 Create Elm classes and JSON decoders from Haskell DataTypes.
 
+## What Kind Of Code Does It Generate?
+
+Here's an example, generated from some of my Haskell code:
+
+```elm
+module Generated.Blog.Rest where
+
+import Json.Decode exposing (..)
+
+import Json.Decode.Extra exposing (apply,date)
+
+type alias Post =
+  {postPostId : String
+  ,postAccountId : String
+  ,postSlug : String
+  ,postTitle : String
+  ,postContent : String
+  ,postCreated : Date
+  ,postPublished : Maybe Date}
+
+decodePost : Decoder Post
+decodePost = Post
+  `map`   ("postPostId" := string)
+  `apply` ("postAccountId" := string)
+  `apply` ("postSlug" := string)
+  `apply` ("postTitle" := string)
+  `apply` ("postContent" := string)
+  `apply` ("postCreated" := date)
+  `apply` ("postPublished" := maybe date)
+```
+
 ## Usage
 
 To use this library, you must first make the types you want to export
