@@ -32,6 +32,9 @@ class ToElmType a  where
   default toElmType :: (Generic a,GenericToElmType (Rep a)) => a -> ElmType
   toElmType = genericToElmType . from
 
+instance ToElmType Bool where
+    toElmType _ = Primitive "Bool"
+
 instance ToElmType Char where
     toElmType _ = Primitive "Char"
 

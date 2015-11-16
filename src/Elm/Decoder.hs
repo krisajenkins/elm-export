@@ -21,6 +21,7 @@ render (Primitive "Int") = "int"
 render (Primitive "Double") = "float"
 render (Primitive "Float") = "float"
 render (Primitive "Date") = "date"
+render (Primitive "Bool") = "bool"
 render (Field (Product (Primitive "Maybe") t)) = printf "maybe %s" (render t)
 render (Field (Product (Primitive "List") (Primitive "Char"))) = "string"
 render (Field (Product (Primitive "List") t )) = printf "list %s" (render t)
