@@ -17,8 +17,9 @@ data Post =
   deriving Generic
 
 data Comment =
-  Comment {postId :: Int
-          ,text   :: Text}
+  Comment {postId    :: Int
+          ,text      :: Text
+          ,published :: Bool}
   deriving (Generic)
 
 instance ToElmType Post

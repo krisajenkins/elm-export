@@ -2,3 +2,4 @@ decodeComment : Decoder Comment
 decodeComment = Comment
   `map`   ("postId" := int)
   `apply` ("text" := string)
+  `apply` ("published" := bool)
