@@ -24,6 +24,7 @@ library
   other-modules: Elm.Type
                , Elm.Common
                , Elm.Decoder
+               , Elm.Encoder
                , Elm.File
                , Elm.Record
 
