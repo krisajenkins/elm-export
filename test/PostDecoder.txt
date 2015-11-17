@@ -5,3 +5,4 @@ decodePost =
     |: ("name" := string)
     |: ("age" := maybe float)
     |: ("comments" := list decodeComment)
+    |: ("author" := maybe string)
