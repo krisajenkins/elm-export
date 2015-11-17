@@ -3,4 +3,4 @@ type alias Post =
   ,name : String
   ,age : Maybe Float
   ,comments : List Comment
-  ,author : Maybe (String)}
+  ,author : Maybe String}
