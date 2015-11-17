@@ -13,7 +13,8 @@ data Post =
   Post {id       :: Int
        ,name     :: String
        ,age      :: Maybe Double
-       ,comments :: [Comment]}
+       ,comments :: [Comment]
+       ,author   :: Maybe String}
   deriving Generic
 
 data Comment =
