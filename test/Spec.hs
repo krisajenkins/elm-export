@@ -14,6 +14,7 @@ data Post =
        ,name     :: String
        ,age      :: Maybe Double
        ,comments :: [Comment]
+       ,promoted :: Maybe Comment
        ,author   :: Maybe String}
   deriving Generic
 
