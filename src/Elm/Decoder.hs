@@ -3,10 +3,12 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module Elm.Decoder (toElmDecoderSource, toElmDecoderSourceWith)
+module Elm.Decoder (toElmDecoderSource, toElmDecoderSourceWith
+                   ,toElmDecoderSourceDefs, toElmDecoderSourceDefsWith)
        where
 
 import           Control.Monad.Reader
+import           Data.List            (nub)
 import           Elm.Common
 import           Elm.Type
 import           Text.Printf
@@ -66,3 +68,58 @@ toElmDecoderSourceWith options x =
 
 toElmDecoderSource :: ElmType a => a -> String
 toElmDecoderSource = toElmDecoderSourceWith defaultOptions
+
+---------------------------------
+
+renderWithDefs :: ElmTypeExpr -> Reader Options (String, [String])
+
+renderWithDefs t@(DataType _ s) =
+  do
+    tDecoder <- render t
+    tDef <- render (TopLevel t)
+    (_, sDefs) <- renderWithDefs s
+    return (tDecoder, tDef : sDefs)
+
+renderWithDefs (Product (Primitive "Maybe") t) =
+  do
+    (tDecoder, tDefs) <- renderWithDefs t
+    return (printf "(Json.Decode.maybe %s)" tDecoder, tDefs)
+
+renderWithDefs t@(Product (Primitive "List") (Primitive "Char")) =
+  do
+    tDecoder <- render (Field t)
+    return (tDecoder, [])
+
+renderWithDefs (Product (Primitive "List") t) =
+  do
+    (tDecoder, tDefs) <- renderWithDefs t
+    return (printf "(Json.Decode.list %s)" tDecoder, tDefs)
+
+renderWithDefs (Product x y) =
+  do
+    (xDecoder, xDefs) <- renderWithDefs x
+    (yDecoder, yDefs) <- renderWithDefs y
+    return ( printf "%s\n  |: %s" xDecoder yDecoder
+           , xDefs ++ yDefs )
+
+renderWithDefs Unit = return ("Json.Decode.succeed ()", [])
+
+renderWithDefs t@(Primitive _) =
+  do
+    tDecoder <- render t
+    return (tDecoder, [])
+
+renderWithDefs (Record _ t) = renderWithDefs t
+
+renderWithDefs (Selector _ t) = renderWithDefs t
+
+renderWithDefs (Field t) = renderWithDefs t
+
+renderWithDefs x = return (printf "<%s>" (show x), [])
+
+toElmDecoderSourceDefsWith :: ElmType a => Options -> a -> (String, [String])
+toElmDecoderSourceDefsWith options x =
+  nub <$> runReader (renderWithDefs (toElmType x)) options
+
+toElmDecoderSourceDefs :: ElmType a => a -> (String, [String])
+toElmDecoderSourceDefs = toElmDecoderSourceDefsWith defaultOptions
