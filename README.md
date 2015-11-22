@@ -59,6 +59,7 @@ an example with a `Person` type:
 
 ```haskell
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
 module Db where
 
 import GHC.Generics
@@ -67,9 +68,7 @@ import Elm
 data Person =
   Person {id   :: Int
          ,name :: Maybe String}
-  deriving (Show,Eq,Generic)
-
-instance ToElmType Person
+  deriving (Show,Eq,Generic,ToElmType)
 ```
 
 That's it for the type. Now you'll want to write a main that generates
