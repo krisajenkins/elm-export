@@ -1,6 +1,7 @@
 decodePost : Decoder Post
-decodePost = Post
-  `map`   ("id" := int)
-  `apply` ("name" := string)
-  `apply` ("age" := maybe float)
-  `apply` ("comments" := list decodeComment)
+decodePost =
+  succeed Post
+    |: ("id" := int)
+    |: ("name" := string)
+    |: ("age" := maybe float)
+    |: ("comments" := list decodeComment)

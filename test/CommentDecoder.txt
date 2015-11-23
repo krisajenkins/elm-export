@@ -1,5 +1,6 @@
 decodeComment : Decoder Comment
-decodeComment = Comment
-  `map`   ("postId" := int)
-  `apply` ("text" := string)
-  `apply` ("published" := bool)
+decodeComment =
+  succeed Comment
+    |: ("postId" := int)
+    |: ("text" := string)
+    |: ("published" := bool)

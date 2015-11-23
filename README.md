@@ -13,7 +13,7 @@ module Generated.Blog.Rest where
 
 import Json.Decode exposing (..)
 
-import Json.Decode.Extra exposing (apply,date)
+import Json.Decode.Extra exposing (date,(|:))
 
 type alias Post =
   {postPostId : String
@@ -25,14 +25,15 @@ type alias Post =
   ,postPublished : Maybe Date}
 
 decodePost : Decoder Post
-decodePost = Post
-  `map`   ("postPostId" := string)
-  `apply` ("postAccountId" := string)
-  `apply` ("postSlug" := string)
-  `apply` ("postTitle" := string)
-  `apply` ("postContent" := string)
-  `apply` ("postCreated" := date)
-  `apply` ("postPublished" := maybe date)
+decodePost =
+  succeed Post
+    |: ("postPostId" := string)
+    |: ("postAccountId" := string)
+    |: ("postSlug" := string)
+    |: ("postTitle" := string)
+    |: ("postContent" := string)
+    |: ("postCreated" := date)
+    |: ("postPublished" := maybe date)
 ```
 
 Looks just like hand-written code, doesn't it?
