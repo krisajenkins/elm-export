@@ -1,5 +1,6 @@
 module Elm.Record (toElmTypeSource) where
 
+import           Elm.Common
 import           Elm.Type
 import           Text.Printf
 
@@ -13,10 +14,7 @@ render (Field t) = render t
 render (Selector s t) = printf "%s : %s" s (render t)
 render (Constructor c t) = printf "%s %s" c (render t)
 render (Product (Primitive "List") (Primitive "Char")) = "String"
-render (Product (Primitive w) p@(Product _ _)) = printf "%s (%s)" w (render p)
-render (Product c@(Primitive _) t) = printf "%s %s" (render c) (render t)
-render (Product x y@(Primitive _)) = printf "%s %s" (render x) (render y)
-render (Product x y) = printf "%s (%s)" (render x) (render y)
+render (Product x y) = printf "%s %s" (render x) (parenthesize y (render y))
 render (Record n (Product x y)) = printf "%s\n  ,%s" (render (Record n x)) (render (Record n y))
 render (Record _ s@(Selector _ _)) = render s
 render Unit = ""

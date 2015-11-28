@@ -4,3 +4,5 @@ decodePost = Post
   `apply` ("name" := string)
   `apply` ("age" := maybe float)
   `apply` ("comments" := list decodeComment)
+  `apply` ("promoted" := maybe decodeComment)
+  `apply` ("author" := maybe string)
