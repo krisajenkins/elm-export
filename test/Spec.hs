@@ -29,7 +29,8 @@ main :: IO ()
 main =
   defaultMainWithOpts
     [testCase "toElmTypeSource" testToElmTypeSource
-    ,testCase "toElmDecoderSource" testToElmDecoderSource]
+    ,testCase "toElmDecoderSource" testToElmDecoderSource
+    ,testCase "toElmEncoderSource" testToElmEncoderSource]
     mempty
 
 testToElmTypeSource :: Assertion
@@ -49,3 +50,12 @@ testToElmDecoderSource =
      commentSource <- readFile "test/CommentDecoder.txt"
      assertEqual "Encoding a Comment decoder" commentSource $
        (toElmDecoderSource (Proxy :: Proxy Comment)) ++ "\n"
+
+testToElmEncoderSource :: Assertion
+testToElmEncoderSource =
+  do postSource <- readFile "test/PostEncoder.txt"
+     assertEqual "Encoding a Post encoder" postSource $
+       toElmEncoderSource (Proxy :: Proxy Post) ++ "\n"
+     commentSource <- readFile "test/CommentEncoder.txt"
+     assertEqual "Encoding a Comment encoder" commentSource $
+       toElmEncoderSource (Proxy :: Proxy Comment) ++ "\n"

@@ -23,6 +23,7 @@ library
   default-language:    Haskell2010
   other-modules: Elm.Type
                , Elm.Decoder
+               , Elm.Encoder
                , Elm.File
                , Elm.Record
 
