@@ -92,7 +92,7 @@ spec = Spec ["Db", "Types"]
             ,toElmDecoderSource (Proxy :: Proxy Person)]
 
 main :: IO ()
-main = specsToDir "some/where/output" [spec]
+main = specsToDir [spec] "some/where/output"
 ```
 
 Run this and the directory `some/where/output` will be created, and

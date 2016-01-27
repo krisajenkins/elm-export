@@ -33,6 +33,6 @@ specToFile rootDir spec =
   in do printf "Writing: %s\n" file
         writeFile file body
 
-specsToDir :: FilePath -> [Spec] -> IO ()
-specsToDir rootDir = mapM_ processSpec
+specsToDir :: [Spec] -> FilePath -> IO ()
+specsToDir specs rootDir = mapM_ processSpec specs
   where processSpec = ensureDirectory rootDir >> specToFile rootDir
