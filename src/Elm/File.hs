@@ -12,8 +12,7 @@ data Spec =
        ,declarations :: [String]}
 
 pathForSpec :: FilePath -> Spec -> [String]
-pathForSpec rootDir spec =
-  rootDir : namespace spec
+pathForSpec rootDir spec = rootDir : namespace spec
 
 ensureDirectory :: FilePath -> Spec -> IO ()
 ensureDirectory rootDir spec =
