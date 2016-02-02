@@ -11,7 +11,7 @@ render elmType =
       in printf "%s : %s -> JS.Value\n%s x =%s" fnName d fnName (render t)
     (DataType d _) -> "encode" ++ d
     (Record _ t) -> printf "\n  JS.object\n    [%s]" (render t)
-    (Product (Primitive "List") (Primitive "Char")) -> "JS.string"
+    (Product (Primitive "List") (Primitive "Char")) -> render (Primitive "String")
     (Product (Primitive "List") t) ->
       printf "(JS.list << List.map %s)" (render t)
     (Product (Primitive "Maybe") t) ->
