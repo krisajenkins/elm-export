@@ -12,6 +12,10 @@ render elmType =
       in printf "%s : %s -> JS.Value\n%s x =%s" fnName d fnName (render t)
     (DataType d _) -> "encode" ++ d
     (Record _ t) -> printf "\n  JS.object\n    [%s]" (render t)
+    (Product (Primitive "Maybe") t) -> renderMaybeWith (render t)
+    (Product (Primitive "List") (Primitive "Char")) -> "JS.string"
+    (Product (Primitive "List") t) ->
+      printf "(JS.list << List.map %s)" (render t)
     (Product x y) ->
       printf "%s\n    ,%s"
              (render x)
@@ -23,12 +27,6 @@ render elmType =
     (Primitive "Float") -> "JS.float"
     (Primitive "Date") -> "JS.date"
     (Primitive "Bool") -> "JS.bool"
-    (Field (Product (Primitive "Maybe") (Product (Primitive "List") (Primitive "Char")))) ->
-      renderMaybeWith "JS.string"
-    (Field (Product (Primitive "Maybe") t)) -> renderMaybeWith (render t)
-    (Field (Product (Primitive "List") (Primitive "Char"))) -> "JS.string"
-    (Field (Product (Primitive "List") t)) ->
-      printf "(JS.list << List.map %s)" (render t)
     (Field t) -> render t
     x -> printf "<%s>" (show x)
   where renderMaybeWith :: String -> String
