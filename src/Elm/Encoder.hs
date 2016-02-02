@@ -1,6 +1,5 @@
 module Elm.Encoder (toElmEncoderSource) where
 
-import           Data.List   (intercalate)
 import           Elm.Type
 import           Text.Printf
 
@@ -16,14 +15,7 @@ render elmType =
     (Product (Primitive "List") t) ->
       printf "(JS.list << List.map %s)" (render t)
     (Product (Primitive "Maybe") t) ->
-      printf (intercalate
-                "\n"
-                [""
-                ,"      (\\y ->"
-                ,"        case y of"
-                ,"          Just val -> %s val"
-                ,"          Nothing -> JS.null)"])
-             (render t)
+      printf "(Maybe.withDefault JS.null << Maybe.map %s)" (render t)
     (Product x y) ->
       printf "%s\n    ,%s"
              (render x)
