@@ -37,27 +37,27 @@ main =
 
 testToElmTypeSource :: Assertion
 testToElmTypeSource =
-  do postSource <- readFile "test/PostType.txt"
+  do postSource <- readFile "test/PostType.elm"
      assertEqual "Encoding a Post type" postSource $
        toElmTypeSource (Proxy :: Proxy Post) ++ "\n"
-     commentSource <- readFile "test/CommentType.txt"
+     commentSource <- readFile "test/CommentType.elm"
      assertEqual "Encoding a Comment type" commentSource $
        toElmTypeSource (Proxy :: Proxy Comment) ++ "\n"
 
 testToElmDecoderSource :: Assertion
 testToElmDecoderSource =
-  do postSource <- readFile "test/PostDecoder.txt"
+  do postSource <- readFile "test/PostDecoder.elm"
      assertEqual "Encoding a Post decoder" postSource $
        toElmDecoderSource (Proxy :: Proxy Post) ++ "\n"
-     commentSource <- readFile "test/CommentDecoder.txt"
+     commentSource <- readFile "test/CommentDecoder.elm"
      assertEqual "Encoding a Comment decoder" commentSource $
        toElmDecoderSource (Proxy :: Proxy Comment) ++ "\n"
 
 testToElmEncoderSource :: Assertion
 testToElmEncoderSource =
-  do postSource <- readFile "test/PostEncoder.txt"
+  do postSource <- readFile "test/PostEncoder.elm"
      assertEqual "Encoding a Post encoder" postSource $
        toElmEncoderSource (Proxy :: Proxy Post) ++ "\n"
-     commentSource <- readFile "test/CommentEncoder.txt"
+     commentSource <- readFile "test/CommentEncoder.elm"
      assertEqual "Encoding a Comment encoder" commentSource $
        toElmEncoderSource (Proxy :: Proxy Comment) ++ "\n"
