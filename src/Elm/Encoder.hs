@@ -27,14 +27,13 @@ render elmType = case elmType of
   x -> printf "<%s>" (show x)
 
   where renderMaybeWith :: String -> String
-        renderMaybeWith renderedType =
+        renderMaybeWith =
           printf (intercalate "\n"
                     [""
                     ,"      (\\y ->"
                     ,"        case y of"
                     ,"          Just val -> %s val"
                     ,"          Nothing -> JS.null)"])
-                 renderedType
 
 toElmEncoderSource :: ToElmType a => a -> String
 toElmEncoderSource = render . TopLevel . toElmType
