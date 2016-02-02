@@ -12,10 +12,18 @@ render elmType =
       in printf "%s : %s -> JS.Value\n%s x =%s" fnName d fnName (render t)
     (DataType d _) -> "encode" ++ d
     (Record _ t) -> printf "\n  JS.object\n    [%s]" (render t)
-    (Product (Primitive "Maybe") t) -> renderMaybeWith (render t)
     (Product (Primitive "List") (Primitive "Char")) -> "JS.string"
     (Product (Primitive "List") t) ->
       printf "(JS.list << List.map %s)" (render t)
+    (Product (Primitive "Maybe") t) ->
+      printf (intercalate
+                "\n"
+                [""
+                ,"      (\\y ->"
+                ,"        case y of"
+                ,"          Just val -> %s val"
+                ,"          Nothing -> JS.null)"])
+             (render t)
     (Product x y) ->
       printf "%s\n    ,%s"
              (render x)
@@ -29,15 +37,6 @@ render elmType =
     (Primitive "Bool") -> "JS.bool"
     (Field t) -> render t
     x -> printf "<%s>" (show x)
-  where renderMaybeWith :: String -> String
-        renderMaybeWith =
-          printf (intercalate
-                    "\n"
-                    [""
-                    ,"      (\\y ->"
-                    ,"        case y of"
-                    ,"          Just val -> %s val"
-                    ,"          Nothing -> JS.null)"])
 
 toElmEncoderSource :: ToElmType a => a -> String
 toElmEncoderSource = render . TopLevel . toElmType
