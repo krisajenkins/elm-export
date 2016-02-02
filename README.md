@@ -129,6 +129,10 @@ Elm. Obviously we will not support those. But there are some which are
 legal Haskell and legal Elm, but we do not yet generate. Please send
 examples, PRs and code-suggestions!
 
+## Contributors
+
+* [Matthew Bray](https://github.com/mattjbray)
+
 ## License
 
 Copyright © 2015 Kris Jenkins
