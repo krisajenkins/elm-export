@@ -1,6 +1,6 @@
-decodeComment : Decoder Comment
+decodeComment : Json.Decode.Decoder Comment
 decodeComment =
-  succeed Comment
-    |: ("postId" := int)
-    |: ("text" := string)
-    |: ("published" := bool)
+  Json.Decode.succeed Comment
+    |: ("postId" := Json.Decode.int)
+    |: ("text" := Json.Decode.string)
+    |: ("published" := Json.Decode.bool)

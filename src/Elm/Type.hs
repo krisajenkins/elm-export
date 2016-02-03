@@ -25,7 +25,7 @@ data ElmType where
         Product :: ElmType -> ElmType -> ElmType
         Unit :: ElmType
         Primitive :: String -> ElmType
-    deriving (Eq,Show)
+    deriving (Eq, Show)
 
 class ToElmType a  where
   toElmType :: a -> ElmType

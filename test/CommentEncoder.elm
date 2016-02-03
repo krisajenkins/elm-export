@@ -1,6 +1,6 @@
-encodeComment : Comment -> JS.Value
+encodeComment : Comment -> Json.Encode.Value
 encodeComment x =
-  JS.object
-    [("postId", JS.int x.postId)
-    ,("text", JS.string x.text)
-    ,("published", JS.bool x.published)]
+  Json.Encode.object
+    [("postId", Json.Encode.int x.postId)
+    ,("text", Json.Encode.string x.text)
+    ,("published", Json.Encode.bool x.published)]

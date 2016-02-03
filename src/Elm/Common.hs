@@ -1,6 +1,6 @@
 module Elm.Common where
 
-import Elm.Type
+import           Elm.Type
 
 isTopLevel :: ElmType -> Bool
 isTopLevel (Primitive _) = True
