@@ -51,20 +51,23 @@ main =
                                       "test/CommentEncoder.elm")]
     mempty
 
+outputWrapping :: String
+outputWrapping = "module Main (..) where\n\n\n%s\n"
+
 testToElmTypeSource :: ToElmType a => a -> FilePath -> IO ()
 testToElmTypeSource proxy sourceFile =
   do source <- readFile sourceFile
      assertEqual "Encoding a type" source $
-       printf "module Main (..) where\n\n\n%s\n" (toElmTypeSource proxy)
+       printf outputWrapping (toElmTypeSource proxy)
 
 testToElmDecoderSource :: ToElmType a => a -> FilePath -> IO ()
 testToElmDecoderSource proxy sourceFile =
   do source <- readFile sourceFile
      assertEqual "Encoding a decoder" source $
-       printf "module Main (..) where\n\n\n%s\n" (toElmDecoderSource proxy)
+       printf outputWrapping (toElmDecoderSource proxy)
 
 testToElmEncoderSource :: ToElmType a => a -> FilePath -> IO ()
 testToElmEncoderSource proxy sourceFile =
   do source <- readFile sourceFile
      assertEqual "Encoding a encoder" source $
-       printf "module Main (..) where\n\n\n%s\n" (toElmEncoderSource proxy)
+       printf outputWrapping (toElmEncoderSource proxy)
