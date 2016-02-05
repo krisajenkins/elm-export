@@ -1,3 +1,6 @@
+module Main (..) where
+
+
 decodePost : Json.Decode.Decoder Post
 decodePost =
   Json.Decode.succeed Post

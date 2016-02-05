@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-import           Data.Monoid
+
 import           Data.Proxy
 import           Data.Text
 import           Elm
@@ -8,6 +8,7 @@ import           GHC.Generics
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
 import           Test.HUnit
+import           Text.Printf
 
 data Post =
   Post {id       :: Int
@@ -30,34 +31,40 @@ instance ToElmType Comment
 main :: IO ()
 main =
   defaultMainWithOpts
-    [testCase "toElmTypeSource" testToElmTypeSource
-    ,testCase "toElmDecoderSource" testToElmDecoderSource
-    ,testCase "toElmEncoderSource" testToElmEncoderSource]
+    [testCase "toElmTypeSource Post"
+              (testToElmTypeSource (Proxy :: Proxy Post)
+                                   "test/PostType.elm")
+    ,testCase "toElmTypeSource Comment"
+              (testToElmTypeSource (Proxy :: Proxy Comment)
+                                   "test/CommentType.elm")
+    ,testCase "toElmDecoderSource Post"
+              (testToElmDecoderSource (Proxy :: Proxy Post)
+                                      "test/PostDecoder.elm")
+    ,testCase "toElmDecoderSource Comment"
+              (testToElmDecoderSource (Proxy :: Proxy Comment)
+                                      "test/CommentDecoder.elm")
+    ,testCase "toElmEncoderSource Post"
+              (testToElmEncoderSource (Proxy :: Proxy Post)
+                                      "test/PostEncoder.elm")
+    ,testCase "toElmEncoderSource Comment"
+              (testToElmEncoderSource (Proxy :: Proxy Comment)
+                                      "test/CommentEncoder.elm")]
     mempty
 
-testToElmTypeSource :: Assertion
-testToElmTypeSource =
-  do postSource <- readFile "test/PostType.elm"
-     assertEqual "Encoding a Post type" postSource $
-       toElmTypeSource (Proxy :: Proxy Post) ++ "\n"
-     commentSource <- readFile "test/CommentType.elm"
-     assertEqual "Encoding a Comment type" commentSource $
-       toElmTypeSource (Proxy :: Proxy Comment) ++ "\n"
+testToElmTypeSource :: ToElmType a => a -> FilePath -> IO ()
+testToElmTypeSource proxy sourceFile =
+  do source <- readFile sourceFile
+     assertEqual "Encoding a type" source $
+       printf "module Main (..) where\n\n\n%s\n" (toElmTypeSource proxy)
 
-testToElmDecoderSource :: Assertion
-testToElmDecoderSource =
-  do postSource <- readFile "test/PostDecoder.elm"
-     assertEqual "Encoding a Post decoder" postSource $
-       toElmDecoderSource (Proxy :: Proxy Post) ++ "\n"
-     commentSource <- readFile "test/CommentDecoder.elm"
-     assertEqual "Encoding a Comment decoder" commentSource $
-       toElmDecoderSource (Proxy :: Proxy Comment) ++ "\n"
+testToElmDecoderSource :: ToElmType a => a -> FilePath -> IO ()
+testToElmDecoderSource proxy sourceFile =
+  do source <- readFile sourceFile
+     assertEqual "Encoding a decoder" source $
+       printf "module Main (..) where\n\n\n%s\n" (toElmDecoderSource proxy)
 
-testToElmEncoderSource :: Assertion
-testToElmEncoderSource =
-  do postSource <- readFile "test/PostEncoder.elm"
-     assertEqual "Encoding a Post encoder" postSource $
-       toElmEncoderSource (Proxy :: Proxy Post) ++ "\n"
-     commentSource <- readFile "test/CommentEncoder.elm"
-     assertEqual "Encoding a Comment encoder" commentSource $
-       toElmEncoderSource (Proxy :: Proxy Comment) ++ "\n"
+testToElmEncoderSource :: ToElmType a => a -> FilePath -> IO ()
+testToElmEncoderSource proxy sourceFile =
+  do source <- readFile sourceFile
+     assertEqual "Encoding a encoder" source $
+       printf "module Main (..) where\n\n\n%s\n" (toElmEncoderSource proxy)

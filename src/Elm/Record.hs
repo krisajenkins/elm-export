@@ -5,7 +5,7 @@ import           Elm.Type
 import           Text.Printf
 
 render :: ElmType -> String
-render (TopLevel (DataType d r@(Record _ _))) = printf "type alias %s =\n  {%s}" d (render r)
+render (TopLevel (DataType d r@(Record _ _))) = printf "type alias %s =\n  { %s\n  }" d (render r)
 render (TopLevel (DataType d s@(Sum _ _))) = printf "type %s\n  = %s" d (render s)
 render (DataType d _) = d
 render (Primitive s) = s
@@ -17,7 +17,7 @@ render (Product (Primitive "List") (Primitive "Char")) = "String"
 render (Product (Primitive "List") p@(Product _ _)) = printf "List (%s)" (render p)
 render (Product (Primitive "List") t) = printf "List %s" (render t)
 render (Product x y) = printf ("%s " ++ parenthesize y "%s") (render x) (render y)
-render (Record n (Product x y)) = printf "%s\n  ,%s" (render (Record n x)) (render (Record n y))
+render (Record n (Product x y)) = printf "%s\n  , %s" (render (Record n x)) (render (Record n y))
 render (Record _ s@(Selector _ _)) = render s
 render Unit = ""
 

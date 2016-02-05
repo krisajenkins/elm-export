@@ -1,3 +1,6 @@
+module Main (..) where
+
+
 decodeComment : Json.Decode.Decoder Comment
 decodeComment =
   Json.Decode.succeed Comment
