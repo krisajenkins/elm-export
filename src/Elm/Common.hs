@@ -1,4 +1,4 @@
-module Elm.Common where
+module Elm.Common  where
 
 import           Elm.Type
 
@@ -13,3 +13,9 @@ isTopLevel _ = False
 parenthesize :: ElmTypeExpr -> String -> String
 parenthesize t s =
   if isTopLevel t then s else "(" ++ s ++ ")"
+
+data Options =
+  Options {fieldLabelModifier :: String -> String}
+
+defaultOptions :: Options
+defaultOptions = Options {fieldLabelModifier = id}

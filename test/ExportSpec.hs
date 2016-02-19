@@ -1,4 +1,5 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module ExportSpec (spec, Post(..), Comment(..)) where
 
@@ -39,43 +40,85 @@ toElmTypeSpec :: Hspec.Spec
 toElmTypeSpec =
   describe "Convert to Elm types." $
   do it "toElmTypeSource Post" $
-       shouldMatchTypeSource (Proxy :: Proxy Post)
+       shouldMatchTypeSource defaultOptions
+                             (Proxy :: Proxy Post)
                              "test/PostType.elm"
      it "toElmTypeSource Comment" $
-       shouldMatchTypeSource (Proxy :: Proxy Comment)
+       shouldMatchTypeSource defaultOptions
+                             (Proxy :: Proxy Comment)
                              "test/CommentType.elm"
+     it "toElmTypeSourceWithOptions Post" $
+       shouldMatchTypeSource
+         (defaultOptions {fieldLabelModifier = withPrefix "post"})
+         (Proxy :: Proxy Post)
+         "test/PostTypeWithOptions.elm"
+     it "toElmTypeSource Comment" $
+       shouldMatchTypeSource
+         (defaultOptions {fieldLabelModifier = withPrefix "comment"})
+         (Proxy :: Proxy Comment)
+         "test/CommentTypeWithOptions.elm"
 
 toElmDecoderSpec :: Hspec.Spec
 toElmDecoderSpec =
   describe "Convert to Elm decoders." $
   do it "toElmDecoderSource Post" $
-       shouldMatchDecoderSource (Proxy :: Proxy Post)
+       shouldMatchDecoderSource defaultOptions
+                                (Proxy :: Proxy Post)
                                 "test/PostDecoder.elm"
      it "toElmDecoderSource Comment" $
-       shouldMatchDecoderSource (Proxy :: Proxy Comment)
+       shouldMatchDecoderSource defaultOptions
+                                (Proxy :: Proxy Comment)
                                 "test/CommentDecoder.elm"
+     it "toElmDecoderSource Post" $
+       shouldMatchDecoderSource
+         (defaultOptions {fieldLabelModifier = withPrefix "post"})
+         (Proxy :: Proxy Post)
+         "test/PostDecoderWithOptions.elm"
+     it "toElmDecoderSource Comment" $
+       shouldMatchDecoderSource
+         (defaultOptions {fieldLabelModifier = withPrefix "comment"})
+         (Proxy :: Proxy Comment)
+         "test/CommentDecoderWithOptions.elm"
 
 toElmEncoderSpec :: Hspec.Spec
 toElmEncoderSpec =
   describe "Convert to Elm encoders." $
   do it "toElmEncoderSource Post" $
-       shouldMatchEncoderSource (Proxy :: Proxy Post)
+       shouldMatchEncoderSource defaultOptions
+                                (Proxy :: Proxy Post)
                                 "test/PostEncoder.elm"
      it "toElmEncoderSource Comment" $
-       shouldMatchEncoderSource (Proxy :: Proxy Comment)
+       shouldMatchEncoderSource defaultOptions
+                                (Proxy :: Proxy Comment)
                                 "test/CommentEncoder.elm"
+     it "toElmEncoderSource Post" $
+       shouldMatchEncoderSource
+         (defaultOptions {fieldLabelModifier = withPrefix "post"})
+         (Proxy :: Proxy Post)
+         "test/PostEncoderWithOptions.elm"
+     it "toElmEncoderSource Comment" $
+       shouldMatchEncoderSource
+         (defaultOptions {fieldLabelModifier = withPrefix "comment"})
+         (Proxy :: Proxy Comment)
+         "test/CommentEncoderWithOptions.elm"
 
-shouldMatchTypeSource :: ElmType a => a -> FilePath -> IO ()
-shouldMatchTypeSource =
-  shouldMatchFile . printf outputWrapping . toElmTypeSource
+shouldMatchTypeSource
+  :: ElmType a
+  => Options -> a -> FilePath -> IO ()
+shouldMatchTypeSource options x =
+  shouldMatchFile . printf outputWrapping $ toElmTypeSourceWith options x
 
-shouldMatchDecoderSource :: ElmType a => a -> FilePath -> IO ()
-shouldMatchDecoderSource =
-  shouldMatchFile . printf outputWrapping . toElmDecoderSource
+shouldMatchDecoderSource
+  :: ElmType a
+  => Options -> a -> FilePath -> IO ()
+shouldMatchDecoderSource options x =
+  shouldMatchFile . printf outputWrapping $ toElmDecoderSourceWith options x
 
-shouldMatchEncoderSource :: ElmType a => a -> FilePath -> IO ()
-shouldMatchEncoderSource =
-  shouldMatchFile . printf outputWrapping . toElmEncoderSource
+shouldMatchEncoderSource
+  :: ElmType a
+  => Options -> a -> FilePath -> IO ()
+shouldMatchEncoderSource options x =
+  shouldMatchFile . printf outputWrapping $ toElmEncoderSourceWith options x
 
 outputWrapping :: String
 outputWrapping = "module Main (..) where\n\n\n%s\n"
@@ -88,3 +131,6 @@ shouldMatchFile actual fileExpected =
 initCap :: String -> String
 initCap [] = []
 initCap (c:cs) = Data.Char.toUpper c : cs
+
+withPrefix :: String -> String -> String
+withPrefix prefix s = prefix ++ initCap s
