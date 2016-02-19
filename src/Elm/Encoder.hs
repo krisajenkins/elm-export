@@ -3,7 +3,7 @@ module Elm.Encoder (toElmEncoderSource) where
 import           Elm.Type
 import           Text.Printf
 
-render :: ElmType -> String
+render :: ElmTypeExpr -> String
 render elmType =
   case elmType of
     (TopLevel (DataType d t)) ->
@@ -30,5 +30,5 @@ render elmType =
     (Field t) -> render t
     x -> printf "<%s>" (show x)
 
-toElmEncoderSource :: ToElmType a => a -> String
+toElmEncoderSource :: ElmType a => a -> String
 toElmEncoderSource = render . TopLevel . toElmType

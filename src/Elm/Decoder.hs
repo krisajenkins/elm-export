@@ -8,7 +8,7 @@ module Elm.Decoder (toElmDecoderSource) where
 import           Elm.Type
 import           Text.Printf
 
-render :: ElmType -> String
+render :: ElmTypeExpr -> String
 render (TopLevel (DataType d t)) =
   printf "%s : Json.Decode.Decoder %s\n%s =\n%s" fnName d fnName (render t)
   where fnName = "decode" ++ d
@@ -28,5 +28,5 @@ render (Primitive "Bool") = "Json.Decode.bool"
 render (Field t) = render t
 render x = printf "<%s>" (show x)
 
-toElmDecoderSource :: ToElmType a => a -> String
+toElmDecoderSource :: ElmType a => a -> String
 toElmDecoderSource = render . TopLevel . toElmType

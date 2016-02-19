@@ -14,69 +14,69 @@ import           Prelude
 
 -- TODO Without doubt, this definition can be tightened up so that
 -- there are fewer (or hopefully zero) representable illegal states.
-data ElmType where
-        TopLevel :: ElmType -> ElmType
-        DataType :: String -> ElmType -> ElmType
-        Record :: String -> ElmType -> ElmType
-        Constructor :: String -> ElmType -> ElmType
-        Selector :: String -> ElmType -> ElmType
-        Field :: ElmType -> ElmType
-        Sum :: ElmType -> ElmType -> ElmType
-        Product :: ElmType -> ElmType -> ElmType
-        Unit :: ElmType
-        Primitive :: String -> ElmType
+data ElmTypeExpr where
+        TopLevel :: ElmTypeExpr -> ElmTypeExpr
+        DataType :: String -> ElmTypeExpr -> ElmTypeExpr
+        Record :: String -> ElmTypeExpr -> ElmTypeExpr
+        Constructor :: String -> ElmTypeExpr -> ElmTypeExpr
+        Selector :: String -> ElmTypeExpr -> ElmTypeExpr
+        Field :: ElmTypeExpr -> ElmTypeExpr
+        Sum :: ElmTypeExpr -> ElmTypeExpr -> ElmTypeExpr
+        Product :: ElmTypeExpr -> ElmTypeExpr -> ElmTypeExpr
+        Unit :: ElmTypeExpr
+        Primitive :: String -> ElmTypeExpr
     deriving (Eq, Show)
 
-class ToElmType a  where
-  toElmType :: a -> ElmType
-  default toElmType :: (Generic a,GenericToElmType (Rep a)) => a -> ElmType
+class ElmType a  where
+  toElmType :: a -> ElmTypeExpr
+  default toElmType :: (Generic a,GenericElmType (Rep a)) => a -> ElmTypeExpr
   toElmType = genericToElmType . from
 
-instance ToElmType Bool where
+instance ElmType Bool where
     toElmType _ = Primitive "Bool"
 
-instance ToElmType Char where
+instance ElmType Char where
     toElmType _ = Primitive "Char"
 
-instance ToElmType Text where
+instance ElmType Text where
     toElmType _ = Primitive "String"
 
-instance ToElmType Float where
+instance ElmType Float where
     toElmType _ = Primitive "Float"
 
-instance ToElmType UTCTime where
+instance ElmType UTCTime where
     toElmType _ = Primitive "Date"
 
-instance ToElmType Day where
+instance ElmType Day where
     toElmType _ = Primitive "Date"
 
-instance ToElmType Double where
+instance ElmType Double where
     toElmType _ = Primitive "Float"
 
-instance ToElmType Int where
+instance ElmType Int where
     toElmType _ = Primitive "Int"
 
-instance ToElmType Integer where
+instance ElmType Integer where
     toElmType _ = Primitive "Int"
 
-instance ToElmType a => ToElmType [a] where
+instance ElmType a => ElmType [a] where
     toElmType _ = Product (Primitive "List") (toElmType (undefined :: a))
 
-instance ToElmType a => ToElmType (Maybe a) where
+instance ElmType a => ElmType (Maybe a) where
   toElmType _ = Product (Primitive "Maybe") (toElmType (undefined :: a))
 
-instance ToElmType a => ToElmType (Proxy a) where
+instance ElmType a => ElmType (Proxy a) where
   toElmType _ = toElmType (undefined :: a)
 
-class GenericToElmType f  where
-  genericToElmType :: f a -> ElmType
+class GenericElmType f  where
+  genericToElmType :: f a -> ElmTypeExpr
 
-instance (GenericToElmType f,Datatype d) => GenericToElmType (D1 d f) where
+instance (GenericElmType f,Datatype d) => GenericElmType (D1 d f) where
   genericToElmType d@(M1 x) =
     DataType (datatypeName d)
              (genericToElmType x)
 
-instance (Constructor c,GenericToElmType f) => GenericToElmType (C1 c f) where
+instance (Constructor c,GenericElmType f) => GenericElmType (C1 c f) where
   genericToElmType c@(M1 x) =
     if conIsRecord c
        then Record name body
@@ -84,23 +84,23 @@ instance (Constructor c,GenericToElmType f) => GenericToElmType (C1 c f) where
     where name = conName c
           body = genericToElmType x
 
-instance (Selector c,GenericToElmType f) => GenericToElmType (S1 c f) where
+instance (Selector c,GenericElmType f) => GenericElmType (S1 c f) where
   genericToElmType s@(M1 x) =
     Selector (selName s)
              (genericToElmType x)
 
-instance GenericToElmType U1 where
+instance GenericElmType U1 where
   genericToElmType _  = Unit
 
-instance (ToElmType c) => GenericToElmType (K1 R c) where
+instance (ElmType c) => GenericElmType (K1 R c) where
   genericToElmType (K1 x) = Field (toElmType x)
 
-instance (GenericToElmType f,GenericToElmType g) => GenericToElmType (f :+: g) where
+instance (GenericElmType f,GenericElmType g) => GenericElmType (f :+: g) where
   genericToElmType _ = Sum
            (genericToElmType (undefined :: f p))
            (genericToElmType (undefined :: g p))
 
-instance (GenericToElmType f,GenericToElmType g) => GenericToElmType (f :*: g) where
+instance (GenericElmType f,GenericElmType g) => GenericElmType (f :*: g) where
   genericToElmType _ =
     Product (genericToElmType (undefined :: f p))
             (genericToElmType (undefined :: g p))

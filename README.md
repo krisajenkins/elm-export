@@ -56,8 +56,8 @@ packages:
 ## Usage
 
 To use this library, you must first make the types you want to export
-implement `ToElmType`. This is easy. Just derive `Generic`, and then
-we can automatically generate the `ToElmType` instance for you. Here's
+implement `ElmType`. This is easy. Just derive `Generic`, and then
+we can automatically generate the `ElmType` instance for you. Here's
 an example with a `Person` type:
 
 ```haskell
@@ -71,7 +71,7 @@ import Elm
 data Person =
   Person {id   :: Int
          ,name :: Maybe String}
-  deriving (Show,Eq,Generic,ToElmType)
+  deriving (Show,Eq,Generic,ElmType)
 ```
 
 That's it for the type. Now you'll want to write a main that generates
@@ -100,7 +100,7 @@ under that the Elm source file `Db/Types.elm` will be found.
 
 All the hard work here is done by `toElmTypeSource` and
 `toElmDecoderSource`. The `Spec` code is just wrapping to make it easy
-to create a complete Elm file from the meat that `ToElmType` gives
+to create a complete Elm file from the meat that `ElmType` gives
 you.
 
 ## Development
@@ -118,6 +118,17 @@ stack build
 ```sh
 stack test --file-watch
 ```
+
+## Change Log
+
+### V0.3.0.0
+* Renamed `ToElmType` to `ElmType`, for brevity.
+
+### V0.2.0.0
+* Added Encoders (thanks to [Matthew Bray](https://github.com/mattjbray))
+
+### V0.1.0.0
+* Initial release.
 
 ## Status
 

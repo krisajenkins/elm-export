@@ -4,7 +4,7 @@ import           Elm.Common
 import           Elm.Type
 import           Text.Printf
 
-render :: ElmType -> String
+render :: ElmTypeExpr -> String
 render (TopLevel (DataType d r@(Record _ _))) = printf "type alias %s =\n  { %s\n  }" d (render r)
 render (TopLevel (DataType d s@(Sum _ _))) = printf "type %s\n  = %s" d (render s)
 render (DataType d _) = d
@@ -21,5 +21,5 @@ render (Record n (Product x y)) = printf "%s\n  , %s" (render (Record n x)) (ren
 render (Record _ s@(Selector _ _)) = render s
 render Unit = ""
 
-toElmTypeSource :: ToElmType a => a -> String
+toElmTypeSource :: ElmType a => a -> String
 toElmTypeSource = render . TopLevel . toElmType

@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
+module Spec where
 
 import           Data.Proxy
 import           Data.Text
@@ -25,8 +26,8 @@ data Comment =
           ,published :: Bool}
   deriving (Generic)
 
-instance ToElmType Post
-instance ToElmType Comment
+instance ElmType Post
+instance ElmType Comment
 
 main :: IO ()
 main =
@@ -54,19 +55,19 @@ main =
 outputWrapping :: String
 outputWrapping = "module Main (..) where\n\n\n%s\n"
 
-testToElmTypeSource :: ToElmType a => a -> FilePath -> IO ()
+testToElmTypeSource :: ElmType a => a -> FilePath -> IO ()
 testToElmTypeSource proxy sourceFile =
   do source <- readFile sourceFile
      assertEqual "Encoding a type" source $
        printf outputWrapping (toElmTypeSource proxy)
 
-testToElmDecoderSource :: ToElmType a => a -> FilePath -> IO ()
+testToElmDecoderSource :: ElmType a => a -> FilePath -> IO ()
 testToElmDecoderSource proxy sourceFile =
   do source <- readFile sourceFile
      assertEqual "Encoding a decoder" source $
        printf outputWrapping (toElmDecoderSource proxy)
 
-testToElmEncoderSource :: ToElmType a => a -> FilePath -> IO ()
+testToElmEncoderSource :: ElmType a => a -> FilePath -> IO ()
 testToElmEncoderSource proxy sourceFile =
   do source <- readFile sourceFile
      assertEqual "Encoding a encoder" source $
