@@ -7,4 +7,5 @@ encodeComment x =
     [ ( "postId", Json.Encode.int x.postId )
     , ( "text", Json.Encode.string x.text )
     , ( "published", Json.Encode.bool x.published )
+    , ( "created", (Json.Encode.string << Exts.Date.toISOString) x.created )
     ]

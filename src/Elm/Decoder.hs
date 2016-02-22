@@ -44,7 +44,7 @@ render (Primitive "Double") = return "Json.Decode.float"
 
 render (Primitive "Float") = return "Json.Decode.float"
 
-render (Primitive "Date") = return "Json.Decode.date"
+render (Primitive "Date") = return "Json.Decode.Extra.date"
 
 render (Primitive "Bool") = return "Json.Decode.bool"
 

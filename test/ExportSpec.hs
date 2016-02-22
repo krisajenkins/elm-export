@@ -6,6 +6,7 @@ module ExportSpec (spec, Post(..), Comment(..)) where
 import           Data.Char
 import           Data.Proxy
 import           Data.Text
+import           Data.Time
 import           Elm
 import           GHC.Generics
 import           Test.Hspec   hiding (Spec)
@@ -24,8 +25,9 @@ data Post =
 data Comment =
   Comment {postId    :: Int
           ,text      :: Text
-          ,published :: Bool}
-  deriving (Generic)
+          ,published :: Bool
+          ,created   :: UTCTime}
+  deriving ((Generic))
 
 instance ElmType Post
 instance ElmType Comment

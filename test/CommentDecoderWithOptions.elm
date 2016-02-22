@@ -7,3 +7,4 @@ decodeComment =
     |: ("commentPostId" := Json.Decode.int)
     |: ("commentText" := Json.Decode.string)
     |: ("commentPublished" := Json.Decode.bool)
+    |: ("commentCreated" := Json.Decode.Extra.date)

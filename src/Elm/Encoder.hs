@@ -40,7 +40,7 @@ render  (Primitive "String") = return "Json.Encode.string"
 render  (Primitive "Int") = return "Json.Encode.int"
 render  (Primitive "Double") = return "Json.Encode.float"
 render  (Primitive "Float") = return "Json.Encode.float"
-render  (Primitive "Date") = return "Json.Encode.date"
+render  (Primitive "Date") = return "(Json.Encode.string << Exts.Date.toISOString)"
 render  (Primitive "Bool") = return "Json.Encode.bool"
 render  (Field t) = render t
 
