@@ -57,7 +57,7 @@ toElmTypeSpec =
          (defaultOptions {fieldLabelModifier = withPrefix "post"})
          (Proxy :: Proxy Post)
          "test/PostTypeWithOptions.elm"
-     it "toElmTypeSource Comment" $
+     it "toElmTypeSourceWithOptions Comment" $
        shouldMatchTypeSource
          (defaultOptions {fieldLabelModifier = withPrefix "comment"})
          (Proxy :: Proxy Comment)
@@ -74,12 +74,12 @@ toElmDecoderSpec =
        shouldMatchDecoderSource defaultOptions
                                 (Proxy :: Proxy Comment)
                                 "test/CommentDecoder.elm"
-     it "toElmDecoderSource Post" $
+     it "toElmDecoderSourceWithOptions Post" $
        shouldMatchDecoderSource
          (defaultOptions {fieldLabelModifier = withPrefix "post"})
          (Proxy :: Proxy Post)
          "test/PostDecoderWithOptions.elm"
-     it "toElmDecoderSource Comment" $
+     it "toElmDecoderSourceWithOptions Comment" $
        shouldMatchDecoderSource
          (defaultOptions {fieldLabelModifier = withPrefix "comment"})
          (Proxy :: Proxy Comment)
@@ -96,12 +96,12 @@ toElmEncoderSpec =
        shouldMatchEncoderSource defaultOptions
                                 (Proxy :: Proxy Comment)
                                 "test/CommentEncoder.elm"
-     it "toElmEncoderSource Post" $
+     it "toElmEncoderSourceWithOptions Post" $
        shouldMatchEncoderSource
          (defaultOptions {fieldLabelModifier = withPrefix "post"})
          (Proxy :: Proxy Post)
          "test/PostEncoderWithOptions.elm"
-     it "toElmEncoderSource Comment" $
+     it "toElmEncoderSourceWithOptions Comment" $
        shouldMatchEncoderSource
          (defaultOptions {fieldLabelModifier = withPrefix "comment"})
          (Proxy :: Proxy Comment)
