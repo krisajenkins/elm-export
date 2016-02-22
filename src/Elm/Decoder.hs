@@ -36,6 +36,14 @@ render (Selector n t) =
   do fieldModifier <- asks fieldLabelModifier
      printf "    |: (\"%s\" := %s)" (fieldModifier n) <$> render t
 
+render (Tuple2 x y) =
+    do bodyX <- render x
+       bodyY <- render y
+       return $ printf "Json.Decode.tuple2 (,) %s %s" bodyX bodyY
+
+render (Dict x y) =
+  printf "Json.Decode.map Dict.fromList (Json.Decode.list (%s))" <$> render (Tuple2 x y)
+
 render (Primitive "String") = return "Json.Decode.string"
 
 render (Primitive "Int") = return "Json.Decode.int"

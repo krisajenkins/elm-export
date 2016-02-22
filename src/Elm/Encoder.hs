@@ -26,6 +26,16 @@ render (Product (Primitive "List") t) =
 render (Product (Primitive "Maybe") t) =
   printf "(Maybe.withDefault Json.Encode.null << Maybe.map %s)" <$> render t
 
+render (Tuple2 x y) =
+  do bodyX <- render x
+     bodyY <- render y
+     return $ printf "Exts.Json.Encode.tuple2 %s %s" bodyX bodyY
+
+render (Dict x y) =
+  do bodyX <- render x
+     bodyY <- render y
+     return $ printf "Exts.Json.Encode.dict %s %s" bodyX bodyY
+
 render (Product x y) =
   do bodyX <- render x
      bodyY <- render y

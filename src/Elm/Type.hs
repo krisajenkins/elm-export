@@ -6,6 +6,7 @@
 {-# LANGUAGE TypeOperators       #-}
 module Elm.Type where
 
+import           Data.Map
 import           Data.Proxy
 import           Data.Text
 import           Data.Time
@@ -22,6 +23,8 @@ data ElmTypeExpr where
         Selector :: String -> ElmTypeExpr -> ElmTypeExpr
         Field :: ElmTypeExpr -> ElmTypeExpr
         Sum :: ElmTypeExpr -> ElmTypeExpr -> ElmTypeExpr
+        Dict :: ElmTypeExpr -> ElmTypeExpr -> ElmTypeExpr
+        Tuple2 :: ElmTypeExpr -> ElmTypeExpr -> ElmTypeExpr
         Product :: ElmTypeExpr -> ElmTypeExpr -> ElmTypeExpr
         Unit :: ElmTypeExpr
         Primitive :: String -> ElmTypeExpr
@@ -59,11 +62,21 @@ instance ElmType Int where
 instance ElmType Integer where
     toElmType _ = Primitive "Int"
 
+instance (ElmType a,ElmType b) => ElmType (a,b) where
+  toElmType _ =
+    Tuple2 (toElmType (Proxy :: Proxy a))
+           (toElmType (Proxy :: Proxy b))
+
 instance ElmType a => ElmType [a] where
-    toElmType _ = Product (Primitive "List") (toElmType (undefined :: a))
+    toElmType _ = Product (Primitive "List") (toElmType (Proxy :: Proxy a))
 
 instance ElmType a => ElmType (Maybe a) where
-  toElmType _ = Product (Primitive "Maybe") (toElmType (undefined :: a))
+  toElmType _ = Product (Primitive "Maybe") (toElmType (Proxy :: Proxy a))
+
+instance (ElmType k,ElmType v) => ElmType (Map k v) where
+  toElmType _ =
+    Dict (toElmType (Proxy :: Proxy k))
+         (toElmType (Proxy :: Proxy v))
 
 instance ElmType a => ElmType (Proxy a) where
   toElmType _ = toElmType (undefined :: a)

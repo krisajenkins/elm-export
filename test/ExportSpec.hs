@@ -4,6 +4,7 @@
 module ExportSpec (spec, Post(..), Comment(..)) where
 
 import           Data.Char
+import           Data.Map
 import           Data.Proxy
 import           Data.Text
 import           Data.Time
@@ -23,10 +24,12 @@ data Post =
   deriving Generic
 
 data Comment =
-  Comment {postId    :: Int
-          ,text      :: Text
-          ,published :: Bool
-          ,created   :: UTCTime}
+  Comment {postId         :: Int
+          ,text           :: Text
+          ,mainCategories :: (String,String)
+          ,published      :: Bool
+          ,created        :: UTCTime
+          ,tags           :: Map String Int}
   deriving ((Generic))
 
 instance ElmType Post

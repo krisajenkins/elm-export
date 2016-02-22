@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Elm
   build-depends:       base >= 4.7 && < 5
+                     , containers
                      , directory
                      , mtl
                      , text
@@ -34,11 +35,12 @@ test-suite elm-export-test
   hs-source-dirs:      test
   main-is:             Spec.hs
   other-modules:       ExportSpec
-  build-depends:       base
+  build-depends:       QuickCheck
+                     , base
+                     , containers
                      , elm-export
                      , hspec
                      , hspec-core
-                     , QuickCheck
                      , quickcheck-instances
                      , text
                      , time

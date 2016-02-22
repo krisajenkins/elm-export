@@ -28,12 +28,27 @@ render (Selector s t) = do fieldModifier <- asks fieldLabelModifier
 
 render (Constructor c t) = printf "%s %s" c <$> render t
 
+render (Tuple2 x y) =
+    do bodyX <- render x
+       bodyY <- render y
+       return $ printf "( %s, %s )" bodyX bodyY
+
+render (Dict x y) =
+    do bodyX <- render x
+       bodyY <- render y
+       return $ printf "Dict %s %s" bodyX bodyY
+
 render (Product (Primitive "List") (Primitive "Char")) = return "String"
 
 render (Product (Primitive "List") p@(Product _ _)) =
   printf "List (%s)" <$> render p
 
 render (Product (Primitive "List") t) = printf "List %s" <$> render t
+
+render (Product (Primitive "Dict") (Product k v)) =
+  do keyBody <- render k
+     valueBody <- render v
+     return $ printf "Dict %s %s" keyBody valueBody
 
 render (Product x y) =
   do bodyX <- render x
