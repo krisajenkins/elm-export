@@ -10,3 +10,8 @@ decodePost =
     |: ("postComments" := Json.Decode.list decodeComment)
     |: ("postPromoted" := Json.Decode.maybe decodeComment)
     |: ("postAuthor" := Json.Decode.maybe Json.Decode.string)
+    |: ("postNothing" := Json.Decode.customDecoder (Json.Decode.list Json.Decode.value)
+          (\jsonList ->
+             case jsonList of
+               [] -> Result.Ok ()
+               _  -> Result.Err "expecting a zero-length array"))

@@ -8,4 +8,5 @@ type alias Post =
   , comments : List Comment
   , promoted : Maybe Comment
   , author : Maybe String
+  , nothing : ()
   }
