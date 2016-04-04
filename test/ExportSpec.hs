@@ -40,6 +40,9 @@ data Position
   | End
   deriving (Generic,ElmType)
 
+data NoContent = NoContent
+  deriving (Generic,ElmType)
+
 spec :: Hspec.Spec
 spec =
   do toElmTypeSpec
@@ -61,6 +64,10 @@ toElmTypeSpec =
        shouldMatchTypeSource defaultOptions
                              (Proxy :: Proxy Position)
                              "test/PositionType.elm"
+     it "toElmTypeSource NoContent" $
+       shouldMatchTypeSource defaultOptions
+                             (Proxy :: Proxy NoContent)
+                             "test/NoContentType.elm"
      it "toElmTypeSourceWithOptions Post" $
        shouldMatchTypeSource
          (defaultOptions {fieldLabelModifier = withPrefix "post"})
