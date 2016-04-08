@@ -26,6 +26,8 @@ render (Field t) = render t
 render (Selector s t) = do fieldModifier <- asks fieldLabelModifier
                            printf "%s : %s" (fieldModifier s) <$> render t
 
+render (Constructor c Unit) = pure c
+
 render (Constructor c t) = printf "%s %s" c <$> render t
 
 render (Tuple2 x y) =
