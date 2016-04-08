@@ -21,7 +21,7 @@ data Post =
        ,comments :: [Comment]
        ,promoted :: Maybe Comment
        ,author   :: Maybe String}
-  deriving Generic
+  deriving (Generic)
 
 data Comment =
   Comment {postId         :: Int
@@ -30,7 +30,7 @@ data Comment =
           ,published      :: Bool
           ,created        :: UTCTime
           ,tags           :: Map String Int}
-  deriving ((Generic))
+  deriving (Generic)
 
 data Position
   = Beginning
