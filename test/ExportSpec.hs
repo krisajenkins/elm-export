@@ -1,7 +1,8 @@
+{-# LANGUAGE DeriveAnyClass    #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module ExportSpec (spec, Post(..), Comment(..)) where
+module ExportSpec where
 
 import           Data.Char
 import           Data.Map
@@ -21,7 +22,7 @@ data Post =
        ,comments :: [Comment]
        ,promoted :: Maybe Comment
        ,author   :: Maybe String}
-  deriving (Generic)
+  deriving (Generic,ElmType)
 
 data Comment =
   Comment {postId         :: Int
@@ -30,17 +31,13 @@ data Comment =
           ,published      :: Bool
           ,created        :: UTCTime
           ,tags           :: Map String Int}
-  deriving (Generic)
+  deriving (Generic,ElmType)
 
 data Position
   = Beginning
   | Middle
   | End
-  deriving (Generic)
-
-instance ElmType Post
-instance ElmType Comment
-instance ElmType Position
+  deriving (Generic,ElmType)
 
 spec :: Hspec.Spec
 spec =
