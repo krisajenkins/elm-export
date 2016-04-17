@@ -1,6 +1,9 @@
-module Elm.Record (toElmTypeSource,toElmTypeSourceWith) where
+module Elm.Record (toElmTypeSource,toElmTypeSourceWith
+                  ,toElmTypeSourceDefs,toElmTypeSourceDefsWith)
+       where
 
 import           Control.Monad.Reader
+import           Data.List   (nub)
 import           Elm.Common
 import           Elm.Type
 import           Text.Printf
@@ -71,3 +74,47 @@ toElmTypeSourceWith options x = runReader (render . TopLevel $ toElmType x) opti
 
 toElmTypeSource :: ElmType a => a -> String
 toElmTypeSource = toElmTypeSourceWith defaultOptions
+
+---------------------------------
+
+renderWithDefs :: ElmTypeExpr -> Reader Options (String, [String])
+
+renderWithDefs t@(DataType d s) =
+  do
+    tDef       <- render (TopLevel t)
+    (_, sDefs) <- renderWithDefs s
+    return (d, tDef : sDefs)
+
+renderWithDefs t@(Product (Primitive "List") (Primitive "Char")) =
+  do
+    tDef <- render (Field t)
+    return (tDef, [])
+
+renderWithDefs (Product x y) =
+  do
+    (xType, xDefs) <- renderWithDefs x
+    (yType, yDefs) <- renderWithDefs y
+    return ( printf (case y of
+                        Primitive _ -> "%s %s"
+                        _           -> "%s (%s)") xType yType
+           , xDefs ++ yDefs )
+
+renderWithDefs t@(Primitive _) =
+  do
+    tDef <- render t
+    return (tDef, [])
+
+renderWithDefs (Record _ t) = renderWithDefs t
+
+renderWithDefs (Selector _ t) = renderWithDefs t
+
+renderWithDefs (Field t) = renderWithDefs t
+
+renderWithDefs t = return (printf "<%s>" (show t), [])
+
+toElmTypeSourceDefsWith :: ElmType a => Options -> a -> (String, [String])
+toElmTypeSourceDefsWith options x =
+  nub <$> runReader (renderWithDefs (toElmType x)) options
+
+toElmTypeSourceDefs :: ElmType a => a -> (String, [String])
+toElmTypeSourceDefs = toElmTypeSourceDefsWith defaultOptions

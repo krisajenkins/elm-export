@@ -1,7 +1,9 @@
-module Elm.Encoder (toElmEncoderSource, toElmEncoderSourceWith)
+module Elm.Encoder (toElmEncoderSource, toElmEncoderSourceWith
+                   ,toElmEncoderSourceDefs, toElmEncoderSourceDefsWith)
        where
 
 import           Control.Monad.Reader
+import           Data.List   (nub)
 import           Elm.Common
 import           Elm.Type
 import           Text.Printf
@@ -59,3 +61,61 @@ toElmEncoderSourceWith options x = runReader (render . TopLevel $ toElmType x) o
 
 toElmEncoderSource :: ElmType a => a -> String
 toElmEncoderSource = toElmEncoderSourceWith defaultOptions
+
+---------------------------------
+
+renderWithDefs :: ElmTypeExpr -> Reader Options (String, [String])
+
+renderWithDefs t@(DataType _ s) =
+  do
+    tEncoder   <- render t
+    tDef       <- render (TopLevel t)
+    (_, sDefs) <- renderWithDefs s
+    return ( tEncoder
+           , tDef : sDefs)
+
+renderWithDefs (Product (Primitive "Maybe") t) =
+  do
+    (tEncoder, tDefs) <- renderWithDefs t
+    return ( printf "(\\y -> case y of Nothing -> JS.null; Just val -> %s val)" (parenthesize t tEncoder)
+           , tDefs)
+
+renderWithDefs t@(Product (Primitive "List") (Primitive "Char")) =
+  do
+    tEncoder <- render (Field t)
+    return (tEncoder, [])
+
+renderWithDefs (Product (Primitive "List") t) =
+  do
+    (tEncoder, tDefs) <- renderWithDefs t
+    return ( printf "(JS.list << List.map %s)" (parenthesize t tEncoder)
+           , tDefs)
+
+renderWithDefs (Product x y) =
+  do
+    (_, xDefs) <- renderWithDefs x
+    (_, yDefs) <- renderWithDefs y
+    return ( undefined -- this case is used only for generating definitions (called from DataType match above)
+           , xDefs ++ yDefs )
+
+renderWithDefs Unit = return ("JS.null", [])
+
+renderWithDefs t@(Primitive _) =
+  do
+    tEncoder <- render t
+    return (tEncoder, [])
+
+renderWithDefs (Record _ t) = renderWithDefs t
+
+renderWithDefs (Selector _ t) = renderWithDefs t
+
+renderWithDefs (Field t) = renderWithDefs t
+
+renderWithDefs x = return (printf "<%s>" (show x), [])
+
+toElmEncoderSourceDefsWith :: ElmType a => Options -> a -> (String, [String])
+toElmEncoderSourceDefsWith options x =
+  nub <$> runReader (renderWithDefs (toElmType x)) options
+
+toElmEncoderSourceDefs :: ElmType a => a -> (String, [String])
+toElmEncoderSourceDefs = toElmEncoderSourceDefsWith defaultOptions
