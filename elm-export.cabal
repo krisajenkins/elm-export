@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Elm
   build-depends:       base >= 4.7 && < 5
+                     , bytestring
                      , containers
                      , directory
                      , mtl
@@ -37,6 +38,7 @@ test-suite elm-export-test
   other-modules:       ExportSpec
   build-depends:       QuickCheck
                      , base
+                     , bytestring
                      , containers
                      , elm-export
                      , hspec
