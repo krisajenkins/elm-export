@@ -1,6 +1,6 @@
 name:                elm-export
 version:             0.3.0.0
-synopsis:            A library to generate Elm types, Decoders and Encoders from Haskell source, using Generics.
+synopsis:            A library to generate Elm types from Haskell source.
 description:         Please see README.md
 homepage:            http://github.com/krisajenkins/elm-export
 license:             OtherLicense
