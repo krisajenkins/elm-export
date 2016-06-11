@@ -14,8 +14,15 @@ parenthesize :: ElmTypeExpr -> String -> String
 parenthesize t s =
   if isTopLevel t then s else "(" ++ s ++ ")"
 
+data ElmVersion
+  = V_0_16
+  | V_0_17
+  deriving (Show, Eq, Ord)
+
 data Options =
-  Options {fieldLabelModifier :: String -> String}
+  Options {elmVersion :: ElmVersion
+          ,fieldLabelModifier :: String -> String}
 
 defaultOptions :: Options
-defaultOptions = Options {fieldLabelModifier = id}
+defaultOptions = Options {elmVersion = V_0_16
+                         ,fieldLabelModifier = id}
