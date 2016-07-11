@@ -8,10 +8,10 @@ import           Text.Printf
 render :: ElmTypeExpr -> Reader Options String
 
 render (TopLevel (DataType dataTypeName record@(Record _ _))) =
-  printf "type alias %s =\n  { %s\n  }" dataTypeName <$> render record
+  printf "type alias %s =\n    { %s\n    }" dataTypeName <$> render record
 
 render (TopLevel (DataType d s@(Sum _ _))) =
-  printf "type %s\n  = %s" d <$> render s
+  printf "type %s\n    = %s" d <$> render s
 
 render (DataType d _) = return d
 render (Primitive s) = return s
@@ -19,7 +19,7 @@ render (Primitive s) = return s
 render (Sum x y) =
     do bodyX <- render x
        bodyY <- render y
-       return $ printf "%s\n  | %s" bodyX bodyY
+       return $ printf "%s\n    | %s" bodyX bodyY
 
 render (Field t) = render t
 
@@ -60,7 +60,7 @@ render (Product x y) =
 render (Record n (Product x y)) =
   do bodyX <- render (Record n x)
      bodyY <- render (Record n y)
-     return $ printf "%s\n  , %s" bodyX bodyY
+     return $ printf "%s\n    , %s" bodyX bodyY
 
 render (Record _ s@(Selector _ _)) = render s
 

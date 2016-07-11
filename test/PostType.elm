@@ -1,11 +1,11 @@
-module Main (..) where
+module Main exposing (..)
 
 
 type alias Post =
-  { id : Int
-  , name : String
-  , age : Maybe Float
-  , comments : List Comment
-  , promoted : Maybe Comment
-  , author : Maybe String
-  }
+    { id : Int
+    , name : String
+    , age : Maybe Float
+    , comments : List Comment
+    , promoted : Maybe Comment
+    , author : Maybe String
+    }

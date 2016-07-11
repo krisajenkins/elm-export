@@ -15,7 +15,7 @@ render (TopLevel (DataType d t)) =
 render (DataType d _) = return $ "encode" ++ d
 
 render (Record _ t) =
-  printf "\n  Json.Encode.object\n    [ %s\n    ]" <$> render t
+  printf "\n    Json.Encode.object\n        [ %s\n        ]" <$> render t
 
 render (Product (Primitive "List") (Primitive "Char")) =
   render (Primitive "String")
@@ -39,7 +39,7 @@ render (Dict x y) =
 render (Product x y) =
   do bodyX <- render x
      bodyY <- render y
-     return $ printf "%s\n    , %s" bodyX bodyY
+     return $ printf "%s\n        , %s" bodyX bodyY
 
 render (Selector n t) =
   do fieldModifier <- asks fieldLabelModifier

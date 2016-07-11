@@ -19,7 +19,7 @@ render (TopLevel (DataType d t)) =
 
 render (DataType d _) = return $ "decode" ++ d
 
-render (Record n t) = printf "  Json.Decode.succeed %s\n%s" n <$> render t
+render (Record n t) = printf "    Json.Decode.succeed %s\n%s" n <$> render t
 
 render (Product (Primitive "List") (Primitive "Char")) = render (Primitive "String")
 
@@ -34,7 +34,7 @@ render (Product x y) =
 
 render (Selector n t) =
   do fieldModifier <- asks fieldLabelModifier
-     printf "    |: (\"%s\" := %s)" (fieldModifier n) <$> render t
+     printf "        |: (\"%s\" := %s)" (fieldModifier n) <$> render t
 
 render (Tuple2 x y) =
     do bodyX <- render x

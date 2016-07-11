@@ -1,7 +1,7 @@
-module Main (..) where
+module Main exposing (..)
 
 
 type Position
-  = Beginning
-  | Middle
-  | End
+    = Beginning
+    | Middle
+    | End
