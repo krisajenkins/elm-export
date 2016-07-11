@@ -1,12 +1,17 @@
-module Main exposing (..)
+module PostDecoder exposing (..)
+
+import CommentDecoder exposing (..)
+import Json.Decode exposing (..)
+import Json.Decode.Pipeline exposing (..)
+import PostType exposing (..)
 
 
-decodePost : Json.Decode.Decoder Post
+decodePost : Decoder Post
 decodePost =
-    Json.Decode.succeed Post
-        |: ("id" := Json.Decode.int)
-        |: ("name" := Json.Decode.string)
-        |: ("age" := Json.Decode.maybe Json.Decode.float)
-        |: ("comments" := Json.Decode.list decodeComment)
-        |: ("promoted" := Json.Decode.maybe decodeComment)
-        |: ("author" := Json.Decode.maybe Json.Decode.string)
+    decode Post
+        |> required "id" int
+        |> required "name" string
+        |> required "age" (maybe float)
+        |> required "comments" (list decodeComment)
+        |> required "promoted" (maybe decodeComment)
+        |> required "author" (maybe string)

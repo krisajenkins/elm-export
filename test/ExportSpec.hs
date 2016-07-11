@@ -104,21 +104,61 @@ toElmTypeSpec =
 toElmDecoderSpec :: Hspec.Spec
 toElmDecoderSpec =
   describe "Convert to Elm decoders." $
-  do it "toElmDecoderSource Post" $
-       shouldMatchDecoderSource defaultOptions
-                                (Proxy :: Proxy Post)
-                                "test/PostDecoder.elm"
-     it "toElmDecoderSource Comment" $
-       shouldMatchDecoderSource defaultOptions
-                                (Proxy :: Proxy Comment)
-                                "test/CommentDecoder.elm"
+  do it "toElmDecoderSource Comment" $
+       shouldMatchDecoderSource
+         (unlines ["module CommentDecoder exposing (..)"
+                  ,""
+                  ,"import CommentType exposing (..)"
+                  ,"import Date"
+                  ,"import Dict"
+                  ,"import Json.Decode exposing (..)"
+                  ,"import Json.Decode.Pipeline exposing (..)"
+                  ,""
+                  ,""
+                  ,"%s"])
+         defaultOptions
+         (Proxy :: Proxy Comment)
+         "test/CommentDecoder.elm"
+     it "toElmDecoderSource Post" $
+       shouldMatchDecoderSource
+         (unlines ["module PostDecoder exposing (..)"
+                  ,""
+                  ,"import CommentDecoder exposing (..)"
+                  ,"import Json.Decode exposing (..)"
+                  ,"import Json.Decode.Pipeline exposing (..)"
+                  ,"import PostType exposing (..)"
+                  ,""
+                  ,""
+                  ,"%s"])
+         defaultOptions
+         (Proxy :: Proxy Post)
+         "test/PostDecoder.elm"
      it "toElmDecoderSourceWithOptions Post" $
        shouldMatchDecoderSource
+         (unlines ["module PostDecoderWithOptions exposing (..)"
+                  ,""
+                  ,"import CommentDecoder exposing (..)"
+                  ,"import Json.Decode exposing (..)"
+                  ,"import Json.Decode.Pipeline exposing (..)"
+                  ,"import PostType exposing (..)"
+                  ,""
+                  ,""
+                  ,"%s"])
          (defaultOptions {fieldLabelModifier = withPrefix "post"})
          (Proxy :: Proxy Post)
          "test/PostDecoderWithOptions.elm"
      it "toElmDecoderSourceWithOptions Comment" $
        shouldMatchDecoderSource
+         (unlines ["module CommentDecoderWithOptions exposing (..)"
+                  ,""
+                  ,"import CommentType exposing (..)"
+                  ,"import Date"
+                  ,"import Dict"
+                  ,"import Json.Decode exposing (..)"
+                  ,"import Json.Decode.Pipeline exposing (..)"
+                  ,""
+                  ,""
+                  ,"%s"])
          (defaultOptions {fieldLabelModifier = withPrefix "comment"})
          (Proxy :: Proxy Comment)
          "test/CommentDecoderWithOptions.elm"
@@ -126,24 +166,60 @@ toElmDecoderSpec =
 toElmEncoderSpec :: Hspec.Spec
 toElmEncoderSpec =
   describe "Convert to Elm encoders." $
-  do it "toElmEncoderSource Post" $
-       shouldMatchEncoderSource defaultOptions
-                                (Proxy :: Proxy Post)
-                                "test/PostEncoder.elm"
-     it "toElmEncoderSource Comment" $
-       shouldMatchEncoderSource defaultOptions
-                                (Proxy :: Proxy Comment)
-                                "test/CommentEncoder.elm"
-     it "toElmEncoderSourceWithOptions Post" $
+  do it "toElmEncoderSource Comment" $
        shouldMatchEncoderSource
-         (defaultOptions {fieldLabelModifier = withPrefix "post"})
+         (unlines ["module CommentEncoder exposing (..)"
+                  ,""
+                  ,"import CommentType exposing (..)"
+                  ,"import Exts.Date exposing (..)"
+                  ,"import Exts.Json.Encode exposing (..)"
+                  ,"import Json.Encode exposing (..)"
+                  ,""
+                  ,""
+                  ,"%s"])
+         defaultOptions
+         (Proxy :: Proxy Comment)
+         "test/CommentEncoder.elm"
+     it "toElmEncoderSource Post" $
+       shouldMatchEncoderSource
+         (unlines ["module PostEncoder exposing (..)"
+                  ,""
+                  ,"import CommentEncoder exposing (..)"
+                  ,"import Json.Encode exposing (..)"
+                  ,"import PostType exposing (..)"
+                  ,""
+                  ,""
+                  ,"%s"])
+         defaultOptions
          (Proxy :: Proxy Post)
-         "test/PostEncoderWithOptions.elm"
+         "test/PostEncoder.elm"
      it "toElmEncoderSourceWithOptions Comment" $
        shouldMatchEncoderSource
+         (unlines ["module CommentEncoderWithOptions exposing (..)"
+                  ,""
+                  ,"import CommentType exposing (..)"
+                  ,"import Exts.Date exposing (..)"
+                  ,"import Exts.Json.Encode exposing (..)"
+                  ,"import Json.Encode exposing (..)"
+                  ,""
+                  ,""
+                  ,"%s"])
          (defaultOptions {fieldLabelModifier = withPrefix "comment"})
          (Proxy :: Proxy Comment)
          "test/CommentEncoderWithOptions.elm"
+     it "toElmEncoderSourceWithOptions Post" $
+       shouldMatchEncoderSource
+         (unlines ["module PostEncoderWithOptions exposing (..)"
+                  ,""
+                  ,"import CommentEncoder exposing (..)"
+                  ,"import Json.Encode exposing (..)"
+                  ,"import PostType exposing (..)"
+                  ,""
+                  ,""
+                  ,"%s"])
+         (defaultOptions {fieldLabelModifier = withPrefix "post"})
+         (Proxy :: Proxy Post)
+         "test/PostEncoderWithOptions.elm"
 
 shouldMatchTypeSource
   :: ElmType a
@@ -153,18 +229,15 @@ shouldMatchTypeSource wrapping options x =
 
 shouldMatchDecoderSource
   :: ElmType a
-  => Options -> a -> FilePath -> IO ()
-shouldMatchDecoderSource options x =
-  shouldMatchFile . printf outputWrapping $ toElmDecoderSourceWith options x
+  => String -> Options -> a -> FilePath -> IO ()
+shouldMatchDecoderSource wrapping options x =
+  shouldMatchFile . printf wrapping $ toElmDecoderSourceWith options x
 
 shouldMatchEncoderSource
   :: ElmType a
-  => Options -> a -> FilePath -> IO ()
-shouldMatchEncoderSource options x =
-  shouldMatchFile . printf outputWrapping $ toElmEncoderSourceWith options x
-
-outputWrapping :: String
-outputWrapping = "module Main exposing (..)\n\n\n%s\n"
+  => String -> Options -> a -> FilePath -> IO ()
+shouldMatchEncoderSource wrapping options x =
+  shouldMatchFile . printf wrapping $ toElmEncoderSourceWith options x
 
 shouldMatchFile :: String -> FilePath -> IO ()
 shouldMatchFile actual fileExpected =

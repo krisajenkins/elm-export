@@ -1,13 +1,18 @@
-module Main exposing (..)
+module CommentEncoder exposing (..)
+
+import CommentType exposing (..)
+import Exts.Date exposing (..)
+import Exts.Json.Encode exposing (..)
+import Json.Encode exposing (..)
 
 
-encodeComment : Comment -> Json.Encode.Value
+encodeComment : Comment -> Value
 encodeComment x =
-    Json.Encode.object
-        [ ( "postId", Json.Encode.int x.postId )
-        , ( "text", Json.Encode.string x.text )
-        , ( "mainCategories", Exts.Json.Encode.tuple2 Json.Encode.string Json.Encode.string x.mainCategories )
-        , ( "published", Json.Encode.bool x.published )
-        , ( "created", (Json.Encode.string << Exts.Date.toISOString) x.created )
-        , ( "tags", Exts.Json.Encode.dict Json.Encode.string Json.Encode.int x.tags )
+    object
+        [ ( "postId", int x.postId )
+        , ( "text", string x.text )
+        , ( "mainCategories", tuple2 string string x.mainCategories )
+        , ( "published", bool x.published )
+        , ( "created", (string << toISOString) x.created )
+        , ( "tags", dict string int x.tags )
         ]

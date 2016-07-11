@@ -1,12 +1,18 @@
-module Main exposing (..)
+module CommentDecoderWithOptions exposing (..)
+
+import CommentType exposing (..)
+import Date
+import Dict
+import Json.Decode exposing (..)
+import Json.Decode.Pipeline exposing (..)
 
 
-decodeComment : Json.Decode.Decoder Comment
+decodeComment : Decoder Comment
 decodeComment =
-    Json.Decode.succeed Comment
-        |: ("commentPostId" := Json.Decode.int)
-        |: ("commentText" := Json.Decode.string)
-        |: ("commentMainCategories" := Json.Decode.tuple2 (,) Json.Decode.string Json.Decode.string)
-        |: ("commentPublished" := Json.Decode.bool)
-        |: ("commentCreated" := Json.Decode.Extra.date)
-        |: ("commentTags" := Json.Decode.map Dict.fromList (Json.Decode.list (Json.Decode.tuple2 (,) Json.Decode.string Json.Decode.int)))
+    decode Comment
+        |> required "commentPostId" int
+        |> required "commentText" string
+        |> required "commentMainCategories" (tuple2 (,) string string)
+        |> required "commentPublished" bool
+        |> required "commentCreated" (customDecoder string Date.fromString)
+        |> required "commentTags" (map Dict.fromList (list (tuple2 (,) string int)))
