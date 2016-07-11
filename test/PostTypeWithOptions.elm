@@ -1,4 +1,6 @@
-module Main exposing (..)
+module PostTypeWithOptions exposing (..)
+
+import CommentType exposing (..)
 
 
 type alias Post =

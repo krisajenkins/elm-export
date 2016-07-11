@@ -7,7 +7,7 @@ module ExportSpec where
 import           Data.Char
 import           Data.Map
 import           Data.Proxy
-import           Data.Text
+import           Data.Text    hiding (unlines)
 import           Data.Time
 import           Elm
 import           GHC.Generics
@@ -49,24 +49,54 @@ toElmTypeSpec :: Hspec.Spec
 toElmTypeSpec =
   describe "Convert to Elm types." $
   do it "toElmTypeSource Post" $
-       shouldMatchTypeSource defaultOptions
-                             (Proxy :: Proxy Post)
-                             "test/PostType.elm"
+       shouldMatchTypeSource
+         (unlines ["module PostType exposing (..)"
+                  ,""
+                  ,"import CommentType exposing (..)"
+                  ,""
+                  ,""
+                  ,"%s"])
+         defaultOptions
+         (Proxy :: Proxy Post)
+         "test/PostType.elm"
      it "toElmTypeSource Comment" $
-       shouldMatchTypeSource defaultOptions
-                             (Proxy :: Proxy Comment)
-                             "test/CommentType.elm"
+       shouldMatchTypeSource
+         (unlines ["module CommentType exposing (..)"
+                  ,""
+                  ,"import Date exposing (Date)"
+                  ,"import Dict exposing (Dict)"
+                  ,""
+                  ,""
+                  ,"%s"])
+         defaultOptions
+         (Proxy :: Proxy Comment)
+         "test/CommentType.elm"
      it "toElmTypeSource Position" $
-       shouldMatchTypeSource defaultOptions
-                             (Proxy :: Proxy Position)
-                             "test/PositionType.elm"
+       shouldMatchTypeSource
+         (unlines ["module PositionType exposing (..)","","","%s"])
+         defaultOptions
+         (Proxy :: Proxy Position)
+         "test/PositionType.elm"
      it "toElmTypeSourceWithOptions Post" $
        shouldMatchTypeSource
+         (unlines ["module PostTypeWithOptions exposing (..)"
+                  ,""
+                  ,"import CommentType exposing (..)"
+                  ,""
+                  ,""
+                  ,"%s"])
          (defaultOptions {fieldLabelModifier = withPrefix "post"})
          (Proxy :: Proxy Post)
          "test/PostTypeWithOptions.elm"
      it "toElmTypeSourceWithOptions Comment" $
        shouldMatchTypeSource
+         (unlines ["module CommentTypeWithOptions exposing (..)"
+                  ,""
+                  ,"import Date exposing (Date)"
+                  ,"import Dict exposing (Dict)"
+                  ,""
+                  ,""
+                  ,"%s"])
          (defaultOptions {fieldLabelModifier = withPrefix "comment"})
          (Proxy :: Proxy Comment)
          "test/CommentTypeWithOptions.elm"
@@ -117,9 +147,9 @@ toElmEncoderSpec =
 
 shouldMatchTypeSource
   :: ElmType a
-  => Options -> a -> FilePath -> IO ()
-shouldMatchTypeSource options x =
-  shouldMatchFile . printf outputWrapping $ toElmTypeSourceWith options x
+  => String -> Options -> a -> FilePath -> IO ()
+shouldMatchTypeSource wrapping options x =
+  shouldMatchFile . printf wrapping $ toElmTypeSourceWith options x
 
 shouldMatchDecoderSource
   :: ElmType a
