@@ -52,6 +52,7 @@ render  (Primitive "Double") = return "Json.Encode.float"
 render  (Primitive "Float") = return "Json.Encode.float"
 render  (Primitive "Date") = return "(Json.Encode.string << Exts.Date.toISOString)"
 render  (Primitive "Bool") = return "Json.Encode.bool"
+render  (Primitive "()") = return "(\\_ -> Json.Encode.list [])"
 render  (Field t) = render t
 
 toElmEncoderSourceWith :: ElmType a => Options -> a -> String

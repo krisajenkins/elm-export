@@ -13,6 +13,9 @@ render (TopLevel (DataType dataTypeName record@(Record _ _))) =
 render (TopLevel (DataType d s@(Sum _ _))) =
   printf "type %s\n  = %s" d <$> render s
 
+render (TopLevel (DataType d c@(Constructor _ _))) =
+  printf "type %s\n  = %s" d <$> render c
+
 render (DataType d _) = return d
 render (Primitive s) = return s
 

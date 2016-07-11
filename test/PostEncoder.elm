@@ -10,4 +10,5 @@ encodePost x =
     , ( "comments", (Json.Encode.list << List.map encodeComment) x.comments )
     , ( "promoted", (Maybe.withDefault Json.Encode.null << Maybe.map encodeComment) x.promoted )
     , ( "author", (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string) x.author )
+    , ( "nothing", (\_ -> Json.Encode.list []) x.nothing )
     ]

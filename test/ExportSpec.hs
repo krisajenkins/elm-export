@@ -21,7 +21,8 @@ data Post =
        ,age      :: Maybe Double
        ,comments :: [Comment]
        ,promoted :: Maybe Comment
-       ,author   :: Maybe String}
+       ,author   :: Maybe String
+       ,nothing  :: ()}
   deriving (Generic,ElmType)
 
 data Comment =
@@ -37,6 +38,9 @@ data Position
   = Beginning
   | Middle
   | End
+  deriving (Generic,ElmType)
+
+data NoContent = NoContent
   deriving (Generic,ElmType)
 
 spec :: Hspec.Spec
@@ -60,6 +64,10 @@ toElmTypeSpec =
        shouldMatchTypeSource defaultOptions
                              (Proxy :: Proxy Position)
                              "test/PositionType.elm"
+     it "toElmTypeSource NoContent" $
+       shouldMatchTypeSource defaultOptions
+                             (Proxy :: Proxy NoContent)
+                             "test/NoContentType.elm"
      it "toElmTypeSourceWithOptions Post" $
        shouldMatchTypeSource
          (defaultOptions {fieldLabelModifier = withPrefix "post"})

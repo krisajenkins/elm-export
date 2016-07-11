@@ -7,6 +7,7 @@ module Elm.Decoder (toElmDecoderSource, toElmDecoderSourceWith)
        where
 
 import           Control.Monad.Reader
+import           Data.List            (intercalate)
 import           Elm.Common
 import           Elm.Type
 import           Text.Printf
@@ -55,6 +56,15 @@ render (Primitive "Float") = return "Json.Decode.float"
 render (Primitive "Date") = return "Json.Decode.Extra.date"
 
 render (Primitive "Bool") = return "Json.Decode.bool"
+
+render (Primitive "()") =
+  return $ intercalate "\n"
+    ["Json.Decode.customDecoder (Json.Decode.list Json.Decode.value)"
+    ,"          (\\jsonList ->"
+    ,"             case jsonList of"
+    ,"               [] -> Result.Ok ()"
+    ,"               _  -> Result.Err \"expecting a zero-length array\")"
+    ]
 
 render (Field t) = render t
 
