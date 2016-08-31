@@ -85,33 +85,39 @@ instance ElmType a =>
          ElmType (Proxy a) where
     toElmType _ = toElmType (undefined :: a)
 
+------------------------------------------------------------
+
 class GenericElmType f  where
     genericToElmType :: f a -> ElmTypeExpr
 
-instance (GenericElmType f, Datatype d) =>
+instance (Datatype d, GenericElmType f) =>
          GenericElmType (D1 d f) where
-    genericToElmType d@(M1 x) = DataType (datatypeName d) (genericToElmType x)
+    genericToElmType datatype =
+        DataType (datatypeName datatype) (genericToElmType (unM1 datatype))
+
 
 instance (Constructor c, GenericElmType f) =>
          GenericElmType (C1 c f) where
-    genericToElmType c@(M1 x) =
-        if conIsRecord c
+    genericToElmType constructor =
+        if conIsRecord constructor
             then Record name body
             else Constructor name body
       where
-        name = conName c
-        body = genericToElmType x
+        name = conName constructor
+        body = genericToElmType (unM1 constructor)
 
 instance (Selector c, GenericElmType f) =>
          GenericElmType (S1 c f) where
-    genericToElmType s@(M1 x) = Selector (selName s) (genericToElmType x)
+    genericToElmType selector =
+        Selector (selName selector) (genericToElmType (unM1 selector))
 
 instance GenericElmType U1 where
     genericToElmType _ = Unit
 
 instance (ElmType c) =>
-         GenericElmType (K1 R c) where
-    genericToElmType (K1 x) = Field (toElmType x)
+         GenericElmType (Rec0 c) where
+    genericToElmType parameter = Field (toElmType (unK1 parameter))
+
 
 instance (GenericElmType f, GenericElmType g) =>
          GenericElmType (f :+: g) where
