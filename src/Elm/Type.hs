@@ -1,5 +1,6 @@
 {-# LANGUAGE DefaultSignatures   #-}
 {-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE FlexibleInstances   #-}
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -18,17 +19,17 @@ import           Prelude
 -- there are fewer (or hopefully zero) representable illegal states.
 data ElmTypeExpr where
         TopLevel :: ElmTypeExpr -> ElmTypeExpr
-        DataType :: String -> ElmTypeExpr -> ElmTypeExpr
-        Record :: String -> ElmTypeExpr -> ElmTypeExpr
-        Constructor :: String -> ElmTypeExpr -> ElmTypeExpr
-        Selector :: String -> ElmTypeExpr -> ElmTypeExpr
+        DataType :: Text -> ElmTypeExpr -> ElmTypeExpr
+        Record :: Text -> ElmTypeExpr -> ElmTypeExpr
+        Constructor :: Text -> ElmTypeExpr -> ElmTypeExpr
+        Selector :: Text -> ElmTypeExpr -> ElmTypeExpr
         Field :: ElmTypeExpr -> ElmTypeExpr
         Sum :: ElmTypeExpr -> ElmTypeExpr -> ElmTypeExpr
         Dict :: ElmTypeExpr -> ElmTypeExpr -> ElmTypeExpr
         Tuple2 :: ElmTypeExpr -> ElmTypeExpr -> ElmTypeExpr
         Product :: ElmTypeExpr -> ElmTypeExpr -> ElmTypeExpr
         Unit :: ElmTypeExpr
-        Primitive :: String -> ElmTypeExpr
+        Primitive :: Text -> ElmTypeExpr
     deriving (Eq, Show)
 
 class ElmType a  where
@@ -93,8 +94,9 @@ class GenericElmType f  where
 instance (Datatype d, GenericElmType f) =>
          GenericElmType (D1 d f) where
     genericToElmType datatype =
-        DataType (datatypeName datatype) (genericToElmType (unM1 datatype))
-
+        DataType
+            (pack (datatypeName datatype))
+            (genericToElmType (unM1 datatype))
 
 instance (Constructor c, GenericElmType f) =>
          GenericElmType (C1 c f) where
@@ -103,13 +105,13 @@ instance (Constructor c, GenericElmType f) =>
             then Record name body
             else Constructor name body
       where
-        name = conName constructor
+        name = pack $ conName constructor
         body = genericToElmType (unM1 constructor)
 
 instance (Selector c, GenericElmType f) =>
          GenericElmType (S1 c f) where
     genericToElmType selector =
-        Selector (selName selector) (genericToElmType (unM1 selector))
+        Selector (pack (selName selector)) (genericToElmType (unM1 selector))
 
 instance GenericElmType U1 where
     genericToElmType _ = Unit

@@ -1,5 +1,8 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Elm.Common  where
 
+import           Data.Monoid ((<>))
+import           Data.Text
 import           Elm.Type
 
 isTopLevel :: ElmTypeExpr -> Bool
@@ -10,12 +13,12 @@ isTopLevel _ = False
 
 -- Put parentheses around the string if the Elm type requires it (i.e. it's not a
 -- Primitive Elm type nor a named DataType).
-parenthesize :: ElmTypeExpr -> String -> String
+parenthesize :: ElmTypeExpr -> Text -> Text
 parenthesize t s =
-  if isTopLevel t then s else "(" ++ s ++ ")"
+  if isTopLevel t then s else ("(" <> s <> ")")
 
 data Options =
-  Options {fieldLabelModifier :: String -> String}
+  Options {fieldLabelModifier :: Text -> Text}
 
 defaultOptions :: Options
 defaultOptions = Options {fieldLabelModifier = id}

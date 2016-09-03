@@ -1,73 +1,73 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Elm.Record (toElmTypeSource,toElmTypeSourceWith) where
 
 import           Control.Monad.Reader
 import           Elm.Common
 import           Elm.Type
-import           Text.Printf
+import           Formatting
+import Data.Text
 
-render :: ElmTypeExpr -> Reader Options String
+render :: ElmTypeExpr -> Reader Options Text
 
 render (TopLevel (DataType dataTypeName record@(Record _ _))) =
-  printf "type alias %s =\n    { %s\n    }" dataTypeName <$> render record
+    sformat ("type alias " % stext % " =\n    { " % stext % "\n    }") dataTypeName <$>
+    render record
 
 render (TopLevel (DataType d s@(Sum _ _))) =
-  printf "type %s\n    = %s" d <$> render s
+    sformat ("type " % stext % "\n    = " % stext) d <$> render s
+
 
 render (DataType d _) = return d
 render (Primitive s) = return s
 
 render (Sum x y) =
-    do bodyX <- render x
-       bodyY <- render y
-       return $ printf "%s\n    | %s" bodyX bodyY
+    sformat (stext % "\n    | " % stext) <$> render x <*> render y
+
 
 render (Field t) = render t
 
-render (Selector s t) = do fieldModifier <- asks fieldLabelModifier
-                           printf "%s : %s" (fieldModifier s) <$> render t
+render (Selector s t) = do
+    fieldModifier <- asks fieldLabelModifier
+    sformat (stext % " : " % stext) (fieldModifier s) <$> render t
 
 render (Constructor c Unit) = pure c
 
-render (Constructor c t) = printf "%s %s" c <$> render t
+render (Constructor c t) = sformat (stext % " " % stext) c <$> render t
 
 render (Tuple2 x y) =
-    do bodyX <- render x
-       bodyY <- render y
-       return $ printf "( %s, %s )" bodyX bodyY
+    sformat ("( " % stext % ", " % stext % " )") <$> render x <*> render y
 
 render (Dict x y) =
-    do bodyX <- render x
-       bodyY <- render y
-       return $ printf "Dict %s %s" bodyX bodyY
+    sformat ("Dict " % stext % " " % stext) <$> render x <*> render y
+
 
 render (Product (Primitive "List") (Primitive "Char")) = return "String"
 
 render (Product (Primitive "List") p@(Product _ _)) =
-  printf "List (%s)" <$> render p
+  sformat ("List (" % stext % ")") <$> render p
 
-render (Product (Primitive "List") t) = printf "List %s" <$> render t
+render (Product (Primitive "List") t) = sformat ("List " % stext) <$> render t
 
 render (Product (Primitive "Dict") (Product k v)) =
-  do keyBody <- render k
-     valueBody <- render v
-     return $ printf "Dict %s %s" keyBody valueBody
+    sformat ("Dict " % stext % " " % stext) <$> render k <*> render v
+
 
 render (Product x y) =
   do bodyX <- render x
      bodyY <- render y
-     return $ printf ("%s " ++ parenthesize y "%s") bodyX bodyY
+     return $ sformat (stext % " " % stext) bodyX (parenthesize y  bodyY)
 
 render (Record n (Product x y)) =
   do bodyX <- render (Record n x)
      bodyY <- render (Record n y)
-     return $ printf "%s\n    , %s" bodyX bodyY
+     return $ sformat (stext % "\n    , " % stext) bodyX bodyY
 
 render (Record _ s@(Selector _ _)) = render s
 
 render Unit = return ""
 
-toElmTypeSourceWith :: ElmType a => Options -> a -> String
+toElmTypeSourceWith :: ElmType a => Options -> a -> Text
 toElmTypeSourceWith options x = runReader (render . TopLevel $ toElmType x) options
 
-toElmTypeSource :: ElmType a => a -> String
+toElmTypeSource :: ElmType a => a -> Text
 toElmTypeSource = toElmTypeSourceWith defaultOptions

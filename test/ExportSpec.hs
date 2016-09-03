@@ -6,6 +6,7 @@ module ExportSpec where
 
 import           Data.Char
 import           Data.Map
+import           Data.Monoid
 import           Data.Proxy
 import           Data.Text    hiding (unlines)
 import           Data.Time
@@ -244,9 +245,11 @@ shouldMatchFile actual fileExpected =
   do source <- readFile fileExpected
      actual `shouldBe` source
 
-initCap :: String -> String
-initCap [] = []
-initCap (c:cs) = Data.Char.toUpper c : cs
+initCap :: Text -> Text
+initCap t =
+    case uncons t of
+        Nothing -> t
+        Just (c, cs) -> cons (Data.Char.toUpper c) cs
 
-withPrefix :: String -> String -> String
-withPrefix prefix s = prefix ++ initCap s
+withPrefix :: Text -> Text -> Text
+withPrefix prefix s = prefix <> ( initCap  s)
