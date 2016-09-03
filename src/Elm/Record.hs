@@ -7,67 +7,49 @@ import           Elm.Type
 import           Formatting
 import Data.Text
 
-render :: ElmTypeExpr -> Reader Options Text
+class HasType a where
+  render :: a -> Reader Options Text
 
-render (TopLevel (DataType dataTypeName record@(Record _ _))) =
-    sformat ("type alias " % stext % " =\n    { " % stext % "\n    }") dataTypeName <$>
-    render record
+instance HasType ElmDatatype where
+    render (ElmDatatype typeName (RecordConstructor _ value)) =
+        sformat ("type alias " % stext % " =\n    { " % stext % "\n    }") typeName <$>
+        render value
+    render (ElmDatatype typeName (NamedConstructor constructorName value)) =
+        sformat ("type " % stext % "\n    = " % stext % " " % stext) typeName constructorName <$>
+        render value
+    render (ElmPrimitive primitive) = render primitive
 
-render (TopLevel (DataType d s@(Sum _ _))) =
-    sformat ("type " % stext % "\n    = " % stext) d <$> render s
-
-
-render (DataType d _) = return d
-render (Primitive s) = return s
-
-render (Sum x y) =
-    sformat (stext % "\n    | " % stext) <$> render x <*> render y
-
-
-render (Field t) = render t
-
-render (Selector s t) = do
-    fieldModifier <- asks fieldLabelModifier
-    sformat (stext % " : " % stext) (fieldModifier s) <$> render t
-
-render (Constructor c Unit) = pure c
-
-render (Constructor c t) = sformat (stext % " " % stext) c <$> render t
-
-render (Tuple2 x y) =
-    sformat ("( " % stext % ", " % stext % " )") <$> render x <*> render y
-
-render (Dict x y) =
-    sformat ("Dict " % stext % " " % stext) <$> render x <*> render y
+instance HasType ElmValue where
+    render (ElmRef name) = pure name
+    render (Values x y) =
+        sformat (stext % cr % "    , " % stext) <$> render x <*> render y
+    render (ElmPrimitiveRef primitive) = render primitive
+    render (ElmField name value) = do
+        fieldModifier <- asks fieldLabelModifier
+        sformat (stext % " : " % stext) (fieldModifier name) <$> render value
 
 
-render (Product (Primitive "List") (Primitive "Char")) = return "String"
-
-render (Product (Primitive "List") p@(Product _ _)) =
-  sformat ("List (" % stext % ")") <$> render p
-
-render (Product (Primitive "List") t) = sformat ("List " % stext) <$> render t
-
-render (Product (Primitive "Dict") (Product k v)) =
-    sformat ("Dict " % stext % " " % stext) <$> render k <*> render v
-
-
-render (Product x y) =
-  do bodyX <- render x
-     bodyY <- render y
-     return $ sformat (stext % " " % stext) bodyX (parenthesize y  bodyY)
-
-render (Record n (Product x y)) =
-  do bodyX <- render (Record n x)
-     bodyY <- render (Record n y)
-     return $ sformat (stext % "\n    , " % stext) bodyX bodyY
-
-render (Record _ s@(Selector _ _)) = render s
-
-render Unit = return ""
+instance HasType ElmPrimitive where
+    render (EList (ElmPrimitive EChar)) = render EString
+    render (EList (ElmPrimitive value)) = sformat ("List " % stext) <$> render value
+    render (EList (ElmDatatype name _)) = pure $ sformat ("List " % stext) name
+    render (ETuple2 x y) =
+        sformat ("( " % stext % ", " % stext % " )") <$> render x <*> render y
+    render (EMaybe (ElmDatatype name _)) = pure $ sformat ("Maybe " % stext) name
+    render (EMaybe (ElmPrimitive value)) =
+        sformat ("Maybe " % stext) <$> render value
+    render (EDict k v) =
+        sformat ("Dict " % stext % " " % stext) <$> render k <*> render v
+    render EInt = pure "Int"
+    render EDate = pure "Date"
+    render EBool = pure "Bool"
+    render EChar = pure "Char"
+    render EString = pure "String"
+    render EUnit = pure "()"
+    render EFloat = pure "Float"
 
 toElmTypeSourceWith :: ElmType a => Options -> a -> Text
-toElmTypeSourceWith options x = runReader (render . TopLevel $ toElmType x) options
+toElmTypeSourceWith options x = runReader (render (toElmType x)) options
 
 toElmTypeSource :: ElmType a => a -> Text
 toElmTypeSource = toElmTypeSourceWith defaultOptions

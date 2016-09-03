@@ -8,62 +8,72 @@ import           Elm.Common
 import           Elm.Type
 import           Formatting
 
-render :: ElmTypeExpr -> Reader Options Text
+class HasEncoder a where
+  render :: a -> Reader Options Text
 
-render (TopLevel (DataType d t)) =
-    sformat
-        (stext % " : " % stext % " -> Value\n" % stext % " x =" % stext)
-        fnName
-        d
-        fnName <$>
-    render t
-  where
-    fnName = sformat ("encode" % stext) d
+instance HasEncoder ElmDatatype where
+    render (ElmDatatype name constructor) =
+        sformat
+            (stext % " : " % stext % " -> Value" % cr % stext % " x =" % stext)
+            fnName
+            name
+            fnName <$>
+        render constructor
+      where
+        fnName = sformat ("encode" % stext) name
+    render (ElmPrimitive primitive) = render primitive
 
-render (DataType d _) = return $ sformat ("encode" % stext) d
+instance HasEncoder ElmConstructor where
+    render (RecordConstructor _ value) =
+      sformat (cr % "    object" % cr % "        [ " % stext % cr % "        ]") <$> render value
 
-render (Record _ t) =
-  sformat ("\n    object\n        [ " % stext % "\n        ]") <$> render t
+instance HasEncoder ElmValue where
+    render (ElmField name value) = do
+        fieldModifier <- asks fieldLabelModifier
+        valueBody <- render value
+        pure $
+            sformat
+                ("( \"" % stext % "\", " % stext % " x." % stext % " )")
+                (fieldModifier name)
+                valueBody
+                name
+    render (ElmPrimitiveRef primitive) = render primitive
+    render (ElmRef name) = pure $ sformat ("encode" % stext) name
+    render (Values x y) = sformat (stext % cr % "        , " % stext) <$> render x <*> render y
 
-render (Product (Primitive "List") (Primitive "Char")) =
-  render (Primitive "String")
+instance HasEncoder ElmPrimitive where
+    render EDate = pure "(string << toISOString)"
+    render EUnit = pure "null"
+    render EInt = pure "int"
+    render EChar = pure "char"
+    render EBool = pure "bool"
+    render EFloat = pure "float"
+    render EString = pure "string"
+    render (EList (ElmDatatype name _)) = sformat ("(list << List.map " % stext % ")") <$> render (ElmRef name)
+    render (EList (ElmPrimitive EChar)) = pure "string"
+    render (EList (ElmPrimitive primitive)) =
+        sformat ("(list << List.map " % stext % ")") <$> render primitive
+    render (EMaybe (ElmDatatype name _)) =
+        sformat ("(Maybe.withDefault null << Maybe.map " % stext % ")") <$>
+        render (ElmRef name)
+    render (EMaybe (ElmPrimitive primitive)) =
+        sformat ("(Maybe.withDefault null << Maybe.map " % stext % ")") <$>
+        render primitive
+    render (ETuple2 x y) =
+        sformat ("(tuple2 " % stext % " " % stext % ")") <$> render x <*>
+        render y
+    render (EDict k (ElmDatatype name _)) =
+        sformat ("(dict " % stext % " " % stext % ")") <$> render k <*>
+        render (ElmRef name)
+    render (EDict k (ElmPrimitive primitive)) =
+        sformat ("(dict " % stext % " " % stext % ")") <$> render k <*> render primitive
 
-render (Product (Primitive "List") t) =
-  sformat ("(list << List.map " % stext % ")") <$> render t
 
-render (Product (Primitive "Maybe") t) =
-  sformat ("(Maybe.withDefault null << Maybe.map " % stext % ")") <$> render t
 
-render (Tuple2 x y) =
-  do bodyX <- render x
-     bodyY <- render y
-     return $ sformat ("tuple2 " % stext % " " % stext) bodyX bodyY
 
-render (Dict x y) =
-  do bodyX <- render x
-     bodyY <- render y
-     return $ sformat ("dict " % stext % " " % stext) bodyX bodyY
-
-render (Product x y) =
-  do bodyX <- render x
-     bodyY <- render y
-     return $ sformat (stext % "\n        , " % stext) bodyX bodyY
-
-render (Selector n t) =
-  do fieldModifier <- asks fieldLabelModifier
-     typeBody <- render t
-     return $ sformat ("( \"" % stext % "\", " % stext % " x." % stext % " )") (fieldModifier n) typeBody n
-
-render  (Primitive "String") = return "string"
-render  (Primitive "Int") = return "int"
-render  (Primitive "Double") = return "float"
-render  (Primitive "Float") = return "float"
-render  (Primitive "Date") = return "(string << toISOString)"
-render  (Primitive "Bool") = return "bool"
-render  (Field t) = render t
 
 toElmEncoderSourceWith :: ElmType a => Options -> a -> Text
-toElmEncoderSourceWith options x = runReader (render . TopLevel $ toElmType x) options
+toElmEncoderSourceWith options x = runReader (render (toElmType x)) options
 
 toElmEncoderSource :: ElmType a => a -> Text
 toElmEncoderSource = toElmEncoderSourceWith defaultOptions

@@ -11,8 +11,8 @@ encodeComment x =
     object
         [ ( "commentPostId", int x.postId )
         , ( "commentText", string x.text )
-        , ( "commentMainCategories", tuple2 string string x.mainCategories )
+        , ( "commentMainCategories", (tuple2 string string) x.mainCategories )
         , ( "commentPublished", bool x.published )
         , ( "commentCreated", (string << toISOString) x.created )
-        , ( "commentTags", dict string int x.tags )
+        , ( "commentTags", (dict string int) x.tags )
         ]

@@ -1,10 +1,10 @@
-{-# LANGUAGE DefaultSignatures   #-}
-{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE DefaultSignatures    #-}
+{-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE FlexibleInstances   #-}
-{-# LANGUAGE GADTs               #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE TypeOperators        #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module Elm.Type where
 
@@ -15,122 +15,152 @@ import           Data.Time
 import           GHC.Generics
 import           Prelude
 
--- TODO Without doubt, this definition can be tightened up so that
--- there are fewer (or hopefully zero) representable illegal states.
-data ElmTypeExpr where
-        TopLevel :: ElmTypeExpr -> ElmTypeExpr
-        DataType :: Text -> ElmTypeExpr -> ElmTypeExpr
-        Record :: Text -> ElmTypeExpr -> ElmTypeExpr
-        Constructor :: Text -> ElmTypeExpr -> ElmTypeExpr
-        Selector :: Text -> ElmTypeExpr -> ElmTypeExpr
-        Field :: ElmTypeExpr -> ElmTypeExpr
-        Sum :: ElmTypeExpr -> ElmTypeExpr -> ElmTypeExpr
-        Dict :: ElmTypeExpr -> ElmTypeExpr -> ElmTypeExpr
-        Tuple2 :: ElmTypeExpr -> ElmTypeExpr -> ElmTypeExpr
-        Product :: ElmTypeExpr -> ElmTypeExpr -> ElmTypeExpr
-        Unit :: ElmTypeExpr
-        Primitive :: Text -> ElmTypeExpr
-    deriving (Eq, Show)
+data ElmDatatype
+    = ElmDatatype Text
+                  ElmConstructor
+    | ElmPrimitive ElmPrimitive
+     deriving (Show, Eq)
+
+data ElmPrimitive
+    = EInt
+    | EBool
+    | EChar
+    | EDate
+    | EFloat
+    | EString
+    | EUnit
+    | EList ElmDatatype
+    | EMaybe ElmDatatype
+    | ETuple2 ElmDatatype
+              ElmDatatype
+    | EDict ElmPrimitive
+            ElmDatatype
+     deriving (Show, Eq)
+
+
+data ElmConstructor
+    = NamedConstructor Text
+                       ElmValue
+    | RecordConstructor Text
+                        ElmValue
+     deriving (Show, Eq)
+
+data ElmValue
+    = ElmRef Text
+    | ElmPrimitiveRef ElmPrimitive
+    | Values ElmValue
+             ElmValue
+    | ElmField Text
+               ElmValue
+     deriving (Show, Eq)
+
+------------------------------------------------------------
 
 class ElmType a  where
-    toElmType :: a -> ElmTypeExpr
-    toElmType = genericToElmType . from
-    default toElmType :: (Generic a, GenericElmType (Rep a)) => a -> ElmTypeExpr
+    toElmType :: a -> ElmDatatype
+    toElmType = genericToElmDatatype . from
+    default toElmType :: (Generic a, GenericElmDatatype (Rep a)) => a -> ElmDatatype
 
-instance ElmType Bool where
-    toElmType _ = Primitive "Bool"
+------------------------------------------------------------
 
-instance ElmType Char where
-    toElmType _ = Primitive "Char"
+class GenericElmDatatype f  where
+    genericToElmDatatype :: f a -> ElmDatatype
+
+instance (Datatype d, GenericElmConstructor f) =>
+         GenericElmDatatype (D1 d f) where
+    genericToElmDatatype datatype =
+        ElmDatatype
+            (pack (datatypeName datatype))
+            (genericToElmConstructor (unM1 datatype))
+
+-- ------------------------------------------------------------
+class GenericElmConstructor f  where
+    genericToElmConstructor :: f a -> ElmConstructor
+
+instance (Constructor c, GenericElmValue f) =>
+         GenericElmConstructor (C1 c f) where
+    genericToElmConstructor constructor =
+        if conIsRecord constructor
+            then RecordConstructor name (genericToElmValue (unM1 constructor))
+            else NamedConstructor name (genericToElmValue (unM1 constructor))
+      where
+        name = pack $ conName constructor
+
+------------------------------------------------------------
+
+class GenericElmValue f  where
+    genericToElmValue :: f a -> ElmValue
+
+instance (Selector s, GenericElmValue a) =>
+         GenericElmValue (S1 s a) where
+    genericToElmValue selector =
+        ElmField
+            (pack (selName selector))
+            (genericToElmValue (undefined :: a p))
+
+instance (GenericElmValue f, GenericElmValue g) =>
+         GenericElmValue (f :*: g) where
+    genericToElmValue _ =
+        Values
+            (genericToElmValue (undefined :: f p))
+            (genericToElmValue (undefined :: g p))
+
+instance GenericElmValue U1 where
+    genericToElmValue _ = ElmPrimitiveRef  EUnit
+
+instance ElmType a =>
+         GenericElmValue (Rec0 a) where
+    genericToElmValue _ =
+        case toElmType (undefined :: a) of
+            ElmPrimitive primitive -> ElmPrimitiveRef primitive
+            ElmDatatype name _ -> ElmRef name
+
+instance ElmType a => ElmType [a] where
+    toElmType _ = ElmPrimitive (EList (toElmType (undefined :: a)))
+
+instance ElmType a => ElmType (Maybe a) where
+    toElmType _ = ElmPrimitive (EMaybe (toElmType (undefined :: a)))
 
 instance ElmType Text where
-    toElmType _ = Primitive "String"
-
-instance ElmType Float where
-    toElmType _ = Primitive "Float"
+    toElmType _ = ElmPrimitive EString
 
 instance ElmType UTCTime where
-    toElmType _ = Primitive "Date"
+    toElmType _ = ElmPrimitive EDate
 
-instance ElmType Day where
-    toElmType _ = Primitive "Date"
+instance ElmType Float where
+    toElmType _ = ElmPrimitive EFloat
 
 instance ElmType Double where
-    toElmType _ = Primitive "Float"
-
-instance ElmType Int where
-    toElmType _ = Primitive "Int"
-
-instance ElmType Integer where
-    toElmType _ = Primitive "Int"
+    toElmType _ = ElmPrimitive EFloat
 
 instance (ElmType a, ElmType b) =>
          ElmType (a, b) where
     toElmType _ =
-        Tuple2 (toElmType (Proxy :: Proxy a)) (toElmType (Proxy :: Proxy b))
+        ElmPrimitive $
+        ETuple2 (toElmType (undefined :: a)) (toElmType (undefined :: b))
 
-instance ElmType a =>
-         ElmType [a] where
-    toElmType _ = Product (Primitive "List") (toElmType (Proxy :: Proxy a))
 
-instance ElmType a =>
-         ElmType (Maybe a) where
-    toElmType _ = Product (Primitive "Maybe") (toElmType (Proxy :: Proxy a))
-
-instance (ElmType k, ElmType v) =>
-         ElmType (Map k v) where
-    toElmType _ =
-        Dict (toElmType (Proxy :: Proxy k)) (toElmType (Proxy :: Proxy v))
-
-instance ElmType a =>
+instance (ElmType a) =>
          ElmType (Proxy a) where
     toElmType _ = toElmType (undefined :: a)
 
-------------------------------------------------------------
+instance (HasElmComparable k, ElmType v) =>
+         ElmType (Map k v) where
+    toElmType _ =
+        ElmPrimitive $
+        EDict (toElmComparable (undefined :: k)) (toElmType (undefined :: v))
 
-class GenericElmType f  where
-    genericToElmType :: f a -> ElmTypeExpr
+class HasElmComparable a where
+  toElmComparable :: a -> ElmPrimitive
 
-instance (Datatype d, GenericElmType f) =>
-         GenericElmType (D1 d f) where
-    genericToElmType datatype =
-        DataType
-            (pack (datatypeName datatype))
-            (genericToElmType (unM1 datatype))
+instance HasElmComparable String where
+  toElmComparable _ = EString
 
-instance (Constructor c, GenericElmType f) =>
-         GenericElmType (C1 c f) where
-    genericToElmType constructor =
-        if conIsRecord constructor
-            then Record name body
-            else Constructor name body
-      where
-        name = pack $ conName constructor
-        body = genericToElmType (unM1 constructor)
+instance ElmType Int where
+  toElmType _ = ElmPrimitive EInt
 
-instance (Selector c, GenericElmType f) =>
-         GenericElmType (S1 c f) where
-    genericToElmType selector =
-        Selector (pack (selName selector)) (genericToElmType (unM1 selector))
+instance ElmType Char where
+  toElmType _ = ElmPrimitive EChar
 
-instance GenericElmType U1 where
-    genericToElmType _ = Unit
-
-instance (ElmType c) =>
-         GenericElmType (Rec0 c) where
-    genericToElmType parameter = Field (toElmType (unK1 parameter))
-
-
-instance (GenericElmType f, GenericElmType g) =>
-         GenericElmType (f :+: g) where
-    genericToElmType _ =
-        Sum
-            (genericToElmType (undefined :: f p))
-            (genericToElmType (undefined :: g p))
-
-instance (GenericElmType f, GenericElmType g) =>
-         GenericElmType (f :*: g) where
-    genericToElmType _ =
-        Product
-            (genericToElmType (undefined :: f p))
-            (genericToElmType (undefined :: g p))
+instance ElmType Bool where
+  toElmType _ = ElmPrimitive EBool
