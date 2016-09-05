@@ -29,7 +29,7 @@ specToFile rootDir spec =
       body =
         intercalate
           "\n\n"
-          (printf "module %s where" namespaceString : declarations spec)
+          (printf "module %s exposing (..)" namespaceString : declarations spec)
   in do printf "Writing: %s\n" file
         writeFile file body
 

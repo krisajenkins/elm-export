@@ -1,4 +1,7 @@
-module Main (..) where
+module Main exposing (..)
+
+
+import Json.Decode
 
 
 decodePost : Json.Decode.Decoder Post
