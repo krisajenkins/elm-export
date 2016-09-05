@@ -134,7 +134,7 @@ shouldMatchEncoderSource options x =
   shouldMatchFile . printf outputWrapping $ toElmEncoderSourceWith options x
 
 outputWrapping :: String
-outputWrapping = "module Main (..) where\n\n\n%s\n"
+outputWrapping = "module Main exposing (..)\n\n\n%s\n"
 
 shouldMatchFile :: String -> FilePath -> IO ()
 shouldMatchFile actual fileExpected =
