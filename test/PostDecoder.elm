@@ -1,6 +1,9 @@
 module Main exposing (..)
 
 
+import Json.Decode
+
+
 decodePost : Json.Decode.Decoder Post
 decodePost =
   Json.Decode.succeed Post

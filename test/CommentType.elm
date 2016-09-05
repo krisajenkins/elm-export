@@ -1,4 +1,8 @@
-module Main exposing (..)
+module CommentType exposing (..)
+
+
+import Date exposing (Date)
+import Dict exposing (Dict)
 
 
 type alias Comment =
