@@ -63,14 +63,9 @@ instance HasEncoder ElmPrimitive where
         sformat ("(tuple2 " % stext % " " % stext % ")") <$> render x <*>
         render y
     render (EDict k (ElmDatatype name _)) =
-        sformat ("(dict " % stext % " " % stext % ")") <$> render k <*>
-        render (ElmRef name)
+        sformat ("(dict " % stext % " " % stext % ")") <$> render k <*> render (ElmRef name)
     render (EDict k (ElmPrimitive primitive)) =
         sformat ("(dict " % stext % " " % stext % ")") <$> render k <*> render primitive
-
-
-
-
 
 toElmEncoderSourceWith :: ElmType a => Options -> a -> Text
 toElmEncoderSourceWith options x = runReader (render (toElmType x)) options
