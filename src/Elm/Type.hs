@@ -43,6 +43,7 @@ data ElmConstructor
                        ElmValue
     | RecordConstructor Text
                         ElmValue
+    | MultipleConstructors [ElmConstructor]
      deriving (Show, Eq)
 
 data ElmValue
@@ -85,6 +86,13 @@ instance (Constructor c, GenericElmValue f) =>
             else NamedConstructor name (genericToElmValue (unM1 constructor))
       where
         name = pack $ conName constructor
+
+instance (GenericElmConstructor f, GenericElmConstructor g) =>
+         GenericElmConstructor (f :+: g) where
+    genericToElmConstructor _ =
+        MultipleConstructors
+            [ genericToElmConstructor (undefined :: f p)
+            , genericToElmConstructor (undefined :: g p)]
 
 ------------------------------------------------------------
 

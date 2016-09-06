@@ -34,6 +34,18 @@ data Comment =
           ,tags           :: Map String Int}
   deriving (Generic,ElmType)
 
+data Position
+  = Beginning
+  | Middle
+  | End
+  deriving (Generic,ElmType)
+
+data Timing
+  = Start
+  | Continue Double
+  | Stop
+  deriving (Generic,ElmType)
+
 spec :: Hspec.Spec
 spec =
   do toElmTypeSpec
@@ -66,6 +78,18 @@ toElmTypeSpec =
          defaultOptions
          (Proxy :: Proxy Comment)
          "test/CommentType.elm"
+     it "toElmTypeSource Position" $
+       shouldMatchTypeSource
+         (unlines ["module PositionType exposing (..)","","","%s"])
+         defaultOptions
+         (Proxy :: Proxy Position)
+         "test/PositionType.elm"
+     it "toElmTypeSource Timing" $
+       shouldMatchTypeSource
+         (unlines ["module TimingType exposing (..)","","","%s"])
+         defaultOptions
+         (Proxy :: Proxy Timing)
+         "test/TimingType.elm"
      it "toElmTypeSourceWithOptions Post" $
        shouldMatchTypeSource
          (unlines ["module PostTypeWithOptions exposing (..)"

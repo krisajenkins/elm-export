@@ -2,22 +2,32 @@
 module Elm.Record (toElmTypeSource,toElmTypeSourceWith) where
 
 import           Control.Monad.Reader
+import           Data.Text
 import           Elm.Common
 import           Elm.Type
 import           Formatting
-import Data.Text
 
 class HasType a where
   render :: a -> Reader Options Text
 
 instance HasType ElmDatatype where
-    render (ElmDatatype typeName (RecordConstructor _ value)) =
-        sformat ("type alias " % stext % " =\n    { " % stext % "\n    }") typeName <$>
-        render value
-    render (ElmDatatype typeName (NamedConstructor constructorName value)) =
-        sformat ("type " % stext % "\n    = " % stext % " " % stext) typeName constructorName <$>
-        render value
+    render (ElmDatatype typeName constructor@(RecordConstructor _ _)) =
+        sformat ("type alias " % stext % " =" % cr % stext) typeName <$> render constructor
+    render (ElmDatatype typeName constructor@(MultipleConstructors _)) =
+        sformat ("type " % stext % cr % "    = " % stext) typeName <$> render constructor
+    render (ElmDatatype typeName constructor@(NamedConstructor _ _)) =
+        sformat ("type " % stext % cr % "    = " % stext) typeName <$> render constructor
     render (ElmPrimitive primitive) = render primitive
+
+
+instance HasType ElmConstructor where
+    render (RecordConstructor _ value) =
+        sformat ("    { " % stext % cr % "    }") <$> render value
+    render (NamedConstructor constructorName value) =
+        sformat (stext % " " % stext) constructorName <$> render value
+    render (MultipleConstructors constructors) =
+        fmap (Data.Text.intercalate "\n    | ") $ sequence $ render <$> constructors
+
 
 instance HasType ElmValue where
     render (ElmRef name) = pure name
