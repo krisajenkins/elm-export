@@ -124,6 +124,9 @@ instance ElmType a => ElmType (Maybe a) where
 instance ElmType Text where
     toElmType _ = ElmPrimitive EString
 
+instance ElmType Day where
+    toElmType _ = ElmPrimitive EDate
+
 instance ElmType UTCTime where
     toElmType _ = ElmPrimitive EDate
 
