@@ -66,7 +66,7 @@ instance HasDecoder ElmPrimitive where
     render (ETuple2 x y) =
         sformat ("(tuple2 (,) " % stext % " " % stext % ")") <$> render x <*>
         render y
-    render EUnit = pure "null"
+    render EUnit = pure "(succeed ())"
     render EDate = pure "(customDecoder string Date.fromString)"
     render EInt = pure "int"
     render EBool = pure "bool"
