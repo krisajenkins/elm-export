@@ -11,7 +11,7 @@ maintainer:          kris.jenkins@clearercode.com
 copyright:           2015-2016 Kris Jenkins
 category:            Web
 build-type:          Simple
--- extra-source-files:
+extra-source-files:  test/*.elm
 cabal-version:       >=1.10
 
 library
