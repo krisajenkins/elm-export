@@ -1,5 +1,5 @@
 name:                elm-export
-version:             0.4.1.0
+version:             0.4.1.1
 synopsis:            A library to generate Elm types from Haskell source.
 description:         Generate Elm source code automatically from Haskell types. Using GHC.Generics, we can automatically derive Elm type declarations, and Aeson-compatible JSON decoders & encoders.
 homepage:            http://github.com/krisajenkins/elm-export
