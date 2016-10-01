@@ -99,12 +99,17 @@ instance (GenericElmConstructor f, GenericElmConstructor g) =>
 class GenericElmValue f  where
     genericToElmValue :: f a -> ElmValue
 
-instance (Selector s, GenericElmValue a) =>
+instance {-# OVERLAPPABLE #-} (Selector s, GenericElmValue a) =>
          GenericElmValue (S1 s a) where
     genericToElmValue selector =
         ElmField
             (pack (selName selector))
             (genericToElmValue (undefined :: a p))
+
+instance {-# OVERLAPPING #-} (GenericElmValue a) =>
+         GenericElmValue (S1 NoSelector a) where
+    genericToElmValue _ =
+        genericToElmValue (undefined :: a p)
 
 instance (GenericElmValue f, GenericElmValue g) =>
          GenericElmValue (f :*: g) where
@@ -122,6 +127,8 @@ instance ElmType a =>
         case toElmType (undefined :: a) of
             ElmPrimitive primitive -> ElmPrimitiveRef primitive
             ElmDatatype name _ -> ElmRef name
+
+------------------------------------------------------------
 
 instance ElmType a => ElmType [a] where
     toElmType _ = ElmPrimitive (EList (toElmType (undefined :: a)))
