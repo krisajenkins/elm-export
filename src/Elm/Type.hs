@@ -41,6 +41,7 @@ data ElmPrimitive
 data ElmConstructor
     = NamedConstructor Text
                        ElmValue
+    | NamedEmptyConstructor Text
     | RecordConstructor Text
                         ElmValue
     | MultipleConstructors [ElmConstructor]
@@ -78,12 +79,19 @@ instance (Datatype d, GenericElmConstructor f) =>
 class GenericElmConstructor f  where
     genericToElmConstructor :: f a -> ElmConstructor
 
-instance (Constructor c, GenericElmValue f) =>
+instance {-# OVERLAPPABLE #-} (Constructor c, GenericElmValue f) =>
          GenericElmConstructor (C1 c f) where
     genericToElmConstructor constructor =
         if conIsRecord constructor
             then RecordConstructor name (genericToElmValue (unM1 constructor))
             else NamedConstructor name (genericToElmValue (unM1 constructor))
+      where
+        name = pack $ conName constructor
+
+instance {-# OVERLAPPING #-} (Constructor c) =>
+         GenericElmConstructor (C1 c U1) where
+    genericToElmConstructor constructor =
+        NamedEmptyConstructor name
       where
         name = pack $ conName constructor
 
