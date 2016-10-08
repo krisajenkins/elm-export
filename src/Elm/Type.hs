@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DefaultSignatures    #-}
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE FlexibleInstances    #-}
@@ -115,7 +117,11 @@ instance {-# OVERLAPPABLE #-} (Selector s, GenericElmValue a) =>
             (genericToElmValue (undefined :: a p))
 
 instance {-# OVERLAPPING #-} (GenericElmValue a) =>
+#if __GLASGOW_HASKELL__ >= 800
+         GenericElmValue (S1 ('MetaSel 'Nothing su ss ds) a) where
+#else
          GenericElmValue (S1 NoSelector a) where
+#endif
     genericToElmValue _ =
         genericToElmValue (undefined :: a p)
 
