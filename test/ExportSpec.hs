@@ -16,23 +16,23 @@ import           Test.Hspec   hiding (Spec)
 import           Test.Hspec   as Hspec
 import           Text.Printf
 
-data Post =
-  Post {id       :: Int
-       ,name     :: String
-       ,age      :: Maybe Double
-       ,comments :: [Comment]
-       ,promoted :: Maybe Comment
-       ,author   :: Maybe String}
-  deriving (Generic,ElmType)
+data Post = Post
+    { id       :: Int
+    , name     :: String
+    , age      :: Maybe Double
+    , comments :: [Comment]
+    , promoted :: Maybe Comment
+    , author   :: Maybe String
+    } deriving (Generic, ElmType)
 
-data Comment =
-  Comment {postId         :: Int
-          ,text           :: Text
-          ,mainCategories :: (String,String)
-          ,published      :: Bool
-          ,created        :: UTCTime
-          ,tags           :: Map String Int}
-  deriving (Generic,ElmType)
+data Comment = Comment
+    { postId         :: Int
+    , text           :: Text
+    , mainCategories :: (String, String)
+    , published      :: Bool
+    , created        :: UTCTime
+    , tags           :: Map String Int
+    } deriving (Generic, ElmType)
 
 data Position
   = Beginning
