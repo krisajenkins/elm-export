@@ -1,5 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Elm.Record (toElmTypeSource,toElmTypeSourceWith) where
+module Elm.Record
+  ( toElmTypeRef
+  , toElmTypeRefWith
+  , toElmTypeSource
+  , toElmTypeSourceWith
+  ) where
 
 import           Control.Monad.Reader
 import           Data.Text
@@ -10,6 +15,9 @@ import           Formatting
 class HasType a where
   render :: a -> Reader Options Text
 
+class HasTypeRef a where
+  renderRef :: a -> Reader Options Text
+
 instance HasType ElmDatatype where
     render (ElmDatatype typeName constructor@(RecordConstructor _ _)) =
         sformat ("type alias " % stext % " =" % cr % stext) typeName <$> render constructor
@@ -18,6 +26,13 @@ instance HasType ElmDatatype where
     render (ElmDatatype typeName constructor@(NamedConstructor _ _)) =
         sformat ("type " % stext % cr % "    = " % stext) typeName <$> render constructor
     render (ElmPrimitive primitive) = render primitive
+
+instance HasTypeRef ElmDatatype where
+    renderRef (ElmDatatype typeName _) =
+        pure typeName
+
+    renderRef (ElmPrimitive primitive) =
+        renderRef primitive
 
 
 instance HasType ElmConstructor where
@@ -58,6 +73,15 @@ instance HasType ElmPrimitive where
     render EString = pure "String"
     render EUnit = pure "()"
     render EFloat = pure "Float"
+
+instance HasTypeRef ElmPrimitive where
+    renderRef = render
+
+toElmTypeRefWith :: ElmType a => Options -> a -> Text
+toElmTypeRefWith options x = runReader (renderRef (toElmType x)) options
+
+toElmTypeRef :: ElmType a => a -> Text
+toElmTypeRef = toElmTypeRefWith defaultOptions
 
 toElmTypeSourceWith :: ElmType a => Options -> a -> Text
 toElmTypeSourceWith options x = runReader (render (toElmType x)) options

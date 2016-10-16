@@ -5,7 +5,9 @@
 {-# LANGUAGE TypeOperators     #-}
 
 module Elm.Decoder
-  ( toElmDecoderSource
+  ( toElmDecoderRef
+  , toElmDecoderRefWith
+  , toElmDecoderSource
   , toElmDecoderSourceWith
   ) where
 
@@ -18,6 +20,9 @@ import           Formatting
 class HasDecoder a where
   render :: a -> Reader Options Text
 
+class HasDecoderRef a where
+  renderRef :: a -> Reader Options Text
+
 instance HasDecoder ElmDatatype where
     render (ElmDatatype name constructor) =
         sformat
@@ -29,6 +34,13 @@ instance HasDecoder ElmDatatype where
       where
         fnName = sformat ("decode" % stext) name
     render (ElmPrimitive primitive) = render primitive
+
+instance HasDecoderRef ElmDatatype where
+    renderRef (ElmDatatype name _) =
+        pure $ sformat ("decode" % stext) name
+
+    renderRef (ElmPrimitive primitive) =
+        renderRef primitive
 
 
 instance HasDecoder ElmConstructor where
@@ -73,6 +85,17 @@ instance HasDecoder ElmPrimitive where
     render EChar = pure "char"
     render EFloat = pure "float"
     render EString = pure "string"
+
+instance HasDecoderRef ElmPrimitive where
+    renderRef = render
+
+
+toElmDecoderRefWith :: ElmType a => Options -> a -> Text
+toElmDecoderRefWith options x = runReader (renderRef (toElmType x)) options
+
+
+toElmDecoderRef :: ElmType a => a -> Text
+toElmDecoderRef = toElmDecoderRefWith defaultOptions
 
 
 toElmDecoderSourceWith :: ElmType a => Options -> a -> Text
