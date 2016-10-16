@@ -1,6 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Elm.Encoder (toElmEncoderSource, toElmEncoderSourceWith)
-       where
+module Elm.Encoder
+  ( toElmEncoderRef
+  , toElmEncoderRefWith
+  , toElmEncoderSource
+  , toElmEncoderSourceWith
+  ) where
 
 import           Control.Monad.Reader
 import           Data.Text
@@ -10,6 +14,9 @@ import           Formatting
 
 class HasEncoder a where
   render :: a -> Reader Options Text
+
+class HasEncoderRef a where
+  renderRef :: a -> Reader Options Text
 
 instance HasEncoder ElmDatatype where
     render (ElmDatatype name constructor) =
@@ -22,6 +29,13 @@ instance HasEncoder ElmDatatype where
       where
         fnName = sformat ("encode" % stext) name
     render (ElmPrimitive primitive) = render primitive
+
+instance HasEncoderRef ElmDatatype where
+    renderRef (ElmDatatype name _) =
+        pure $ sformat ("encode" % stext) name
+
+    renderRef (ElmPrimitive primitive) =
+        renderRef primitive
 
 instance HasEncoder ElmConstructor where
     render (RecordConstructor _ value) =
@@ -66,6 +80,15 @@ instance HasEncoder ElmPrimitive where
         sformat ("(dict " % stext % " " % stext % ")") <$> render k <*> render (ElmRef name)
     render (EDict k (ElmPrimitive primitive)) =
         sformat ("(dict " % stext % " " % stext % ")") <$> render k <*> render primitive
+
+instance HasEncoderRef ElmPrimitive where
+    renderRef = render
+
+toElmEncoderRefWith :: ElmType a => Options -> a -> Text
+toElmEncoderRefWith options x = runReader (renderRef (toElmType x)) options
+
+toElmEncoderRef :: ElmType a => a -> Text
+toElmEncoderRef = toElmEncoderRefWith defaultOptions
 
 toElmEncoderSourceWith :: ElmType a => Options -> a -> Text
 toElmEncoderSourceWith options x = runReader (render (toElmType x)) options
