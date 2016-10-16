@@ -1,8 +1,14 @@
-module Elm.File (Spec(..),specsToDir) where
+{-# LANGUAGE OverloadedStrings #-}
+
+module Elm.File
+  ( Spec(..)
+  , specsToDir
+  ) where
 
 import           Data.List
+import           Data.Monoid
+import           Formatting       as F
 import           System.Directory
-import           Text.Printf
 
 pathString :: [String] -> String
 pathString = intercalate "/"
@@ -21,17 +27,16 @@ ensureDirectory rootDir spec =
 
 specToFile :: FilePath -> Spec -> IO ()
 specToFile rootDir spec =
-  let path = pathForSpec rootDir spec
-      file = pathString path ++ ".elm"
-      namespaceString =
-        intercalate "."
-                    (namespace spec)
-      body =
-        intercalate
-          "\n\n"
-          (printf "module %s exposing (..)" namespaceString : declarations spec)
-  in do printf "Writing: %s\n" file
-        writeFile file body
+    let path = pathForSpec rootDir spec
+        file = pathString path <> ".elm"
+        namespaceString = intercalate "." (namespace spec)
+        body =
+            intercalate
+                "\n\n"
+                (formatToString ("module " % F.string % " exposing (..)") namespaceString :
+                 declarations spec)
+    in do fprint ("Writing: " % F.string % "\n") file
+          writeFile file body
 
 specsToDir :: [Spec] -> FilePath -> IO ()
 specsToDir specs rootDir = mapM_ processSpec specs
