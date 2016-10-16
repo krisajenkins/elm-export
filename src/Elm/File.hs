@@ -13,17 +13,18 @@ import           System.Directory
 pathString :: [String] -> String
 pathString = intercalate "/"
 
-data Spec =
-  Spec {namespace    :: [String]
-       ,declarations :: [String]}
+data Spec = Spec
+    { namespace    :: [String]
+    , declarations :: [String]
+    }
 
 pathForSpec :: FilePath -> Spec -> [String]
 pathForSpec rootDir spec = rootDir : namespace spec
 
 ensureDirectory :: FilePath -> Spec -> IO ()
 ensureDirectory rootDir spec =
-  let dir = pathString . init $ pathForSpec rootDir spec
-  in createDirectoryIfMissing True dir
+    let dir = pathString . init $ pathForSpec rootDir spec
+    in createDirectoryIfMissing True dir
 
 specToFile :: FilePath -> Spec -> IO ()
 specToFile rootDir spec =
@@ -40,4 +41,5 @@ specToFile rootDir spec =
 
 specsToDir :: [Spec] -> FilePath -> IO ()
 specsToDir specs rootDir = mapM_ processSpec specs
-  where processSpec = ensureDirectory rootDir >> specToFile rootDir
+  where
+    processSpec = ensureDirectory rootDir >> specToFile rootDir
