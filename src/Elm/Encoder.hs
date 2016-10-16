@@ -19,15 +19,14 @@ class HasEncoderRef a where
   renderRef :: a -> Reader Options Text
 
 instance HasEncoder ElmDatatype where
-    render (ElmDatatype name constructor) =
+    render d@(ElmDatatype name constructor) = do
+        fnName <- renderRef d
         sformat
             (stext % " : " % stext % " -> Value" % cr % stext % " x =" % stext)
             fnName
             name
             fnName <$>
-        render constructor
-      where
-        fnName = sformat ("encode" % stext) name
+            render constructor
     render (ElmPrimitive primitive) = render primitive
 
 instance HasEncoderRef ElmDatatype where
@@ -63,23 +62,16 @@ instance HasEncoder ElmPrimitive where
     render EBool = pure "bool"
     render EFloat = pure "float"
     render EString = pure "string"
-    render (EList (ElmDatatype name _)) = sformat ("(list << List.map " % stext % ")") <$> render (ElmRef name)
     render (EList (ElmPrimitive EChar)) = pure "string"
-    render (EList (ElmPrimitive primitive)) =
-        sformat ("(list << List.map " % stext % ")") <$> render primitive
-    render (EMaybe (ElmDatatype name _)) =
+    render (EList datatype) = sformat ("(list << List.map " % stext % ")") <$> renderRef datatype
+    render (EMaybe datatype) =
         sformat ("(Maybe.withDefault null << Maybe.map " % stext % ")") <$>
-        render (ElmRef name)
-    render (EMaybe (ElmPrimitive primitive)) =
-        sformat ("(Maybe.withDefault null << Maybe.map " % stext % ")") <$>
-        render primitive
+        renderRef datatype
     render (ETuple2 x y) =
         sformat ("(tuple2 " % stext % " " % stext % ")") <$> render x <*>
         render y
-    render (EDict k (ElmDatatype name _)) =
-        sformat ("(dict " % stext % " " % stext % ")") <$> render k <*> render (ElmRef name)
-    render (EDict k (ElmPrimitive primitive)) =
-        sformat ("(dict " % stext % " " % stext % ")") <$> render k <*> render primitive
+    render (EDict k datatype) =
+        sformat ("(dict " % stext % " " % stext % ")") <$> render k <*> renderRef datatype
 
 instance HasEncoderRef ElmPrimitive where
     renderRef = render

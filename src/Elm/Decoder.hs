@@ -24,15 +24,14 @@ class HasDecoderRef a where
   renderRef :: a -> Reader Options Text
 
 instance HasDecoder ElmDatatype where
-    render (ElmDatatype name constructor) =
+    render d@(ElmDatatype name constructor) = do
+        fnName <- renderRef d
         sformat
             (stext % " : Decoder " % stext % cr % stext % " =" % cr % stext)
             fnName
             name
             fnName <$>
-        render constructor
-      where
-        fnName = sformat ("decode" % stext) name
+            render constructor
     render (ElmPrimitive primitive) = render primitive
 
 instance HasDecoderRef ElmDatatype where
@@ -63,18 +62,14 @@ instance HasDecoder ElmValue where
 
 
 instance HasDecoder ElmPrimitive where
-    render (EList (ElmDatatype name _)) =
-        sformat ("(list " % stext % ")") <$> render (ElmRef name)
     render (EList (ElmPrimitive EChar)) = pure "string"
-    render (EList (ElmPrimitive value)) =
-        sformat ("(list " % stext % ")") <$> render value
+    render (EList datatype) =
+        sformat ("(list " % stext % ")") <$> renderRef datatype
     render (EDict key value) =
         sformat ("(map Dict.fromList " % stext % ")") <$>
         render (EList (ElmPrimitive (ETuple2 (ElmPrimitive key) value)))
-    render (EMaybe (ElmPrimitive value)) =
-        sformat ("(maybe " % stext % ")") <$> render value
-    render (EMaybe (ElmDatatype name _)) =
-        sformat ("(maybe " % stext % ")") <$> render (ElmRef name)
+    render (EMaybe datatype) =
+        sformat ("(maybe " % stext % ")") <$> renderRef datatype
     render (ETuple2 x y) =
         sformat ("(tuple2 (,) " % stext % " " % stext % ")") <$> render x <*>
         render y

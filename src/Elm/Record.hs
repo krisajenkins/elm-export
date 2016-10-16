@@ -19,12 +19,12 @@ class HasTypeRef a where
   renderRef :: a -> Reader Options Text
 
 instance HasType ElmDatatype where
-    render (ElmDatatype typeName constructor@(RecordConstructor _ _)) =
-        sformat ("type alias " % stext % " =" % cr % stext) typeName <$> render constructor
-    render (ElmDatatype typeName constructor@(MultipleConstructors _)) =
-        sformat ("type " % stext % cr % "    = " % stext) typeName <$> render constructor
-    render (ElmDatatype typeName constructor@(NamedConstructor _ _)) =
-        sformat ("type " % stext % cr % "    = " % stext) typeName <$> render constructor
+    render d@(ElmDatatype _ constructor@(RecordConstructor _ _)) =
+        sformat ("type alias " % stext % " =" % cr % stext) <$> renderRef d <*> render constructor
+    render d@(ElmDatatype _ constructor@(MultipleConstructors _)) =
+        sformat ("type " % stext % cr % "    = " % stext) <$> renderRef d <*> render constructor
+    render d@(ElmDatatype _ constructor@(NamedConstructor _ _)) =
+        sformat ("type " % stext % cr % "    = " % stext) <$> renderRef d <*> render constructor
     render (ElmPrimitive primitive) = render primitive
 
 instance HasTypeRef ElmDatatype where
@@ -57,13 +57,11 @@ instance HasType ElmValue where
 
 instance HasType ElmPrimitive where
     render (EList (ElmPrimitive EChar)) = render EString
-    render (EList (ElmPrimitive value)) = sformat ("List (" % stext % ")") <$> render value
-    render (EList (ElmDatatype name _)) = pure $ sformat ("List (" % stext % ")") name
+    render (EList datatype) = sformat ("List (" % stext % ")") <$> renderRef datatype
     render (ETuple2 x y) =
         sformat ("( " % stext % ", " % stext % " )") <$> render x <*> render y
-    render (EMaybe (ElmDatatype name _)) = pure $ sformat ("Maybe (" % stext%")") name
-    render (EMaybe (ElmPrimitive value)) =
-        sformat ("Maybe (" % stext % ")") <$> render value
+    render (EMaybe datatype) =
+        sformat ("Maybe (" % stext % ")") <$> renderRef datatype
     render (EDict k v) =
         sformat ("Dict (" % stext % ") (" % stext % ")") <$> render k <*> render v
     render EInt = pure "Int"

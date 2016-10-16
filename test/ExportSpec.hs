@@ -139,19 +139,19 @@ toElmTypeSpec =
             `shouldBe` "Post"
           it "toElmTypeRef [Comment]" $
             toElmTypeRef (Proxy :: Proxy [Comment])
-            `shouldBe` "List Comment"
+            `shouldBe` "List (Comment)"
           it "toElmTypeRef String" $
             toElmTypeRef (Proxy :: Proxy String)
             `shouldBe` "String"
           it "toElmTypeRef (Maybe String)" $
             toElmTypeRef (Proxy :: Proxy (Maybe String))
-            `shouldBe` "Maybe String"
+            `shouldBe` "Maybe (String)"
           it "toElmTypeRef [Maybe String]" $
             toElmTypeRef (Proxy :: Proxy [Maybe String])
-            `shouldBe` "List (Maybe String)"
+            `shouldBe` "List (Maybe (String))"
           it "toElmTypeRef (Map String (Maybe String))" $
             toElmTypeRef (Proxy :: Proxy (Map String (Maybe String)))
-            `shouldBe` "Dict String (Maybe String)"
+            `shouldBe` "Dict (String) (Maybe (String))"
 
 toElmDecoderSpec :: Hspec.Spec
 toElmDecoderSpec =
