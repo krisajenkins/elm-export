@@ -7,37 +7,40 @@ module Elm.File
 
 import           Data.List
 import           Data.Monoid
+import           Data.Text        (Text)
+import qualified Data.Text        as T
+import qualified Data.Text.IO     as T
 import           Formatting       as F
 import           System.Directory
 
-pathString :: [String] -> String
-pathString = intercalate "/"
+makePath :: [Text] -> Text
+makePath = T.intercalate "/"
 
 data Spec = Spec
-    { namespace    :: [String]
-    , declarations :: [String]
+    { namespace    :: [Text]
+    , declarations :: [Text]
     }
 
-pathForSpec :: FilePath -> Spec -> [String]
-pathForSpec rootDir spec = rootDir : namespace spec
+pathForSpec :: FilePath -> Spec -> [Text]
+pathForSpec rootDir spec = T.pack rootDir : namespace spec
 
 ensureDirectory :: FilePath -> Spec -> IO ()
 ensureDirectory rootDir spec =
-    let dir = pathString . init $ pathForSpec rootDir spec
-    in createDirectoryIfMissing True dir
+    let dir = makePath . Data.List.init $ pathForSpec rootDir spec
+    in createDirectoryIfMissing True (T.unpack dir)
 
 specToFile :: FilePath -> Spec -> IO ()
 specToFile rootDir spec =
     let path = pathForSpec rootDir spec
-        file = pathString path <> ".elm"
-        namespaceString = intercalate "." (namespace spec)
+        file = makePath path <> ".elm"
+        namespaceText = T.intercalate "." (namespace spec)
         body =
-            intercalate
+            T.intercalate
                 "\n\n"
-                (formatToString ("module " % F.string % " exposing (..)") namespaceString :
+                (sformat ("module " % F.stext % " exposing (..)") namespaceText :
                  declarations spec)
-    in do fprint ("Writing: " % F.string % "\n") file
-          writeFile file body
+    in do fprint ("Writing: " % F.stext % "\n") file
+          T.writeFile (T.unpack file) body
 
 specsToDir :: [Spec] -> FilePath -> IO ()
 specsToDir specs rootDir = mapM_ processSpec specs
