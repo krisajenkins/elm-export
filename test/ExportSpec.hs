@@ -244,7 +244,7 @@ toElmEncoderSpec =
                   ,"import CommentType exposing (..)"
                   ,"import Exts.Date exposing (..)"
                   ,"import Exts.Json.Encode exposing (..)"
-                  ,"import Json.Encode exposing (..)"
+                  ,"import Json.Encode"
                   ,""
                   ,""
                   ,"%s"])
@@ -256,7 +256,7 @@ toElmEncoderSpec =
          (unlines ["module PostEncoder exposing (..)"
                   ,""
                   ,"import CommentEncoder exposing (..)"
-                  ,"import Json.Encode exposing (..)"
+                  ,"import Json.Encode"
                   ,"import PostType exposing (..)"
                   ,""
                   ,""
@@ -271,7 +271,7 @@ toElmEncoderSpec =
                   ,"import CommentType exposing (..)"
                   ,"import Exts.Date exposing (..)"
                   ,"import Exts.Json.Encode exposing (..)"
-                  ,"import Json.Encode exposing (..)"
+                  ,"import Json.Encode"
                   ,""
                   ,""
                   ,"%s"])
@@ -283,7 +283,7 @@ toElmEncoderSpec =
          (unlines ["module PostEncoderWithOptions exposing (..)"
                   ,""
                   ,"import CommentEncoder exposing (..)"
-                  ,"import Json.Encode exposing (..)"
+                  ,"import Json.Encode"
                   ,"import PostType exposing (..)"
                   ,""
                   ,""
@@ -297,19 +297,19 @@ toElmEncoderSpec =
             `shouldBe` "encodePost"
           it "toElmEncoderRef [Comment]" $
             toElmEncoderRef (Proxy :: Proxy [Comment])
-            `shouldBe` "(list << List.map encodeComment)"
+            `shouldBe` "(Json.Encode.list << List.map encodeComment)"
           it "toElmEncoderRef String" $
             toElmEncoderRef (Proxy :: Proxy String)
-            `shouldBe` "string"
+            `shouldBe` "Json.Encode.string"
           it "toElmEncoderRef (Maybe String)" $
             toElmEncoderRef (Proxy :: Proxy (Maybe String))
-            `shouldBe` "(Maybe.withDefault null << Maybe.map string)"
+            `shouldBe` "(Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string)"
           it "toElmEncoderRef [Maybe String]" $
             toElmEncoderRef (Proxy :: Proxy [Maybe String])
-            `shouldBe` "(list << List.map (Maybe.withDefault null << Maybe.map string))"
+            `shouldBe` "(Json.Encode.list << List.map (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
           it "toElmEncoderRef (Map String (Maybe String))" $
             toElmEncoderRef (Proxy :: Proxy (Map String (Maybe String)))
-            `shouldBe` "(dict string (Maybe.withDefault null << Maybe.map string))"
+            `shouldBe` "(dict Json.Encode.string (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
 
 shouldMatchTypeSource
   :: ElmType a
