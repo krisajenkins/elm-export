@@ -51,6 +51,10 @@ data Timing
   | Stop
   deriving (Generic,ElmType)
 
+newtype FavoritePlaces =
+  FavoritePlaces {positionsByUser :: Map String [Position]}
+  deriving (Generic,ElmType)
+
 spec :: Hspec.Spec
 spec =
   do toElmTypeSpec
@@ -95,6 +99,17 @@ toElmTypeSpec =
          defaultOptions
          (Proxy :: Proxy Timing)
          "test/TimingType.elm"
+     it "toElmTypeSource FavoritePlaces" $
+       shouldMatchTypeSource
+         (unlines ["module FavoritePlacesType exposing (..)"
+                  ,""
+                  ,"import PositionType exposing (..)"
+                  ,""
+                  ,""
+                  ,"%s"])
+         defaultOptions
+         (Proxy :: Proxy FavoritePlaces)
+         "test/FavoritePlacesType.elm"
      it "toElmTypeSourceWithOptions Post" $
        shouldMatchTypeSource
          (unlines ["module PostTypeWithOptions exposing (..)"

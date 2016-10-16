@@ -42,15 +42,15 @@ instance HasType ElmValue where
 
 instance HasType ElmPrimitive where
     render (EList (ElmPrimitive EChar)) = render EString
-    render (EList (ElmPrimitive value)) = sformat ("List " % stext) <$> render value
-    render (EList (ElmDatatype name _)) = pure $ sformat ("List " % stext) name
+    render (EList (ElmPrimitive value)) = sformat ("List " % (parenthesize %. stext)) <$> render value
+    render (EList (ElmDatatype name _)) = pure $ sformat ("List " % (parenthesize %. stext)) name
     render (ETuple2 x y) =
         sformat ("( " % stext % ", " % stext % " )") <$> render x <*> render y
-    render (EMaybe (ElmDatatype name _)) = pure $ sformat ("Maybe " % stext) name
+    render (EMaybe (ElmDatatype name _)) = pure $ sformat ("Maybe " % (parenthesize %. stext)) name
     render (EMaybe (ElmPrimitive value)) =
-        sformat ("Maybe " % stext) <$> render value
+        sformat ("Maybe " % (parenthesize %. stext)) <$> render value
     render (EDict k v) =
-        sformat ("Dict " % stext % " " % stext) <$> render k <*> render v
+        sformat ("Dict " % (parenthesize %. stext) % " " % (parenthesize %. stext)) <$> render k <*> render v
     render EInt = pure "Int"
     render EDate = pure "Date"
     render EBool = pure "Bool"
