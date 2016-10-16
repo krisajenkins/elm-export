@@ -1,17 +1,17 @@
 module PostEncoderWithOptions exposing (..)
 
 import CommentEncoder exposing (..)
-import Json.Encode exposing (..)
+import Json.Encode
 import PostType exposing (..)
 
 
-encodePost : Post -> Value
+encodePost : Post -> Json.Encode.Value
 encodePost x =
-    object
-        [ ( "postId", int x.id )
-        , ( "postName", string x.name )
-        , ( "postAge", (Maybe.withDefault null << Maybe.map float) x.age )
-        , ( "postComments", (list << List.map encodeComment) x.comments )
-        , ( "postPromoted", (Maybe.withDefault null << Maybe.map encodeComment) x.promoted )
-        , ( "postAuthor", (Maybe.withDefault null << Maybe.map string) x.author )
+    Json.Encode.object
+        [ ( "postId", Json.Encode.int x.id )
+        , ( "postName", Json.Encode.string x.name )
+        , ( "postAge", (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.float) x.age )
+        , ( "postComments", (Json.Encode.list << List.map encodeComment) x.comments )
+        , ( "postPromoted", (Maybe.withDefault Json.Encode.null << Maybe.map encodeComment) x.promoted )
+        , ( "postAuthor", (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string) x.author )
         ]
