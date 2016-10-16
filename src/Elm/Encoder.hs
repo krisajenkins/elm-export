@@ -27,7 +27,7 @@ instance HasEncoder ElmDatatype where
             name
             fnName <$>
             render constructor
-    render (ElmPrimitive primitive) = render primitive
+    render (ElmPrimitive primitive) = renderRef primitive
 
 instance HasEncoderRef ElmDatatype where
     renderRef (ElmDatatype name _) =
@@ -50,31 +50,28 @@ instance HasEncoder ElmValue where
                 (fieldModifier name)
                 valueBody
                 name
-    render (ElmPrimitiveRef primitive) = render primitive
+    render (ElmPrimitiveRef primitive) = renderRef primitive
     render (ElmRef name) = pure $ sformat ("encode" % stext) name
     render (Values x y) = sformat (stext % cr % "        , " % stext) <$> render x <*> render y
 
-instance HasEncoder ElmPrimitive where
-    render EDate = pure "(string << toISOString)"
-    render EUnit = pure "null"
-    render EInt = pure "int"
-    render EChar = pure "char"
-    render EBool = pure "bool"
-    render EFloat = pure "float"
-    render EString = pure "string"
-    render (EList (ElmPrimitive EChar)) = pure "string"
-    render (EList datatype) = sformat ("(list << List.map " % stext % ")") <$> renderRef datatype
-    render (EMaybe datatype) =
+instance HasEncoderRef ElmPrimitive where
+    renderRef EDate = pure "(string << toISOString)"
+    renderRef EUnit = pure "null"
+    renderRef EInt = pure "int"
+    renderRef EChar = pure "char"
+    renderRef EBool = pure "bool"
+    renderRef EFloat = pure "float"
+    renderRef EString = pure "string"
+    renderRef (EList (ElmPrimitive EChar)) = pure "string"
+    renderRef (EList datatype) = sformat ("(list << List.map " % stext % ")") <$> renderRef datatype
+    renderRef (EMaybe datatype) =
         sformat ("(Maybe.withDefault null << Maybe.map " % stext % ")") <$>
         renderRef datatype
-    render (ETuple2 x y) =
-        sformat ("(tuple2 " % stext % " " % stext % ")") <$> render x <*>
-        render y
-    render (EDict k datatype) =
-        sformat ("(dict " % stext % " " % stext % ")") <$> render k <*> renderRef datatype
-
-instance HasEncoderRef ElmPrimitive where
-    renderRef = render
+    renderRef (ETuple2 x y) =
+        sformat ("(tuple2 " % stext % " " % stext % ")") <$> renderRef x <*>
+        renderRef y
+    renderRef (EDict k datatype) =
+        sformat ("(dict " % stext % " " % stext % ")") <$> renderRef k <*> renderRef datatype
 
 toElmEncoderRefWith :: ElmType a => Options -> a -> Text
 toElmEncoderRefWith options x = runReader (renderRef (toElmType x)) options
