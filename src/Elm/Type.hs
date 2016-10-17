@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DefaultSignatures    #-}
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE FlexibleInstances    #-}
@@ -41,6 +43,7 @@ data ElmPrimitive
 data ElmConstructor
     = NamedConstructor Text
                        ElmValue
+    | NamedEmptyConstructor Text
     | RecordConstructor Text
                         ElmValue
     | MultipleConstructors [ElmConstructor]
@@ -78,12 +81,19 @@ instance (Datatype d, GenericElmConstructor f) =>
 class GenericElmConstructor f  where
     genericToElmConstructor :: f a -> ElmConstructor
 
-instance (Constructor c, GenericElmValue f) =>
+instance {-# OVERLAPPABLE #-} (Constructor c, GenericElmValue f) =>
          GenericElmConstructor (C1 c f) where
     genericToElmConstructor constructor =
         if conIsRecord constructor
             then RecordConstructor name (genericToElmValue (unM1 constructor))
             else NamedConstructor name (genericToElmValue (unM1 constructor))
+      where
+        name = pack $ conName constructor
+
+instance {-# OVERLAPPING #-} (Constructor c) =>
+         GenericElmConstructor (C1 c U1) where
+    genericToElmConstructor constructor =
+        NamedEmptyConstructor name
       where
         name = pack $ conName constructor
 
@@ -99,12 +109,21 @@ instance (GenericElmConstructor f, GenericElmConstructor g) =>
 class GenericElmValue f  where
     genericToElmValue :: f a -> ElmValue
 
-instance (Selector s, GenericElmValue a) =>
+instance {-# OVERLAPPABLE #-} (Selector s, GenericElmValue a) =>
          GenericElmValue (S1 s a) where
     genericToElmValue selector =
         ElmField
             (pack (selName selector))
             (genericToElmValue (undefined :: a p))
+
+instance {-# OVERLAPPING #-} (GenericElmValue a) =>
+#if __GLASGOW_HASKELL__ >= 800
+         GenericElmValue (S1 ('MetaSel 'Nothing su ss ds) a) where
+#else
+         GenericElmValue (S1 NoSelector a) where
+#endif
+    genericToElmValue _ =
+        genericToElmValue (undefined :: a p)
 
 instance (GenericElmValue f, GenericElmValue g) =>
          GenericElmValue (f :*: g) where
@@ -122,6 +141,8 @@ instance ElmType a =>
         case toElmType (undefined :: a) of
             ElmPrimitive primitive -> ElmPrimitiveRef primitive
             ElmDatatype name _ -> ElmRef name
+
+------------------------------------------------------------
 
 instance ElmType a => ElmType [a] where
     toElmType _ = ElmPrimitive (EList (toElmType (undefined :: a)))

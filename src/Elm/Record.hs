@@ -17,6 +17,8 @@ instance HasType ElmDatatype where
         sformat ("type " % stext % cr % "    = " % stext) typeName <$> render constructor
     render (ElmDatatype typeName constructor@(NamedConstructor _ _)) =
         sformat ("type " % stext % cr % "    = " % stext) typeName <$> render constructor
+    render (ElmDatatype typeName constructor@(NamedEmptyConstructor _ )) =
+        sformat ("type " % stext % cr % "    = " % stext) typeName <$> render constructor
     render (ElmPrimitive primitive) = render primitive
 
 
@@ -25,6 +27,8 @@ instance HasType ElmConstructor where
         sformat ("    { " % stext % cr % "    }") <$> render value
     render (NamedConstructor constructorName value) =
         sformat (stext % " " % stext) constructorName <$> render value
+    render (NamedEmptyConstructor constructorName ) =
+        pure constructorName
     render (MultipleConstructors constructors) =
         fmap (Data.Text.intercalate "\n    | ") $ sequence $ render <$> constructors
 
