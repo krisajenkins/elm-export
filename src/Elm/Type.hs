@@ -48,6 +48,7 @@ data ElmConstructor
 
 data ElmValue
     = ElmRef Text
+    | ElmEmpty
     | ElmPrimitiveRef ElmPrimitive
     | Values ElmValue
              ElmValue
@@ -102,9 +103,9 @@ class GenericElmValue f  where
 instance (Selector s, GenericElmValue a) =>
          GenericElmValue (S1 s a) where
     genericToElmValue selector =
-        ElmField
-            (pack (selName selector))
-            (genericToElmValue (undefined :: a p))
+        case selName selector of
+            "" -> genericToElmValue (undefined :: a p)
+            name -> ElmField (pack name) (genericToElmValue (undefined :: a p))
 
 instance (GenericElmValue f, GenericElmValue g) =>
          GenericElmValue (f :*: g) where
@@ -114,7 +115,7 @@ instance (GenericElmValue f, GenericElmValue g) =>
             (genericToElmValue (undefined :: g p))
 
 instance GenericElmValue U1 where
-    genericToElmValue _ = ElmPrimitiveRef  EUnit
+    genericToElmValue _ = ElmEmpty
 
 instance ElmType a =>
          GenericElmValue (Rec0 a) where
@@ -128,6 +129,9 @@ instance ElmType a => ElmType [a] where
 
 instance ElmType a => ElmType (Maybe a) where
     toElmType _ = ElmPrimitive (EMaybe (toElmType (undefined :: a)))
+
+instance ElmType () where
+    toElmType _ = ElmPrimitive EUnit
 
 instance ElmType Text where
     toElmType _ = ElmPrimitive EString

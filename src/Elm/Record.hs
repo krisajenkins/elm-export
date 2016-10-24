@@ -24,19 +24,20 @@ instance HasType ElmConstructor where
     render (RecordConstructor _ value) =
         sformat ("    { " % stext % cr % "    }") <$> render value
     render (NamedConstructor constructorName value) =
-        sformat (stext % " " % stext) constructorName <$> render value
+        sformat (stext % stext) constructorName <$> render value
     render (MultipleConstructors constructors) =
-        fmap (Data.Text.intercalate "\n    | ") $ sequence $ render <$> constructors
+        fmap (Data.Text.intercalate "\n    | ") . sequence $ render <$> constructors
 
 
 instance HasType ElmValue where
     render (ElmRef name) = pure name
+    render ElmEmpty = pure ""
     render (Values x y) =
         sformat (stext % cr % "    , " % stext) <$> render x <*> render y
-    render (ElmPrimitiveRef primitive) = render primitive
+    render (ElmPrimitiveRef primitive) = sformat (" " % stext) <$> render primitive
     render (ElmField name value) = do
         fieldModifier <- asks fieldLabelModifier
-        sformat (stext % " : " % stext) (fieldModifier name) <$> render value
+        sformat (stext % " :" % stext) (fieldModifier name) <$> render value
 
 
 instance HasType ElmPrimitive where
