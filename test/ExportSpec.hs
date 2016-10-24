@@ -16,6 +16,11 @@ import           Test.Hspec   hiding (Spec)
 import           Test.Hspec   as Hspec
 import           Text.Printf
 
+-- Debugging hint:
+-- ghci> import GHC.Generics
+-- ghci> :kind! Rep Post
+-- ...
+
 data Post = Post
     { id       :: Int
     , name     :: String
