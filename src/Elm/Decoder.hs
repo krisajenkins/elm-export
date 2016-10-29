@@ -5,7 +5,9 @@
 {-# LANGUAGE TypeOperators     #-}
 
 module Elm.Decoder
-  ( toElmDecoderSource
+  ( toElmDecoderRef
+  , toElmDecoderRefWith
+  , toElmDecoderSource
   , toElmDecoderSourceWith
   ) where
 
@@ -18,17 +20,26 @@ import           Formatting
 class HasDecoder a where
   render :: a -> Reader Options Text
 
+class HasDecoderRef a where
+  renderRef :: a -> Reader Options Text
+
 instance HasDecoder ElmDatatype where
-    render (ElmDatatype name constructor) =
+    render d@(ElmDatatype name constructor) = do
+        fnName <- renderRef d
         sformat
             (stext % " : Decoder " % stext % cr % stext % " =" % cr % stext)
             fnName
             name
             fnName <$>
-        render constructor
-      where
-        fnName = sformat ("decode" % stext) name
-    render (ElmPrimitive primitive) = render primitive
+            render constructor
+    render (ElmPrimitive primitive) = renderRef primitive
+
+instance HasDecoderRef ElmDatatype where
+    renderRef (ElmDatatype name _) =
+        pure $ sformat ("decode" % stext) name
+
+    renderRef (ElmPrimitive primitive) =
+        renderRef primitive
 
 
 instance HasDecoder ElmConstructor where
@@ -40,7 +51,7 @@ instance HasDecoder ElmConstructor where
 
 instance HasDecoder ElmValue where
     render (ElmRef name) = pure (sformat ("decode" % stext) name)
-    render (ElmPrimitiveRef primitive) = render primitive
+    render (ElmPrimitiveRef primitive) = renderRef primitive
     render (Values x y) = sformat (stext % cr % stext) <$> render x <*> render y
     render (ElmField name value) = do
         fieldModifier <- asks fieldLabelModifier
@@ -50,29 +61,33 @@ instance HasDecoder ElmValue where
             render value
 
 
-instance HasDecoder ElmPrimitive where
-    render (EList (ElmDatatype name _)) =
-        sformat ("(list " % stext % ")") <$> render (ElmRef name)
-    render (EList (ElmPrimitive EChar)) = pure "string"
-    render (EList (ElmPrimitive value)) =
-        sformat ("(list " % stext % ")") <$> render value
-    render (EDict key value) =
+instance HasDecoderRef ElmPrimitive where
+    renderRef (EList (ElmPrimitive EChar)) = pure "string"
+    renderRef (EList datatype) =
+        sformat ("(list " % stext % ")") <$> renderRef datatype
+    renderRef (EDict key value) =
         sformat ("(map Dict.fromList " % stext % ")") <$>
-        render (EList (ElmPrimitive (ETuple2 (ElmPrimitive key) value)))
-    render (EMaybe (ElmPrimitive value)) =
-        sformat ("(maybe " % stext % ")") <$> render value
-    render (EMaybe (ElmDatatype name _)) =
-        sformat ("(maybe " % stext % ")") <$> render (ElmRef name)
-    render (ETuple2 x y) =
-        sformat ("(tuple2 (,) " % stext % " " % stext % ")") <$> render x <*>
-        render y
-    render EUnit = pure "(succeed ())"
-    render EDate = pure "(customDecoder string Date.fromString)"
-    render EInt = pure "int"
-    render EBool = pure "bool"
-    render EChar = pure "char"
-    render EFloat = pure "float"
-    render EString = pure "string"
+        renderRef (EList (ElmPrimitive (ETuple2 (ElmPrimitive key) value)))
+    renderRef (EMaybe datatype) =
+        sformat ("(maybe " % stext % ")") <$> renderRef datatype
+    renderRef (ETuple2 x y) =
+        sformat ("(tuple2 (,) " % stext % " " % stext % ")") <$> renderRef x <*>
+        renderRef y
+    renderRef EUnit = pure "(succeed ())"
+    renderRef EDate = pure "(customDecoder string Date.fromString)"
+    renderRef EInt = pure "int"
+    renderRef EBool = pure "bool"
+    renderRef EChar = pure "char"
+    renderRef EFloat = pure "float"
+    renderRef EString = pure "string"
+
+
+toElmDecoderRefWith :: ElmType a => Options -> a -> Text
+toElmDecoderRefWith options x = runReader (renderRef (toElmType x)) options
+
+
+toElmDecoderRef :: ElmType a => a -> Text
+toElmDecoderRef = toElmDecoderRefWith defaultOptions
 
 
 toElmDecoderSourceWith :: ElmType a => Options -> a -> Text

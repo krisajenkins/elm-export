@@ -1,6 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Elm.Encoder (toElmEncoderSource, toElmEncoderSourceWith)
-       where
+module Elm.Encoder
+  ( toElmEncoderRef
+  , toElmEncoderRefWith
+  , toElmEncoderSource
+  , toElmEncoderSourceWith
+  ) where
 
 import           Control.Monad.Reader
 import           Data.Text
@@ -11,21 +15,30 @@ import           Formatting
 class HasEncoder a where
   render :: a -> Reader Options Text
 
+class HasEncoderRef a where
+  renderRef :: a -> Reader Options Text
+
 instance HasEncoder ElmDatatype where
-    render (ElmDatatype name constructor) =
+    render d@(ElmDatatype name constructor) = do
+        fnName <- renderRef d
         sformat
-            (stext % " : " % stext % " -> Value" % cr % stext % " x =" % stext)
+            (stext % " : " % stext % " -> Json.Encode.Value" % cr % stext % " x =" % stext)
             fnName
             name
             fnName <$>
-        render constructor
-      where
-        fnName = sformat ("encode" % stext) name
-    render (ElmPrimitive primitive) = render primitive
+            render constructor
+    render (ElmPrimitive primitive) = renderRef primitive
+
+instance HasEncoderRef ElmDatatype where
+    renderRef (ElmDatatype name _) =
+        pure $ sformat ("encode" % stext) name
+
+    renderRef (ElmPrimitive primitive) =
+        renderRef primitive
 
 instance HasEncoder ElmConstructor where
     render (RecordConstructor _ value) =
-      sformat (cr % "    object" % cr % "        [ " % stext % cr % "        ]") <$> render value
+      sformat (cr % "    Json.Encode.object" % cr % "        [ " % stext % cr % "        ]") <$> render value
 
 instance HasEncoder ElmValue where
     render (ElmField name value) = do
@@ -37,35 +50,34 @@ instance HasEncoder ElmValue where
                 (fieldModifier name)
                 valueBody
                 name
-    render (ElmPrimitiveRef primitive) = render primitive
+    render (ElmPrimitiveRef primitive) = renderRef primitive
     render (ElmRef name) = pure $ sformat ("encode" % stext) name
     render (Values x y) = sformat (stext % cr % "        , " % stext) <$> render x <*> render y
 
-instance HasEncoder ElmPrimitive where
-    render EDate = pure "(string << toISOString)"
-    render EUnit = pure "null"
-    render EInt = pure "int"
-    render EChar = pure "char"
-    render EBool = pure "bool"
-    render EFloat = pure "float"
-    render EString = pure "string"
-    render (EList (ElmDatatype name _)) = sformat ("(list << List.map " % stext % ")") <$> render (ElmRef name)
-    render (EList (ElmPrimitive EChar)) = pure "string"
-    render (EList (ElmPrimitive primitive)) =
-        sformat ("(list << List.map " % stext % ")") <$> render primitive
-    render (EMaybe (ElmDatatype name _)) =
-        sformat ("(Maybe.withDefault null << Maybe.map " % stext % ")") <$>
-        render (ElmRef name)
-    render (EMaybe (ElmPrimitive primitive)) =
-        sformat ("(Maybe.withDefault null << Maybe.map " % stext % ")") <$>
-        render primitive
-    render (ETuple2 x y) =
-        sformat ("(tuple2 " % stext % " " % stext % ")") <$> render x <*>
-        render y
-    render (EDict k (ElmDatatype name _)) =
-        sformat ("(dict " % stext % " " % stext % ")") <$> render k <*> render (ElmRef name)
-    render (EDict k (ElmPrimitive primitive)) =
-        sformat ("(dict " % stext % " " % stext % ")") <$> render k <*> render primitive
+instance HasEncoderRef ElmPrimitive where
+    renderRef EDate = pure "(Json.Encode.string << toISOString)"
+    renderRef EUnit = pure "Json.Encode.null"
+    renderRef EInt = pure "Json.Encode.int"
+    renderRef EChar = pure "Json.Encode.char"
+    renderRef EBool = pure "Json.Encode.bool"
+    renderRef EFloat = pure "Json.Encode.float"
+    renderRef EString = pure "Json.Encode.string"
+    renderRef (EList (ElmPrimitive EChar)) = pure "Json.Encode.string"
+    renderRef (EList datatype) = sformat ("(Json.Encode.list << List.map " % stext % ")") <$> renderRef datatype
+    renderRef (EMaybe datatype) =
+        sformat ("(Maybe.withDefault Json.Encode.null << Maybe.map " % stext % ")") <$>
+        renderRef datatype
+    renderRef (ETuple2 x y) =
+        sformat ("(tuple2 " % stext % " " % stext % ")") <$> renderRef x <*>
+        renderRef y
+    renderRef (EDict k datatype) =
+        sformat ("(dict " % stext % " " % stext % ")") <$> renderRef k <*> renderRef datatype
+
+toElmEncoderRefWith :: ElmType a => Options -> a -> Text
+toElmEncoderRefWith options x = runReader (renderRef (toElmType x)) options
+
+toElmEncoderRef :: ElmType a => a -> Text
+toElmEncoderRef = toElmEncoderRefWith defaultOptions
 
 toElmEncoderSourceWith :: ElmType a => Options -> a -> Text
 toElmEncoderSourceWith options x = runReader (render (toElmType x)) options
