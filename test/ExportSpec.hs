@@ -5,6 +5,7 @@
 module ExportSpec where
 
 import           Data.Char
+import           Data.Int
 import           Data.Map
 import           Data.Monoid
 import           Data.Proxy
@@ -17,7 +18,7 @@ import           Test.Hspec   as Hspec
 import           Text.Printf
 
 data Post =
-  Post {id       :: Int
+  Post {id       :: Int32
        ,name     :: String
        ,age      :: Maybe Double
        ,comments :: [Comment]
@@ -26,12 +27,12 @@ data Post =
   deriving (Generic,ElmType)
 
 data Comment =
-  Comment {postId         :: Int
+  Comment {postId         :: Int32
           ,text           :: Text
           ,mainCategories :: (String,String)
           ,published      :: Bool
           ,created        :: UTCTime
-          ,tags           :: Map String Int}
+          ,tags           :: Map String Int32}
   deriving (Generic,ElmType)
 
 data Position
