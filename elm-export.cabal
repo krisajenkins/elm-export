@@ -38,6 +38,7 @@ test-suite elm-export-test
   hs-source-dirs:      test
   main-is:             Spec.hs
   other-modules:       ExportSpec
+                     , TypesSpec
   build-depends:       QuickCheck
                      , base
                      , bytestring
