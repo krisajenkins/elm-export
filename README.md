@@ -4,54 +4,9 @@
 
 Create Elm classes and JSON decoders from Haskell DataTypes.
 
-## What Kind Of Code Does It Generate?
-
-Here's an example, generated from some of my Haskell code:
-
-```elm
-module Generated.Blog.Rest where
-
-import Json.Decode exposing (..)
-
-import Json.Decode.Extra exposing (date,(|:))
-
-type alias Post =
-  {postPostId : String
-  ,postAccountId : String
-  ,postSlug : String
-  ,postTitle : String
-  ,postContent : String
-  ,postCreated : Date
-  ,postPublished : Maybe Date}
-
-decodePost : Decoder Post
-decodePost =
-  succeed Post
-    |: ("postPostId" := string)
-    |: ("postAccountId" := string)
-    |: ("postSlug" := string)
-    |: ("postTitle" := string)
-    |: ("postContent" := string)
-    |: ("postCreated" := date)
-    |: ("postPublished" := maybe date)
-```
-
-Looks just like hand-written code, doesn't it?
-
 ## Installation
 
-For now, elm-export requires stack. Add `elm-export` to your cabal
-file's `build-depends` list, and this to your `stack.yaml` file:
-
-```yaml
-...
-packages:
-  ...
-  - location:
-      git: https://www.github.com/krisajenkins/elm-export
-      commit: 2a026e4c3a93a18006595636e783955223f9b98e
-...
-```
+Elm Export is [available on Hackage](http://hackage.haskell.org/package/elm-export).
 
 ## Usage
 
