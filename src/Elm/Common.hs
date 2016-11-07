@@ -1,10 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Elm.Common  where
 
-import           Data.Monoid
-import           Data.Text              (Text)
-import           Data.Text.Lazy         (count)
-import           Data.Text.Lazy.Builder
+import           Data.Text  (Text)
 import           Formatting
 
 data Options =
