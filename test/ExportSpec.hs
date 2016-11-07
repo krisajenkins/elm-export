@@ -51,6 +51,10 @@ data Timing
   | Stop
   deriving (Generic,ElmType)
 
+newtype Useless =
+    Useless ()
+     deriving (Generic, ElmType)
+
 newtype FavoritePlaces =
   FavoritePlaces {positionsByUser :: Map String [Position]}
   deriving (Generic,ElmType)
@@ -99,6 +103,12 @@ toElmTypeSpec =
          defaultOptions
          (Proxy :: Proxy Timing)
          "test/TimingType.elm"
+     it "toElmTypeSource Useless" $
+       shouldMatchTypeSource
+         (unlines ["module UselessType exposing (..)","","","%s"])
+         defaultOptions
+         (Proxy :: Proxy Useless)
+         "test/UselessType.elm"
      it "toElmTypeSource FavoritePlaces" $
        shouldMatchTypeSource
          (unlines ["module FavoritePlacesType exposing (..)"
