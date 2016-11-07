@@ -16,28 +16,47 @@ import           Test.Hspec   hiding (Spec)
 import           Test.Hspec   as Hspec
 import           Text.Printf
 
-data Post =
-  Post {id       :: Int
-       ,name     :: String
-       ,age      :: Maybe Double
-       ,comments :: [Comment]
-       ,promoted :: Maybe Comment
-       ,author   :: Maybe String}
-  deriving (Generic,ElmType)
+-- Debugging hint:
+-- ghci> import GHC.Generics
+-- ghci> :kind! Rep Post
+-- ...
 
-data Comment =
-  Comment {postId         :: Int
-          ,text           :: Text
-          ,mainCategories :: (String,String)
-          ,published      :: Bool
-          ,created        :: UTCTime
-          ,tags           :: Map String Int}
-  deriving (Generic,ElmType)
+data Post = Post
+    { id       :: Int
+    , name     :: String
+    , age      :: Maybe Double
+    , comments :: [Comment]
+    , promoted :: Maybe Comment
+    , author   :: Maybe String
+    } deriving (Generic, ElmType)
+
+data Comment = Comment
+    { postId         :: Int
+    , text           :: Text
+    , mainCategories :: (String, String)
+    , published      :: Bool
+    , created        :: UTCTime
+    , tags           :: Map String Int
+    } deriving (Generic, ElmType)
 
 data Position
   = Beginning
   | Middle
   | End
+  deriving (Generic,ElmType)
+
+data Timing
+  = Start
+  | Continue Double
+  | Stop
+  deriving (Generic,ElmType)
+
+newtype Useless =
+    Useless ()
+     deriving (Generic, ElmType)
+
+newtype FavoritePlaces =
+  FavoritePlaces {positionsByUser :: Map String [Position]}
   deriving (Generic,ElmType)
 
 spec :: Hspec.Spec
@@ -78,6 +97,29 @@ toElmTypeSpec =
          defaultOptions
          (Proxy :: Proxy Position)
          "test/PositionType.elm"
+     it "toElmTypeSource Timing" $
+       shouldMatchTypeSource
+         (unlines ["module TimingType exposing (..)","","","%s"])
+         defaultOptions
+         (Proxy :: Proxy Timing)
+         "test/TimingType.elm"
+     it "toElmTypeSource Useless" $
+       shouldMatchTypeSource
+         (unlines ["module UselessType exposing (..)","","","%s"])
+         defaultOptions
+         (Proxy :: Proxy Useless)
+         "test/UselessType.elm"
+     it "toElmTypeSource FavoritePlaces" $
+       shouldMatchTypeSource
+         (unlines ["module FavoritePlacesType exposing (..)"
+                  ,""
+                  ,"import PositionType exposing (..)"
+                  ,""
+                  ,""
+                  ,"%s"])
+         defaultOptions
+         (Proxy :: Proxy FavoritePlaces)
+         "test/FavoritePlacesType.elm"
      it "toElmTypeSourceWithOptions Post" $
        shouldMatchTypeSource
          (unlines ["module PostTypeWithOptions exposing (..)"
@@ -101,6 +143,25 @@ toElmTypeSpec =
          (defaultOptions {fieldLabelModifier = withPrefix "comment"})
          (Proxy :: Proxy Comment)
          "test/CommentTypeWithOptions.elm"
+     describe "Convert to Elm type references." $
+       do it "toElmTypeRef Post" $
+            toElmTypeRef (Proxy :: Proxy Post)
+            `shouldBe` "Post"
+          it "toElmTypeRef [Comment]" $
+            toElmTypeRef (Proxy :: Proxy [Comment])
+            `shouldBe` "List (Comment)"
+          it "toElmTypeRef String" $
+            toElmTypeRef (Proxy :: Proxy String)
+            `shouldBe` "String"
+          it "toElmTypeRef (Maybe String)" $
+            toElmTypeRef (Proxy :: Proxy (Maybe String))
+            `shouldBe` "Maybe (String)"
+          it "toElmTypeRef [Maybe String]" $
+            toElmTypeRef (Proxy :: Proxy [Maybe String])
+            `shouldBe` "List (Maybe (String))"
+          it "toElmTypeRef (Map String (Maybe String))" $
+            toElmTypeRef (Proxy :: Proxy (Map String (Maybe String)))
+            `shouldBe` "Dict (String) (Maybe (String))"
 
 toElmDecoderSpec :: Hspec.Spec
 toElmDecoderSpec =
@@ -163,6 +224,25 @@ toElmDecoderSpec =
          (defaultOptions {fieldLabelModifier = withPrefix "comment"})
          (Proxy :: Proxy Comment)
          "test/CommentDecoderWithOptions.elm"
+     describe "Convert to Elm decoder references." $
+       do it "toElmDecoderRef Post" $
+            toElmDecoderRef (Proxy :: Proxy Post)
+            `shouldBe` "decodePost"
+          it "toElmDecoderRef [Comment]" $
+            toElmDecoderRef (Proxy :: Proxy [Comment])
+            `shouldBe` "(list decodeComment)"
+          it "toElmDecoderRef String" $
+            toElmDecoderRef (Proxy :: Proxy String)
+            `shouldBe` "string"
+          it "toElmDecoderRef (Maybe String)" $
+            toElmDecoderRef (Proxy :: Proxy (Maybe String))
+            `shouldBe` "(maybe string)"
+          it "toElmDecoderRef [Maybe String]" $
+            toElmDecoderRef (Proxy :: Proxy [Maybe String])
+            `shouldBe` "(list (maybe string))"
+          it "toElmDecoderRef (Map String (Maybe String))" $
+            toElmDecoderRef (Proxy :: Proxy (Map String (Maybe String)))
+            `shouldBe` "(map Dict.fromList (list (tuple2 (,) string (maybe string))))"
 
 toElmEncoderSpec :: Hspec.Spec
 toElmEncoderSpec =
@@ -174,7 +254,7 @@ toElmEncoderSpec =
                   ,"import CommentType exposing (..)"
                   ,"import Exts.Date exposing (..)"
                   ,"import Exts.Json.Encode exposing (..)"
-                  ,"import Json.Encode exposing (..)"
+                  ,"import Json.Encode"
                   ,""
                   ,""
                   ,"%s"])
@@ -186,7 +266,7 @@ toElmEncoderSpec =
          (unlines ["module PostEncoder exposing (..)"
                   ,""
                   ,"import CommentEncoder exposing (..)"
-                  ,"import Json.Encode exposing (..)"
+                  ,"import Json.Encode"
                   ,"import PostType exposing (..)"
                   ,""
                   ,""
@@ -201,7 +281,7 @@ toElmEncoderSpec =
                   ,"import CommentType exposing (..)"
                   ,"import Exts.Date exposing (..)"
                   ,"import Exts.Json.Encode exposing (..)"
-                  ,"import Json.Encode exposing (..)"
+                  ,"import Json.Encode"
                   ,""
                   ,""
                   ,"%s"])
@@ -213,7 +293,7 @@ toElmEncoderSpec =
          (unlines ["module PostEncoderWithOptions exposing (..)"
                   ,""
                   ,"import CommentEncoder exposing (..)"
-                  ,"import Json.Encode exposing (..)"
+                  ,"import Json.Encode"
                   ,"import PostType exposing (..)"
                   ,""
                   ,""
@@ -221,6 +301,25 @@ toElmEncoderSpec =
          (defaultOptions {fieldLabelModifier = withPrefix "post"})
          (Proxy :: Proxy Post)
          "test/PostEncoderWithOptions.elm"
+     describe "Convert to Elm encoder references." $
+       do it "toElmEncoderRef Post" $
+            toElmEncoderRef (Proxy :: Proxy Post)
+            `shouldBe` "encodePost"
+          it "toElmEncoderRef [Comment]" $
+            toElmEncoderRef (Proxy :: Proxy [Comment])
+            `shouldBe` "(Json.Encode.list << List.map encodeComment)"
+          it "toElmEncoderRef String" $
+            toElmEncoderRef (Proxy :: Proxy String)
+            `shouldBe` "Json.Encode.string"
+          it "toElmEncoderRef (Maybe String)" $
+            toElmEncoderRef (Proxy :: Proxy (Maybe String))
+            `shouldBe` "(Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string)"
+          it "toElmEncoderRef [Maybe String]" $
+            toElmEncoderRef (Proxy :: Proxy [Maybe String])
+            `shouldBe` "(Json.Encode.list << List.map (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+          it "toElmEncoderRef (Map String (Maybe String))" $
+            toElmEncoderRef (Proxy :: Proxy (Map String (Maybe String)))
+            `shouldBe` "(dict Json.Encode.string (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
 
 shouldMatchTypeSource
   :: ElmType a

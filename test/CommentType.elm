@@ -10,5 +10,5 @@ type alias Comment =
     , mainCategories : ( String, String )
     , published : Bool
     , created : Date
-    , tags : Dict String Int
+    , tags : Dict (String) (Int)
     }

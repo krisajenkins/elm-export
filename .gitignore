@@ -2,3 +2,5 @@
 /TAGS
 /test/elm-package.json
 /test/elm-stuff
+/.ghci
+/.shake

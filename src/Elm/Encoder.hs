@@ -1,6 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Elm.Encoder (toElmEncoderSource, toElmEncoderSourceWith)
-       where
+module Elm.Encoder
+  ( toElmEncoderRef
+  , toElmEncoderRefWith
+  , toElmEncoderSource
+  , toElmEncoderSourceWith
+  ) where
 
 import           Control.Monad.Reader
 import           Data.Text
@@ -8,62 +12,75 @@ import           Elm.Common
 import           Elm.Type
 import           Formatting
 
-render :: ElmTypeExpr -> Reader Options Text
+class HasEncoder a where
+  render :: a -> Reader Options Text
 
-render (TopLevel (DataType d t)) =
-    sformat
-        (stext % " : " % stext % " -> Value\n" % stext % " x =" % stext)
-        fnName
-        d
-        fnName <$>
-    render t
-  where
-    fnName = sformat ("encode" % stext) d
+class HasEncoderRef a where
+  renderRef :: a -> Reader Options Text
 
-render (DataType d _) = return $ sformat ("encode" % stext) d
+instance HasEncoder ElmDatatype where
+    render d@(ElmDatatype name constructor) = do
+        fnName <- renderRef d
+        sformat
+            (stext % " : " % stext % " -> Json.Encode.Value" % cr % stext % " x =" % stext)
+            fnName
+            name
+            fnName <$>
+            render constructor
+    render (ElmPrimitive primitive) = renderRef primitive
 
-render (Record _ t) =
-  sformat ("\n    object\n        [ " % stext % "\n        ]") <$> render t
+instance HasEncoderRef ElmDatatype where
+    renderRef (ElmDatatype name _) =
+        pure $ sformat ("encode" % stext) name
 
-render (Product (Primitive "List") (Primitive "Char")) =
-  render (Primitive "String")
+    renderRef (ElmPrimitive primitive) =
+        renderRef primitive
 
-render (Product (Primitive "List") t) =
-  sformat ("(list << List.map " % stext % ")") <$> render t
+instance HasEncoder ElmConstructor where
+    render (RecordConstructor _ value) =
+      sformat (cr % "    Json.Encode.object" % cr % "        [ " % stext % cr % "        ]") <$> render value
 
-render (Product (Primitive "Maybe") t) =
-  sformat ("(Maybe.withDefault null << Maybe.map " % stext % ")") <$> render t
+instance HasEncoder ElmValue where
+    render (ElmField name value) = do
+        fieldModifier <- asks fieldLabelModifier
+        valueBody <- render value
+        pure $
+            sformat
+                ("( \"" % stext % "\", " % stext % " x." % stext % " )")
+                (fieldModifier name)
+                valueBody
+                name
+    render (ElmPrimitiveRef primitive) = renderRef primitive
+    render (ElmRef name) = pure $ sformat ("encode" % stext) name
+    render (Values x y) = sformat (stext % cr % "        , " % stext) <$> render x <*> render y
 
-render (Tuple2 x y) =
-  do bodyX <- render x
-     bodyY <- render y
-     return $ sformat ("tuple2 " % stext % " " % stext) bodyX bodyY
+instance HasEncoderRef ElmPrimitive where
+    renderRef EDate = pure "(Json.Encode.string << toISOString)"
+    renderRef EUnit = pure "Json.Encode.null"
+    renderRef EInt = pure "Json.Encode.int"
+    renderRef EChar = pure "Json.Encode.char"
+    renderRef EBool = pure "Json.Encode.bool"
+    renderRef EFloat = pure "Json.Encode.float"
+    renderRef EString = pure "Json.Encode.string"
+    renderRef (EList (ElmPrimitive EChar)) = pure "Json.Encode.string"
+    renderRef (EList datatype) = sformat ("(Json.Encode.list << List.map " % stext % ")") <$> renderRef datatype
+    renderRef (EMaybe datatype) =
+        sformat ("(Maybe.withDefault Json.Encode.null << Maybe.map " % stext % ")") <$>
+        renderRef datatype
+    renderRef (ETuple2 x y) =
+        sformat ("(tuple2 " % stext % " " % stext % ")") <$> renderRef x <*>
+        renderRef y
+    renderRef (EDict k datatype) =
+        sformat ("(dict " % stext % " " % stext % ")") <$> renderRef k <*> renderRef datatype
 
-render (Dict x y) =
-  do bodyX <- render x
-     bodyY <- render y
-     return $ sformat ("dict " % stext % " " % stext) bodyX bodyY
+toElmEncoderRefWith :: ElmType a => Options -> a -> Text
+toElmEncoderRefWith options x = runReader (renderRef (toElmType x)) options
 
-render (Product x y) =
-  do bodyX <- render x
-     bodyY <- render y
-     return $ sformat (stext % "\n        , " % stext) bodyX bodyY
-
-render (Selector n t) =
-  do fieldModifier <- asks fieldLabelModifier
-     typeBody <- render t
-     return $ sformat ("( \"" % stext % "\", " % stext % " x." % stext % " )") (fieldModifier n) typeBody n
-
-render  (Primitive "String") = return "string"
-render  (Primitive "Int") = return "int"
-render  (Primitive "Double") = return "float"
-render  (Primitive "Float") = return "float"
-render  (Primitive "Date") = return "(string << toISOString)"
-render  (Primitive "Bool") = return "bool"
-render  (Field t) = render t
+toElmEncoderRef :: ElmType a => a -> Text
+toElmEncoderRef = toElmEncoderRefWith defaultOptions
 
 toElmEncoderSourceWith :: ElmType a => Options -> a -> Text
-toElmEncoderSourceWith options x = runReader (render . TopLevel $ toElmType x) options
+toElmEncoderSourceWith options x = runReader (render (toElmType x)) options
 
 toElmEncoderSource :: ElmType a => a -> Text
 toElmEncoderSource = toElmEncoderSourceWith defaultOptions
