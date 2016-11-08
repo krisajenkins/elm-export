@@ -5,6 +5,7 @@
 module ExportSpec where
 
 import           Data.Char
+import           Data.Int
 import           Data.Map
 import           Data.Monoid
 import           Data.Proxy
@@ -58,6 +59,14 @@ newtype Useless =
 newtype FavoritePlaces =
   FavoritePlaces {positionsByUser :: Map String [Position]}
   deriving (Generic,ElmType)
+
+-- | We don't actually use this type, we just need to see that it compiles.
+data LotsOfInts = LotsOfInts
+    { intA :: Int8
+    , intB :: Int16
+    , intC :: Int32
+    , intD :: Int64
+    } deriving (Generic, ElmType)
 
 spec :: Hspec.Spec
 spec =
