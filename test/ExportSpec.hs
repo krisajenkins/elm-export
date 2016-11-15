@@ -7,6 +7,7 @@ module ExportSpec where
 import           Data.Char
 import           Data.Int
 import           Data.Map
+import           Data.IntMap
 import           Data.Monoid
 import           Data.Proxy
 import           Data.Text    hiding (unlines)
@@ -171,6 +172,9 @@ toElmTypeSpec =
           it "toElmTypeRef (Map String (Maybe String))" $
             toElmTypeRef (Proxy :: Proxy (Map String (Maybe String)))
             `shouldBe` "Dict (String) (Maybe (String))"
+          it "toElmTypeRef (IntMap (Maybe String))" $
+            toElmTypeRef (Proxy :: Proxy (IntMap (Maybe String)))
+            `shouldBe` "Dict (Int) (Maybe (String))"
 
 toElmDecoderSpec :: Hspec.Spec
 toElmDecoderSpec =
@@ -252,6 +256,9 @@ toElmDecoderSpec =
           it "toElmDecoderRef (Map String (Maybe String))" $
             toElmDecoderRef (Proxy :: Proxy (Map String (Maybe String)))
             `shouldBe` "(map Dict.fromList (list (tuple2 (,) string (maybe string))))"
+          it "toElmDecoderRef (IntMap (Maybe String))" $
+            toElmDecoderRef (Proxy :: Proxy (IntMap (Maybe String)))
+            `shouldBe` "(map Dict.fromList (list (tuple2 (,) int (maybe string))))"
 
 toElmEncoderSpec :: Hspec.Spec
 toElmEncoderSpec =
@@ -329,6 +336,9 @@ toElmEncoderSpec =
           it "toElmEncoderRef (Map String (Maybe String))" $
             toElmEncoderRef (Proxy :: Proxy (Map String (Maybe String)))
             `shouldBe` "(dict Json.Encode.string (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+          it "toElmEncoderRef (IntMap (Maybe String))" $
+            toElmEncoderRef (Proxy :: Proxy (IntMap (Maybe String)))
+            `shouldBe` "(dict Json.Encode.int (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
 
 shouldMatchTypeSource
   :: ElmType a
