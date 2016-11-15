@@ -10,6 +10,7 @@ module Elm.Type where
 
 import           Data.Int     (Int16, Int32, Int64, Int8)
 import           Data.Map
+import           Data.IntMap
 import           Data.Proxy
 import           Data.Text
 import           Data.Time
@@ -177,6 +178,12 @@ instance (HasElmComparable k, ElmType v) =>
     toElmType _ =
         ElmPrimitive $
         EDict (toElmComparable (undefined :: k)) (toElmType (undefined :: v))
+
+instance (ElmType v) =>
+         ElmType (IntMap v) where
+  toElmType _ =
+    ElmPrimitive $
+    EDict EInt (toElmType (undefined :: v))
 
 class HasElmComparable a where
   toElmComparable :: a -> ElmPrimitive
