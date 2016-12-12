@@ -40,7 +40,9 @@ test-suite elm-export-test
   main-is:             Spec.hs
   other-modules:       ExportSpec
                      , TypesSpec
-  build-depends:       QuickCheck
+  build-depends:       Diff
+                     , HUnit
+                     , QuickCheck
                      , base
                      , bytestring
                      , containers

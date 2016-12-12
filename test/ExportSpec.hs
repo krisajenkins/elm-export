@@ -4,17 +4,20 @@
 
 module ExportSpec where
 
+import qualified Data.Algorithm.Diff       as Diff
+import qualified Data.Algorithm.DiffOutput as DiffOutput
 import           Data.Char
 import           Data.Int
 import           Data.Map
 import           Data.Monoid
 import           Data.Proxy
-import           Data.Text    hiding (unlines)
+import           Data.Text    hiding (lines, unlines)
 import           Data.Time
 import           Elm
 import           GHC.Generics
 import           Test.Hspec   hiding (Spec)
 import           Test.Hspec   as Hspec
+import           Test.HUnit   (Assertion, assertBool)
 import           Text.Printf
 
 -- Debugging hint:
@@ -351,7 +354,15 @@ shouldMatchEncoderSource wrapping options x =
 shouldMatchFile :: String -> FilePath -> IO ()
 shouldMatchFile actual fileExpected =
   do source <- readFile fileExpected
-     actual `shouldBe` source
+     actual `shouldBeDiff` (fileExpected, source)
+
+shouldBeDiff :: String -> (String, String) -> Assertion
+shouldBeDiff a (fpath,b) =
+    assertBool
+        ("< generated\n" <>
+         "> " <> fpath <> "\n" <>
+         DiffOutput.ppDiff (Diff.getGroupedDiff (lines a) (lines b)))
+        (a == b)
 
 initCap :: Text -> Text
 initCap t =
