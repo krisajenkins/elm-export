@@ -1,4 +1,6 @@
-module Elm (module X) where
+module Elm
+  ( module X
+  ) where
 
 import           Elm.Common  as X (Options (..), defaultOptions)
 import           Elm.Decoder as X

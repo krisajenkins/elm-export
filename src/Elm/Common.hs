@@ -1,11 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Elm.Common  where
+
+module Elm.Common where
 
 import           Data.Text  (Text)
 import           Formatting
 
-data Options =
-  Options {fieldLabelModifier :: Text -> Text}
+data Options = Options
+  { fieldLabelModifier :: Text -> Text
+  }
 
 defaultOptions :: Options
 defaultOptions = Options {fieldLabelModifier = id}

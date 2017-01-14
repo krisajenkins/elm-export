@@ -17,30 +17,30 @@ makePath :: [Text] -> Text
 makePath = T.intercalate "/"
 
 data Spec = Spec
-    { namespace    :: [Text]
-    , declarations :: [Text]
-    }
+  { namespace    :: [Text]
+  , declarations :: [Text]
+  }
 
 pathForSpec :: FilePath -> Spec -> [Text]
 pathForSpec rootDir spec = T.pack rootDir : namespace spec
 
 ensureDirectory :: FilePath -> Spec -> IO ()
 ensureDirectory rootDir spec =
-    let dir = makePath . Data.List.init $ pathForSpec rootDir spec
-    in createDirectoryIfMissing True (T.unpack dir)
+  let dir = makePath . Data.List.init $ pathForSpec rootDir spec
+  in createDirectoryIfMissing True (T.unpack dir)
 
 specToFile :: FilePath -> Spec -> IO ()
 specToFile rootDir spec =
-    let path = pathForSpec rootDir spec
-        file = makePath path <> ".elm"
-        namespaceText = T.intercalate "." (namespace spec)
-        body =
-            T.intercalate
-                "\n\n"
-                (sformat ("module " % F.stext % " exposing (..)") namespaceText :
-                 declarations spec)
-    in do fprint ("Writing: " % F.stext % "\n") file
-          T.writeFile (T.unpack file) body
+  let path = pathForSpec rootDir spec
+      file = makePath path <> ".elm"
+      namespaceText = T.intercalate "." (namespace spec)
+      body =
+        T.intercalate
+          "\n\n"
+          (sformat ("module " % F.stext % " exposing (..)") namespaceText :
+           declarations spec)
+  in do fprint ("Writing: " % F.stext % "\n") file
+        T.writeFile (T.unpack file) body
 
 specsToDir :: [Spec] -> FilePath -> IO ()
 specsToDir specs rootDir = mapM_ processSpec specs
