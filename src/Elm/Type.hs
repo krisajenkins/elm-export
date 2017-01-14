@@ -120,17 +120,17 @@ instance GenericElmValue U1 where
 instance ElmType a =>
          GenericElmValue (Rec0 a) where
   genericToElmValue _ =
-    case toElmType (undefined :: a) of
+    case toElmType (Proxy :: Proxy a) of
       ElmPrimitive primitive -> ElmPrimitiveRef primitive
       ElmDatatype name _     -> ElmRef name
 
 instance ElmType a =>
          ElmType [a] where
-  toElmType _ = ElmPrimitive (EList (toElmType (undefined :: a)))
+  toElmType _ = ElmPrimitive (EList (toElmType (Proxy :: Proxy a)))
 
 instance ElmType a =>
          ElmType (Maybe a) where
-  toElmType _ = ElmPrimitive (EMaybe (toElmType (undefined :: a)))
+  toElmType _ = ElmPrimitive (EMaybe (toElmType (Proxy :: Proxy a)))
 
 instance ElmType () where
   toElmType _ = ElmPrimitive EUnit
@@ -166,7 +166,7 @@ instance (ElmType a, ElmType b) =>
          ElmType (a, b) where
   toElmType _ =
     ElmPrimitive $
-    ETuple2 (toElmType (undefined :: a)) (toElmType (undefined :: b))
+    ETuple2 (toElmType (Proxy :: Proxy a)) (toElmType (Proxy :: Proxy b))
 
 instance (ElmType a) =>
          ElmType (Proxy a) where
@@ -176,11 +176,11 @@ instance (HasElmComparable k, ElmType v) =>
          ElmType (Map k v) where
   toElmType _ =
     ElmPrimitive $
-    EDict (toElmComparable (undefined :: k)) (toElmType (undefined :: v))
+    EDict (toElmComparable (undefined :: k)) (toElmType (Proxy :: Proxy v))
 
 instance (ElmType v) =>
          ElmType (IntMap v) where
-  toElmType _ = ElmPrimitive $ EDict EInt (toElmType (undefined :: v))
+  toElmType _ = ElmPrimitive $ EDict EInt (toElmType (Proxy :: Proxy v))
 
 class HasElmComparable a where
   toElmComparable :: a -> ElmPrimitive
