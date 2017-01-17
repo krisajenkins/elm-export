@@ -70,7 +70,8 @@ instance HasDecoderRef ElmPrimitive where
   renderRef (ETuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y
-    return . parens $ "tuple2 (,)" <+> dx <+> dy
+    return . parens $
+      "map2 (,)" <+> parens ("index 0" <+> dx) <+> parens ("index 1" <+> dy)
   renderRef EUnit = pure $ parens "succeed ()"
   renderRef EDate = pure "decodeDate"
   renderRef EInt = pure "int"
