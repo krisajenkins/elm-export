@@ -51,12 +51,12 @@ instance HasType ElmConstructor where
 
 instance HasType ElmValue where
   render (ElmRef name) = pure (stext name)
+  render (ElmPrimitiveRef primitive) = renderRef primitive
   render ElmEmpty = pure (text "")
   render (Values x y) = do
     dx <- render x
     dy <- render y
     return $ dx <$$> comma <+> dy
-  render (ElmPrimitiveRef primitive) = renderRef primitive
   render (ElmField name value) = do
     fieldModifier <- asks fieldLabelModifier
     dv <- render value
