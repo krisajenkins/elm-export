@@ -18,15 +18,16 @@ an example with a `Person` type:
 ```haskell
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
+
 module Db where
 
-import GHC.Generics
 import Elm
+import GHC.Generics
 
-data Person =
-  Person {id   :: Int
-         ,name :: Maybe String}
-  deriving (Show,Eq,Generic,ElmType)
+data Person = Person
+  { id :: Int
+  , name :: Maybe String
+  } deriving (Show, Eq, Generic, ElmType)
 ```
 
 That's it for the type. Now you'll want to write a main that generates
@@ -35,16 +36,19 @@ the Elm source code:
 ```haskell
 module Main where
 
+import Data.Proxy
 import Db
 import Elm
-import Data.Proxy
 
 spec :: Spec
-spec = Spec ["Db", "Types"]
-            ["import Json.Decode exposing (..)"
-            ,"import Json.Decode.Pipeline exposing (..)"
-            ,toElmTypeSource (Proxy :: Proxy Person)
-            ,toElmDecoderSource (Proxy :: Proxy Person)]
+spec =
+  Spec
+    ["Db", "Types"]
+    [ "import Json.Decode exposing (..)"
+    , "import Json.Decode.Pipeline exposing (..)"
+    , toElmTypeSource (Proxy :: Proxy Person)
+    , toElmDecoderSource (Proxy :: Proxy Person)
+    ]
 
 main :: IO ()
 main = specsToDir [spec] "some/where/output"
