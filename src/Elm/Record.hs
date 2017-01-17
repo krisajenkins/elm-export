@@ -25,11 +25,7 @@ instance HasType ElmDatatype where
     name <- renderRef d
     ctor <- render constructor
     return . nest 4 $ "type alias" <+> name <+> "=" <$$> ctor
-  render d@(ElmDatatype _ constructor@(MultipleConstructors _)) = do
-    name <- renderRef d
-    ctor <- render constructor
-    return . nest 4 $ "type" <+> name <$$> "=" <+> ctor
-  render d@(ElmDatatype _ constructor@(NamedConstructor _ _)) = do
+  render d@(ElmDatatype _ constructor) = do
     name <- renderRef d
     ctor <- render constructor
     return . nest 4 $ "type" <+> name <$$> "=" <+> ctor
