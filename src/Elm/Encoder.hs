@@ -71,10 +71,10 @@ instance HasEncoderRef ElmPrimitive where
     dx <- renderRef x
     dy <- renderRef y
     return . parens $ "tuple2" <+> dx <+> dy
-  renderRef (EDict k datatype) = do
+  renderRef (EDict k v) = do
     dk <- renderRef k
-    dd <- renderRef datatype
-    return . parens $ "dict" <+> dk <+> dd
+    dv <- renderRef v
+    return . parens $ "dict" <+> dk <+> dv
 
 toElmEncoderRefWith
   :: ElmType a
