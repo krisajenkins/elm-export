@@ -8,7 +8,7 @@ license:             OtherLicense
 license-file:        LICENSE.txt
 author:              Kris Jenkins
 maintainer:          kris.jenkins@clearercode.com
-copyright:           2015-2016 Kris Jenkins
+copyright:           2015-2017 Kris Jenkins
 category:            Web
 build-type:          Simple
 extra-source-files:  test/*.elm
