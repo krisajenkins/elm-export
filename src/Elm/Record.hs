@@ -21,18 +21,18 @@ class HasTypeRef a where
   renderRef :: a -> Reader Options Doc
 
 instance HasType ElmDatatype where
-  render d@(ElmDatatype _ constructor@(RecordConstructor _ _)) =
-    template <$> renderRef d <*> render constructor
-    where
-      template name ctor = nest 4 $ "type alias" <+> name <+> "=" <$$> ctor
-  render d@(ElmDatatype _ constructor@(MultipleConstructors _)) =
-    template <$> renderRef d <*> render constructor
-    where
-      template name ctor = nest 4 $ "type" <+> name <$$> "=" <+> ctor
-  render d@(ElmDatatype _ constructor@(NamedConstructor _ _)) =
-    template <$> renderRef d <*> render constructor
-    where
-      template name ctor = nest 4 $ "type" <+> name <$$> "=" <+> ctor
+  render d@(ElmDatatype _ constructor@(RecordConstructor _ _)) = do
+    name <- renderRef d
+    ctor <- render constructor
+    return . nest 4 $ "type alias" <+> name <+> "=" <$$> ctor
+  render d@(ElmDatatype _ constructor@(MultipleConstructors _)) = do
+    name <- renderRef d
+    ctor <- render constructor
+    return . nest 4 $ "type" <+> name <$$> "=" <+> ctor
+  render d@(ElmDatatype _ constructor@(NamedConstructor _ _)) = do
+    name <- renderRef d
+    ctor <- render constructor
+    return . nest 4 $ "type" <+> name <$$> "=" <+> ctor
   render (ElmPrimitive primitive) = renderRef primitive
 
 instance HasTypeRef ElmDatatype where
@@ -40,41 +40,44 @@ instance HasTypeRef ElmDatatype where
   renderRef (ElmPrimitive primitive) = renderRef primitive
 
 instance HasType ElmConstructor where
-  render (RecordConstructor _ value) = template <$> render value
-    where
-      template v = "{" <+> v <$$> "}"
-  render (NamedConstructor constructorName value) = template <$> render value
-    where
-      template v = stext constructorName <+> v
+  render (RecordConstructor _ value) = do
+    dv <- render value
+    return $ "{" <+> dv <$$> "}"
+  render (NamedConstructor constructorName value) = do
+    dv <- render value
+    return $ stext constructorName <+> dv
   render (MultipleConstructors constructors) =
     mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
 
 instance HasType ElmValue where
   render (ElmRef name) = pure (stext name)
   render ElmEmpty = pure (text "")
-  render (Values x y) = template <$> render x <*> render y
-    where
-      template dx dy = dx <$$> comma <+> dy
+  render (Values x y) = do
+    dx <- render x
+    dy <- render y
+    return $ dx <$$> comma <+> dy
   render (ElmPrimitiveRef primitive) = renderRef primitive
   render (ElmField name value) = do
     fieldModifier <- asks fieldLabelModifier
-    let template v = stext (fieldModifier name) <+> ":" <+> v
-    template <$> render value
+    dv <- render value
+    return $ stext (fieldModifier name) <+> ":" <+> dv
 
 instance HasTypeRef ElmPrimitive where
   renderRef (EList (ElmPrimitive EChar)) = renderRef EString
-  renderRef (EList datatype) = template <$> renderRef datatype
-    where
-      template dv = "List" <+> parens dv
-  renderRef (ETuple2 x y) = template <$> renderRef x <*> renderRef y
-    where
-      template dx dy = "(" <+> dx <> comma <+> dy <+> ")"
-  renderRef (EMaybe datatype) = template <$> renderRef datatype
-    where
-      template dv = "Maybe" <+> parens dv
-  renderRef (EDict k v) = template <$> renderRef k <*> renderRef v
-    where
-      template dk dv = "Dict" <+> parens dk <+> parens dv
+  renderRef (EList datatype) = do
+    dt <- renderRef datatype
+    return $ "List" <+> parens dt
+  renderRef (ETuple2 x y) = do
+    dx <- render x
+    dy <- render y
+    return . spaceparens $ dx <> comma <+> dy
+  renderRef (EMaybe datatype) = do
+    dt <- renderRef datatype
+    return $ "Maybe" <+> parens dt
+  renderRef (EDict k v) = do
+    dk <- renderRef k
+    dv <- renderRef v
+    return $ "Dict" <+> parens dk <+> parens dv
   renderRef EInt = pure "Int"
   renderRef EDate = pure "Date"
   renderRef EBool = pure "Bool"

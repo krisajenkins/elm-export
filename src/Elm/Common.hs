@@ -30,3 +30,6 @@ pprinter = LT.toStrict . displayT . renderPretty 0.4 100
 
 stext :: Data.Text.Text -> Doc
 stext = text . LT.fromStrict
+
+spaceparens :: Doc -> Doc
+spaceparens doc = "(" <+> doc <+> ")"

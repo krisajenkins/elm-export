@@ -25,9 +25,8 @@ instance HasEncoder ElmDatatype where
     fnName <- renderRef d
     ctor <- render constructor
     return $
-      fnName <+>
-      ":" <+>
-      stext name <+> "-> Json.Encode.Value" <$$> fnName <+> "x =" <> ctor
+      (fnName <+> ":" <+> stext name <+> "->" <+> "Json.Encode.Value") <$$>
+      (fnName <+> "x =" <$$> indent 4 ctor)
   render (ElmPrimitive primitive) = renderRef primitive
 
 instance HasEncoderRef ElmDatatype where
@@ -37,17 +36,15 @@ instance HasEncoderRef ElmDatatype where
 instance HasEncoder ElmConstructor where
   render (RecordConstructor _ value) = do
     dv <- render value
-    return $
-      nest 4 (line <> nest 4 ("Json.Encode.object" <$$> "[" <+> dv <$$> "]"))
+    return . nest 4 $ "Json.Encode.object" <$$> "[" <+> dv <$$> "]"
 
 instance HasEncoder ElmValue where
   render (ElmField name value) = do
     fieldModifier <- asks fieldLabelModifier
     valueBody <- render value
-    return
-      ("(" <+>
-       dquotes (stext (fieldModifier name)) <> comma <+>
-       valueBody <+> "x." <> stext name <+> ")")
+    return . spaceparens $
+      dquotes (stext (fieldModifier name)) <> comma <+>
+      (valueBody <+> "x." <> stext name)
   render (ElmPrimitiveRef primitive) = renderRef primitive
   render (ElmRef name) = pure $ "encode" <> stext name
   render (Values x y) = do
@@ -56,7 +53,7 @@ instance HasEncoder ElmValue where
     return $ dx <$$> comma <+> dy
 
 instance HasEncoderRef ElmPrimitive where
-  renderRef EDate = pure "(Json.Encode.string << toISOString)"
+  renderRef EDate = pure $ parens "Json.Encode.string << toISOString"
   renderRef EUnit = pure "Json.Encode.null"
   renderRef EInt = pure "Json.Encode.int"
   renderRef EChar = pure "Json.Encode.char"

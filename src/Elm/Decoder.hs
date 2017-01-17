@@ -28,8 +28,8 @@ instance HasDecoder ElmDatatype where
     fnName <- renderRef d
     ctor <- render constructor
     return $
-      fnName <+>
-      ": Decoder" <+> stext name <$$> nest 4 (fnName <+> "=" <$$> ctor)
+      (fnName <+> ": Decoder" <+> stext name) <$$>
+      (fnName <+> "=" <$$> indent 4 ctor)
   render (ElmPrimitive primitive) = renderRef primitive
 
 instance HasDecoderRef ElmDatatype where
@@ -39,10 +39,10 @@ instance HasDecoderRef ElmDatatype where
 instance HasDecoder ElmConstructor where
   render (NamedConstructor name value) = do
     dv <- render value
-    return $ "decode" <+> stext name <$$> dv
+    return $ "decode" <+> stext name <$$> indent 4 dv
   render (RecordConstructor name value) = do
     dv <- render value
-    return . nest 4 $ "decode" <+> stext name <$$> dv
+    return $ "decode" <+> stext name <$$> indent 4 dv
 
 instance HasDecoder ElmValue where
   render (ElmRef name) = pure $ "decode" <> stext name
@@ -71,8 +71,8 @@ instance HasDecoderRef ElmPrimitive where
     dx <- renderRef x
     dy <- renderRef y
     return . parens $ "tuple2 (,)" <+> dx <+> dy
-  renderRef EUnit = pure "(succeed ())"
-  renderRef EDate = pure "(customDecoder string Date.fromString)"
+  renderRef EUnit = pure $ parens "succeed ()"
+  renderRef EDate = pure $ parens "customDecoder string Date.fromString"
   renderRef EInt = pure "int"
   renderRef EBool = pure "bool"
   renderRef EChar = pure "char"
