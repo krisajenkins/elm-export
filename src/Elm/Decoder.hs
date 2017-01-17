@@ -1,7 +1,7 @@
-{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeOperators     #-}
+{-# LANGUAGE TypeOperators #-}
 
 module Elm.Decoder
   ( toElmDecoderRef
@@ -10,61 +10,67 @@ module Elm.Decoder
   , toElmDecoderSourceWith
   ) where
 
-import           Control.Monad.Reader
-import           Data.Text
-import           Elm.Common
-import           Elm.Type
-import           Formatting
+import Control.Monad.Reader
+import Data.Monoid
+import qualified Data.Text as T
+import Elm.Common
+import Elm.Type
+import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
-class HasDecoder a  where
-  render :: a -> Reader Options Text
+class HasDecoder a where
+  render :: a -> Reader Options Doc
 
-class HasDecoderRef a  where
-  renderRef :: a -> Reader Options Text
+class HasDecoderRef a where
+  renderRef :: a -> Reader Options Doc
 
 instance HasDecoder ElmDatatype where
   render d@(ElmDatatype name constructor) = do
     fnName <- renderRef d
-    sformat
-      (stext % " : Decoder " % stext % cr % stext % " =" % cr % stext)
-      fnName
-      name
-      fnName <$>
-      render constructor
+    ctor <- render constructor
+    return $
+      fnName <+>
+      ": Decoder" <+> stext name <$$> nest 4 (fnName <+> "=" <$$> ctor)
   render (ElmPrimitive primitive) = renderRef primitive
 
 instance HasDecoderRef ElmDatatype where
-  renderRef (ElmDatatype name _)     = pure $ sformat ("decode" % stext) name
+  renderRef (ElmDatatype name _) = pure $ "decode" <> stext name
   renderRef (ElmPrimitive primitive) = renderRef primitive
 
 instance HasDecoder ElmConstructor where
-  render (NamedConstructor name value) =
-    sformat ("    decode " % stext % cr % stext) name <$> render value
-  render (RecordConstructor name value) =
-    sformat ("    decode " % stext % cr % stext) name <$> render value
+  render (NamedConstructor name value) = do
+    dv <- render value
+    return $ "decode" <+> stext name <$$> dv
+  render (RecordConstructor name value) = do
+    dv <- render value
+    return . nest 4 $ "decode" <+> stext name <$$> dv
 
 instance HasDecoder ElmValue where
-  render (ElmRef name) = pure (sformat ("decode" % stext) name)
+  render (ElmRef name) = pure $ "decode" <> stext name
   render (ElmPrimitiveRef primitive) = renderRef primitive
-  render (Values x y) = sformat (stext % cr % stext) <$> render x <*> render y
+  render (Values x y) = do
+    dx <- render x
+    dy <- render y
+    return $ dx <$$> dy
   render (ElmField name value) = do
     fieldModifier <- asks fieldLabelModifier
-    sformat
-      ("        |> required \"" % stext % "\" " % stext)
-      (fieldModifier name) <$>
-      render value
+    dv <- render value
+    return $ "|> required" <+> dquotes (stext (fieldModifier name)) <+> dv
 
 instance HasDecoderRef ElmPrimitive where
   renderRef (EList (ElmPrimitive EChar)) = pure "string"
-  renderRef (EList datatype) = sformat ("(list " % stext % ")") <$> renderRef datatype
-  renderRef (EDict key value) =
-    sformat ("(map Dict.fromList " % stext % ")") <$>
-    renderRef (EList (ElmPrimitive (ETuple2 (ElmPrimitive key) value)))
-  renderRef (EMaybe datatype) =
-    sformat ("(maybe " % stext % ")") <$> renderRef datatype
-  renderRef (ETuple2 x y) =
-    sformat ("(tuple2 (,) " % stext % " " % stext % ")") <$> renderRef x <*>
-    renderRef y
+  renderRef (EList datatype) = do
+    dt <- renderRef datatype
+    return . parens $ "list" <+> dt
+  renderRef (EDict key value) = do
+    d <- renderRef (EList (ElmPrimitive (ETuple2 (ElmPrimitive key) value)))
+    return . parens $ "map Dict.fromList" <+> d
+  renderRef (EMaybe datatype) = do
+    dt <- renderRef datatype
+    return . parens $ "maybe" <+> dt
+  renderRef (ETuple2 x y) = do
+    dx <- renderRef x
+    dy <- renderRef y
+    return . parens $ "tuple2 (,)" <+> dx <+> dy
   renderRef EUnit = pure "(succeed ())"
   renderRef EDate = pure "(customDecoder string Date.fromString)"
   renderRef EInt = pure "int"
@@ -75,20 +81,20 @@ instance HasDecoderRef ElmPrimitive where
 
 toElmDecoderRefWith
   :: ElmType a
-  => Options -> a -> Text
-toElmDecoderRefWith options x = runReader (renderRef (toElmType x)) options
+  => Options -> a -> T.Text
+toElmDecoderRefWith options x = pprinter $ runReader (renderRef (toElmType x)) options
 
 toElmDecoderRef
   :: ElmType a
-  => a -> Text
+  => a -> T.Text
 toElmDecoderRef = toElmDecoderRefWith defaultOptions
 
 toElmDecoderSourceWith
   :: ElmType a
-  => Options -> a -> Text
-toElmDecoderSourceWith options x = runReader (render (toElmType x)) options
+  => Options -> a -> T.Text
+toElmDecoderSourceWith options x = pprinter $ runReader (render (toElmType x)) options
 
 toElmDecoderSource
   :: ElmType a
-  => a -> Text
+  => a -> T.Text
 toElmDecoderSource = toElmDecoderSourceWith defaultOptions
