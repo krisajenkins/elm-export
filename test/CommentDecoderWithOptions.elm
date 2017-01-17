@@ -12,7 +12,7 @@ decodeComment =
     decode Comment
         |> required "commentPostId" int
         |> required "commentText" string
-        |> required "commentMainCategories" (tuple2 (,) string string)
+        |> required "commentMainCategories" (map2 (,) (index 0 string) (index 1 string))
         |> required "commentPublished" bool
         |> required "commentCreated" decodeDate
-        |> required "commentTags" (map Dict.fromList (list (tuple2 (,) string int)))
+        |> required "commentTags" (map Dict.fromList (list (map2 (,) (index 0 string) (index 1 int))))
