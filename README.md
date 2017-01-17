@@ -42,7 +42,7 @@ import Data.Proxy
 spec :: Spec
 spec = Spec ["Db", "Types"]
             ["import Json.Decode exposing (..)"
-            ,"import Json.Decode.Extra exposing (apply,date)"
+            ,"import Json.Decode.Pipeline exposing (..)"
             ,toElmTypeSource (Proxy :: Proxy Person)
             ,toElmDecoderSource (Proxy :: Proxy Person)]
 
@@ -57,6 +57,15 @@ All the hard work here is done by `toElmTypeSource` and
 `toElmDecoderSource`. The `Spec` code is just wrapping to make it easy
 to create a complete Elm file from the meat that `ElmType` gives
 you.
+
+### Required Elm Packages
+
+The decoders we produce require these extra Elm packages installed:
+
+``` sh
+elm package install NoRedInk/elm-decode-pipeline
+elm package install krisajenkins/elm-exts
+```
 
 ## Development
 

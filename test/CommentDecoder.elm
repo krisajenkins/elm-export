@@ -1,8 +1,8 @@
 module CommentDecoder exposing (..)
 
 import CommentType exposing (..)
-import Date
 import Dict
+import Exts.Json.Decode exposing (..)
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
 
@@ -14,5 +14,5 @@ decodeComment =
         |> required "text" string
         |> required "mainCategories" (tuple2 (,) string string)
         |> required "published" bool
-        |> required "created" (customDecoder string Date.fromString)
+        |> required "created" decodeDate
         |> required "tags" (map Dict.fromList (list (tuple2 (,) string int)))

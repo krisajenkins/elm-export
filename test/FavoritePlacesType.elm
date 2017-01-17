@@ -1,5 +1,6 @@
 module FavoritePlacesType exposing (..)
 
+import Dict exposing (..)
 import PositionType exposing (..)
 
 

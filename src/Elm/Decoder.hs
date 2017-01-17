@@ -72,7 +72,7 @@ instance HasDecoderRef ElmPrimitive where
     dy <- renderRef y
     return . parens $ "tuple2 (,)" <+> dx <+> dy
   renderRef EUnit = pure $ parens "succeed ()"
-  renderRef EDate = pure $ parens "customDecoder string Date.fromString"
+  renderRef EDate = pure "decodeDate"
   renderRef EInt = pure "int"
   renderRef EBool = pure "bool"
   renderRef EChar = pure "char"

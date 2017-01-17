@@ -1,7 +1,6 @@
 module CommentEncoderWithOptions exposing (..)
 
 import CommentType exposing (..)
-import Exts.Date exposing (..)
 import Exts.Json.Encode exposing (..)
 import Json.Encode
 
@@ -13,6 +12,6 @@ encodeComment x =
         , ( "commentText", Json.Encode.string x.text )
         , ( "commentMainCategories", (tuple2 Json.Encode.string Json.Encode.string) x.mainCategories )
         , ( "commentPublished", Json.Encode.bool x.published )
-        , ( "commentCreated", (Json.Encode.string << toISOString) x.created )
+        , ( "commentCreated", (Json.Encode.string << toString) x.created )
         , ( "commentTags", (dict Json.Encode.string Json.Encode.int) x.tags )
         ]
