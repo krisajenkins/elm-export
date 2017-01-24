@@ -5,20 +5,21 @@ module Elm.Encoder
   , toElmEncoderRefWith
   , toElmEncoderSource
   , toElmEncoderSourceWith
+  , renderEncoder
   ) where
 
 import Control.Monad.Reader
-import Data.Monoid
+import Control.Monad.Writer
 import qualified Data.Text as T
 import Elm.Common
 import Elm.Type
 import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 class HasEncoder a where
-  render :: a -> Reader Options Doc
+  render :: a -> RenderM Doc
 
 class HasEncoderRef a where
-  renderRef :: a -> Reader Options Doc
+  renderRef :: a -> RenderM Doc
 
 instance HasEncoder ElmDatatype where
   render d@(ElmDatatype name constructor) = do
@@ -70,17 +71,19 @@ instance HasEncoderRef ElmPrimitive where
   renderRef (ETuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y
-    return . parens $ "tuple2" <+> dx <+> dy
+    require "Exts.Json.Encode"
+    return . parens $ "Exts.Json.Encode.tuple2" <+> dx <+> dy
   renderRef (EDict k v) = do
     dk <- renderRef k
     dv <- renderRef v
-    return . parens $ "dict" <+> dk <+> dv
+    require "Exts.Json.Encode"
+    return . parens $ "Exts.Json.Encode.dict" <+> dk <+> dv
 
 toElmEncoderRefWith
   :: ElmType a
   => Options -> a -> T.Text
 toElmEncoderRefWith options x =
-  pprinter $ runReader (renderRef (toElmType x)) options
+  pprinter . fst $ runReader (runWriterT (renderRef (toElmType x))) options
 
 toElmEncoderRef
   :: ElmType a
@@ -91,9 +94,14 @@ toElmEncoderSourceWith
   :: ElmType a
   => Options -> a -> T.Text
 toElmEncoderSourceWith options x =
-  pprinter $ runReader (render (toElmType x)) options
+  pprinter . fst $ runReader (runWriterT (render (toElmType x))) options
 
 toElmEncoderSource
   :: ElmType a
   => a -> T.Text
 toElmEncoderSource = toElmEncoderSourceWith defaultOptions
+
+renderEncoder :: ElmType a => a -> RenderM ()
+renderEncoder x =
+  require "Json.Encode" >>
+  (collectDeclaration . render . toElmType $ x)

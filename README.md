@@ -42,13 +42,10 @@ import Elm
 
 spec :: Spec
 spec =
-  Spec
-    ["Db", "Types"]
-    [ "import Json.Decode exposing (..)"
-    , "import Json.Decode.Pipeline exposing (..)"
-    , toElmTypeSource (Proxy :: Proxy Person)
-    , toElmDecoderSource (Proxy :: Proxy Person)
-    ]
+  moduleSpec ["Db", "Types"] $ do
+    renderType (Proxy :: Proxy Person)
+    renderDecoder (Proxy :: Proxy Person)
+    renderEncoder (Proxy :: Proxy Person)
 
 main :: IO ()
 main = specsToDir [spec] "some/where/output"
@@ -56,11 +53,6 @@ main = specsToDir [spec] "some/where/output"
 
 Run this and the directory `some/where/output` will be created, and
 under that the Elm source file `Db/Types.elm` will be found.
-
-All the hard work here is done by `toElmTypeSource` and
-`toElmDecoderSource`. The `Spec` code is just wrapping to make it easy
-to create a complete Elm file from the meat that `ElmType` gives
-you.
 
 ### Required Elm Packages
 

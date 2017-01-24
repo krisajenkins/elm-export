@@ -12,7 +12,7 @@ import           Data.IntMap
 import           Data.Map
 import           Data.Monoid
 import           Data.Proxy
-import           Data.Text                 hiding (lines, unlines)
+import           Data.Text                 hiding (head, lines, unlines)
 import           Data.Time
 import           Elm
 import           GHC.Generics
@@ -76,6 +76,7 @@ spec = do
   toElmTypeSpec
   toElmDecoderSpec
   toElmEncoderSpec
+  moduleSpecsSpec
 
 toElmTypeSpec :: Hspec.Spec
 toElmTypeSpec =
@@ -356,10 +357,29 @@ toElmEncoderSpec =
         "(Json.Encode.list << List.map (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
       it "toElmEncoderRef (Map String (Maybe String))" $
         toElmEncoderRef (Proxy :: Proxy (Map String (Maybe String))) `shouldBe`
-        "(dict Json.Encode.string (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+        "(Exts.Json.Encode.dict Json.Encode.string (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
       it "toElmEncoderRef (IntMap (Maybe String))" $
         toElmEncoderRef (Proxy :: Proxy (IntMap (Maybe String))) `shouldBe`
-        "(dict Json.Encode.int (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+        "(Exts.Json.Encode.dict Json.Encode.int (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+
+moduleSpecsSpec :: Hspec.Spec
+moduleSpecsSpec =
+  describe "Generating a module Spec" $ do
+    let mySpec =
+          moduleSpec ["My", "Module"] $ do
+            renderType (Proxy :: Proxy Post)
+            renderDecoder (Proxy :: Proxy Post)
+            renderType (Proxy :: Proxy Comment)
+    it "sets the module namespace" $
+      namespace mySpec `shouldBe` ["My", "Module"]
+    it "inserts the correct imports" $
+      head (declarations mySpec) `shouldBe`
+      intercalate "\n"
+        [ "import Date"
+        , "import Dict"
+        , "import Json.Decode exposing (..)"
+        , "import Json.Decode.Pipeline exposing (..)"
+        ]
 
 shouldMatchTypeSource
   :: ElmType a
