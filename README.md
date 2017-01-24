@@ -42,13 +42,9 @@ import Elm
 
 spec :: Spec
 spec =
-  Spec
-    ["Db", "Types"]
-    [ "import Json.Decode exposing (..)"
-    , "import Json.Decode.Pipeline exposing (..)"
-    , toElmTypeSource (Proxy :: Proxy Person)
-    , toElmDecoderSource (Proxy :: Proxy Person)
-    ]
+  moduleSpec ["Db", "Types"] $ do
+    renderType (Proxy :: Proxy Person)
+    renderDecoder (Proxy :: Proxy Person)
 
 main :: IO ()
 main = specsToDir [spec] "some/where/output"

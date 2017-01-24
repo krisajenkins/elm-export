@@ -8,20 +8,21 @@ module Elm.Decoder
   , toElmDecoderRefWith
   , toElmDecoderSource
   , toElmDecoderSourceWith
+  , renderDecoder
   ) where
 
 import Control.Monad.Reader
-import Data.Monoid
+import Control.Monad.Writer
 import qualified Data.Text as T
 import Elm.Common
 import Elm.Type
 import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 class HasDecoder a where
-  render :: a -> Reader Options Doc
+  render :: a -> RenderM Doc
 
 class HasDecoderRef a where
-  renderRef :: a -> Reader Options Doc
+  renderRef :: a -> RenderM Doc
 
 instance HasDecoder ElmDatatype where
   render d@(ElmDatatype name constructor) = do
@@ -62,6 +63,7 @@ instance HasDecoderRef ElmPrimitive where
     dt <- renderRef datatype
     return . parens $ "list" <+> dt
   renderRef (EDict key value) = do
+    require "Dict"
     d <- renderRef (EList (ElmPrimitive (ETuple2 (ElmPrimitive key) value)))
     return . parens $ "map Dict.fromList" <+> d
   renderRef (EMaybe datatype) = do
@@ -82,7 +84,8 @@ instance HasDecoderRef ElmPrimitive where
 toElmDecoderRefWith
   :: ElmType a
   => Options -> a -> T.Text
-toElmDecoderRefWith options x = pprinter $ runReader (renderRef (toElmType x)) options
+toElmDecoderRefWith options x =
+  pprinter . fst $ runReader (runWriterT (renderRef (toElmType x))) options
 
 toElmDecoderRef
   :: ElmType a
@@ -92,9 +95,16 @@ toElmDecoderRef = toElmDecoderRefWith defaultOptions
 toElmDecoderSourceWith
   :: ElmType a
   => Options -> a -> T.Text
-toElmDecoderSourceWith options x = pprinter $ runReader (render (toElmType x)) options
+toElmDecoderSourceWith options x =
+  pprinter . fst $ runReader (runWriterT (render (toElmType x))) options
 
 toElmDecoderSource
   :: ElmType a
   => a -> T.Text
 toElmDecoderSource = toElmDecoderSourceWith defaultOptions
+
+renderDecoder :: ElmType a => a -> RenderM ()
+renderDecoder x =
+  require "Json.Decode exposing (..)" >>
+  require "Json.Decode.Pipeline exposing (..)" >>
+  (collectDeclaration . render . toElmType $ x)
