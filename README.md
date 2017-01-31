@@ -111,6 +111,7 @@ examples, PRs and code-suggestions!
 ## Contributors
 
 * [Matthew Bray](https://github.com/mattjbray)
+* [Domen Kožar](https://github.com/domenkozar)
 
 ## License
 
