@@ -171,6 +171,8 @@ toElmTypeSpec =
         toElmTypeRef (Proxy :: Proxy Post) `shouldBe` "Post"
       it "toElmTypeRef [Comment]" $
         toElmTypeRef (Proxy :: Proxy [Comment]) `shouldBe` "List (Comment)"
+      it "toElmTypeRef (Comment, String)" $
+        toElmTypeRef (Proxy :: Proxy (Comment, String)) `shouldBe` "(Comment, String)"
       it "toElmTypeRef String" $
         toElmTypeRef (Proxy :: Proxy String) `shouldBe` "String"
       it "toElmTypeRef (Maybe String)" $
