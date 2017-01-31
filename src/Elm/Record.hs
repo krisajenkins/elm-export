@@ -66,7 +66,7 @@ instance HasTypeRef ElmPrimitive where
   renderRef (ETuple2 x y) = do
     dx <- render x
     dy <- render y
-    return . spaceparens $ dx <> comma <+> dy
+    return . parens $ dx <> comma <+> dy
   renderRef (EMaybe datatype) = do
     dt <- renderRef datatype
     return $ "Maybe" <+> parens dt
