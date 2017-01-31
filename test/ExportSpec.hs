@@ -398,4 +398,4 @@ initCap t =
     Just (c, cs) -> cons (Data.Char.toUpper c) cs
 
 withPrefix :: Text -> Text -> Text
-withPrefix prefix s = prefix <> (initCap s)
+withPrefix prefix s = prefix <> initCap s
