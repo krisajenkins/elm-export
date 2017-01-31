@@ -3,13 +3,18 @@
 module Elm.File
   ( Spec(..)
   , specsToDir
+  , moduleSpec
+  , moduleSpecWith
   ) where
 
+import           Control.Monad.Reader
+import           Control.Monad.Writer
 import           Data.List
-import           Data.Monoid
+import qualified Data.Set         as S
 import           Data.Text        (Text)
 import qualified Data.Text        as T
 import qualified Data.Text.IO     as T
+import           Elm.Common
 import           Formatting       as F
 import           System.Directory
 
@@ -19,7 +24,7 @@ makePath = T.intercalate "/"
 data Spec = Spec
   { namespace    :: [Text]
   , declarations :: [Text]
-  }
+  } deriving (Eq, Show)
 
 pathForSpec :: FilePath -> Spec -> [Text]
 pathForSpec rootDir spec = T.pack rootDir : namespace spec
@@ -46,3 +51,19 @@ specsToDir :: [Spec] -> FilePath -> IO ()
 specsToDir specs rootDir = mapM_ processSpec specs
   where
     processSpec = ensureDirectory rootDir >> specToFile rootDir
+
+moduleSpecWith :: Options -> [Text] -> RenderM () -> Spec
+moduleSpecWith options ns m =
+  let
+    (imports, defns) =
+      runReader (execWriterT m) options
+  in
+    Spec
+      { namespace = ns
+      , declarations =
+          (T.intercalate "\n" . map ("import " <>) . S.toAscList $ imports)
+          : defns
+      }
+
+moduleSpec :: [Text] -> RenderM () -> Spec
+moduleSpec = moduleSpecWith defaultOptions

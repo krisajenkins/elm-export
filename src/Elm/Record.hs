@@ -5,20 +5,21 @@ module Elm.Record
   , toElmTypeRefWith
   , toElmTypeSource
   , toElmTypeSourceWith
+  , renderType
   ) where
 
 import Control.Monad.Reader
-import Data.Monoid
+import Control.Monad.Writer
 import qualified Data.Text as T
 import Elm.Common
 import Elm.Type
 import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 class HasType a where
-  render :: a -> Reader Options Doc
+  render :: a -> RenderM Doc
 
 class HasTypeRef a where
-  renderRef :: a -> Reader Options Doc
+  renderRef :: a -> RenderM Doc
 
 instance HasType ElmDatatype where
   render d@(ElmDatatype _ constructor@(RecordConstructor _ _)) = do
@@ -71,11 +72,12 @@ instance HasTypeRef ElmPrimitive where
     dt <- renderRef datatype
     return $ "Maybe" <+> parens dt
   renderRef (EDict k v) = do
+    require "Dict"
     dk <- renderRef k
     dv <- renderRef v
     return $ "Dict" <+> parens dk <+> parens dv
   renderRef EInt = pure "Int"
-  renderRef EDate = pure "Date"
+  renderRef EDate = require "Date" >> pure "Date"
   renderRef EBool = pure "Bool"
   renderRef EChar = pure "Char"
   renderRef EString = pure "String"
@@ -86,7 +88,7 @@ toElmTypeRefWith
   :: ElmType a
   => Options -> a -> T.Text
 toElmTypeRefWith options x =
-  pprinter $ runReader (renderRef (toElmType x)) options
+  pprinter . fst $ runReader (runWriterT (renderRef (toElmType x))) options
 
 toElmTypeRef
   :: ElmType a
@@ -97,9 +99,12 @@ toElmTypeSourceWith
   :: ElmType a
   => Options -> a -> T.Text
 toElmTypeSourceWith options x =
-  pprinter $ runReader (render (toElmType x)) options
+  pprinter . fst $ runReader (runWriterT (render (toElmType x))) options
 
 toElmTypeSource
   :: ElmType a
   => a -> T.Text
 toElmTypeSource = toElmTypeSourceWith defaultOptions
+
+renderType :: ElmType a => a -> RenderM ()
+renderType = collectDeclaration . render . toElmType
