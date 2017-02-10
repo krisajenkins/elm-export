@@ -43,6 +43,7 @@ import Elm
 spec :: Spec
 spec =
   moduleSpec ["Db", "Types"] $ do
+    require "Date exposing (Date)"
     renderType (Proxy :: Proxy Person)
     renderDecoder (Proxy :: Proxy Person)
     renderEncoder (Proxy :: Proxy Person)
@@ -81,6 +82,15 @@ stack test --file-watch
 
 ## Change Log
 
+### V0.6.x
+Updated to Elm 0.18.
+
+### V0.5.x
+???
+
+### V0.4.x
+???
+
 ### V0.3.0.0
 * Renamed `ToElmType` to `ElmType`, for brevity.
 
@@ -92,8 +102,8 @@ stack test --file-watch
 
 ## Status
 
-Alpha. The author is using it in production, but it is not yet
-expected to work for every reasonable case.
+Beta. Several people are using it in production, reliably, but it is
+not yet expected to work for every reasonable datatype.
 
 There are some Haskell datatypes that cannot be represented in
 Elm. Obviously we will not support those. But there are some which are
