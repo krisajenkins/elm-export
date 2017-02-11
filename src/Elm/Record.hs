@@ -106,5 +106,7 @@ toElmTypeSource
   => a -> T.Text
 toElmTypeSource = toElmTypeSourceWith defaultOptions
 
-renderType :: ElmType a => a -> RenderM ()
+renderType
+  :: ElmType a
+  => a -> RenderM ()
 renderType = collectDeclaration . render . toElmType

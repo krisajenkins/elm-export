@@ -104,7 +104,9 @@ toElmDecoderSource
   => a -> T.Text
 toElmDecoderSource = toElmDecoderSourceWith defaultOptions
 
-renderDecoder :: ElmType a => a -> RenderM ()
+renderDecoder
+  :: ElmType a
+  => a -> RenderM ()
 renderDecoder x =
   require "Json.Decode exposing (..)" >>
   require "Json.Decode.Pipeline exposing (..)" >>

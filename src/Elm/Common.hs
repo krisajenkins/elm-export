@@ -2,14 +2,14 @@
 
 module Elm.Common where
 
-import           Control.Monad.Reader
-import           Control.Monad.Writer
+import Control.Monad.Reader
+import Control.Monad.Writer
+import Data.Set (Set)
+import qualified Data.Set as S
+import Data.Text (Text)
+import qualified Data.Text.Lazy as LT
+import Formatting hiding (text)
 import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
-import           Data.Text  (Text)
-import           qualified Data.Text.Lazy as LT
-import           Formatting hiding (text)
-import           Data.Set  (Set)
-import qualified Data.Set  as S
 
 data Options = Options
   { fieldLabelModifier :: Text -> Text
@@ -38,12 +38,9 @@ spaceparens :: Doc -> Doc
 spaceparens doc = "(" <+> doc <+> ")"
 
 --
-
-type RenderM a =
-  WriterT ( Set Text -- The set of required imports
-          , [Text]   -- Declarations
-          )
-  (Reader Options) a
+type RenderM a = WriterT (Set Text -- The set of required imports
+                          , [Text] -- Declarations
+                          ) (Reader Options) a
 
 {-| Add an import to the set.
 -}

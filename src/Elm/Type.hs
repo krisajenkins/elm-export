@@ -1,21 +1,21 @@
-{-# LANGUAGE DefaultSignatures    #-}
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE ScopedTypeVariables  #-}
-{-# LANGUAGE TypeOperators        #-}
+{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
 module Elm.Type where
 
-import           Data.Int     (Int16, Int32, Int64, Int8)
-import           Data.IntMap
-import           Data.Map
-import           Data.Proxy
-import           Data.Text
-import           Data.Time
-import           GHC.Generics
-import           Prelude
+import Data.Int (Int16, Int32, Int64, Int8)
+import Data.IntMap
+import Data.Map
+import Data.Proxy
+import Data.Text
+import Data.Time
+import GHC.Generics
+import Prelude
 
 data ElmDatatype
   = ElmDatatype Text
@@ -104,7 +104,7 @@ instance (Selector s, GenericElmValue a) =>
          GenericElmValue (S1 s a) where
   genericToElmValue selector =
     case selName selector of
-      ""   -> genericToElmValue (undefined :: a p)
+      "" -> genericToElmValue (undefined :: a p)
       name -> ElmField (pack name) (genericToElmValue (undefined :: a p))
 
 instance (GenericElmValue f, GenericElmValue g) =>
@@ -122,7 +122,7 @@ instance ElmType a =>
   genericToElmValue _ =
     case toElmType (Proxy :: Proxy a) of
       ElmPrimitive primitive -> ElmPrimitiveRef primitive
-      ElmDatatype name _     -> ElmRef name
+      ElmDatatype name _ -> ElmRef name
 
 instance ElmType a =>
          ElmType [a] where

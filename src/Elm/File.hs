@@ -7,22 +7,22 @@ module Elm.File
   , moduleSpecWith
   ) where
 
-import           Control.Monad.Reader
-import           Control.Monad.Writer
-import           Data.List
-import qualified Data.Set         as S
-import           Data.Text        (Text)
-import qualified Data.Text        as T
-import qualified Data.Text.IO     as T
-import           Elm.Common
-import           Formatting       as F
-import           System.Directory
+import Control.Monad.Reader
+import Control.Monad.Writer
+import Data.List
+import qualified Data.Set as S
+import Data.Text (Text)
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
+import Elm.Common
+import Formatting as F
+import System.Directory
 
 makePath :: [Text] -> Text
 makePath = T.intercalate "/"
 
 data Spec = Spec
-  { namespace    :: [Text]
+  { namespace :: [Text]
   , declarations :: [Text]
   } deriving (Eq, Show)
 
@@ -54,16 +54,13 @@ specsToDir specs rootDir = mapM_ processSpec specs
 
 moduleSpecWith :: Options -> [Text] -> RenderM () -> Spec
 moduleSpecWith options ns m =
-  let
-    (imports, defns) =
-      runReader (execWriterT m) options
-  in
-    Spec
-      { namespace = ns
-      , declarations =
-          (T.intercalate "\n" . fmap ("import " <>) . S.toAscList $ imports)
-          : defns
-      }
+  let (imports, defns) = runReader (execWriterT m) options
+  in Spec
+     { namespace = ns
+     , declarations =
+         (T.intercalate "\n" . fmap ("import " <>) . S.toAscList $ imports) :
+         defns
+     }
 
 moduleSpec :: [Text] -> RenderM () -> Spec
 moduleSpec = moduleSpecWith defaultOptions
