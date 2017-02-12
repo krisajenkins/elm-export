@@ -11,8 +11,7 @@ module Elm.Decoder
   , renderDecoder
   ) where
 
-import Control.Monad.Reader
-import Control.Monad.Writer
+import Control.Monad.RWS
 import qualified Data.Text as T
 import Elm.Common
 import Elm.Type
@@ -86,7 +85,7 @@ toElmDecoderRefWith
   :: ElmType a
   => Options -> a -> T.Text
 toElmDecoderRefWith options x =
-  pprinter . fst $ runReader (runWriterT (renderRef (toElmType x))) options
+  pprinter . fst $ evalRWS (renderRef (toElmType x)) options ()
 
 toElmDecoderRef
   :: ElmType a
@@ -97,7 +96,7 @@ toElmDecoderSourceWith
   :: ElmType a
   => Options -> a -> T.Text
 toElmDecoderSourceWith options x =
-  pprinter . fst $ runReader (runWriterT (render (toElmType x))) options
+  pprinter . fst $ evalRWS (render (toElmType x)) options ()
 
 toElmDecoderSource
   :: ElmType a

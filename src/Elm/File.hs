@@ -7,8 +7,7 @@ module Elm.File
   , moduleSpecWith
   ) where
 
-import Control.Monad.Reader
-import Control.Monad.Writer
+import Control.Monad.RWS
 import Data.List
 import qualified Data.Set as S
 import Data.Text (Text)
@@ -54,7 +53,7 @@ specsToDir specs rootDir = mapM_ processSpec specs
 
 moduleSpecWith :: Options -> [Text] -> RenderM () -> Spec
 moduleSpecWith options ns m =
-  let (imports, defns) = runReader (execWriterT m) options
+  let ((), (imports, defns)) = execRWS m options ()
   in Spec
      { namespace = ns
      , declarations =

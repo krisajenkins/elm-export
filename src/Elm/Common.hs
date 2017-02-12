@@ -2,8 +2,7 @@
 
 module Elm.Common where
 
-import Control.Monad.Reader
-import Control.Monad.Writer
+import Control.Monad.RWS
 import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Text (Text)
@@ -38,9 +37,9 @@ spaceparens :: Doc -> Doc
 spaceparens doc = "(" <+> doc <+> ")"
 
 --
-type RenderM a = WriterT (Set Text -- The set of required imports
-                          , [Text] -- Declarations
-                          ) (Reader Options) a
+type RenderM = RWS Options (Set Text -- The set of required imports
+                            , [Text] -- Generated declarations
+                            ) ()
 
 {-| Add an import to the set.
 -}
@@ -52,4 +51,4 @@ declarations.
 -}
 collectDeclaration :: RenderM Doc -> RenderM ()
 collectDeclaration =
-  mapWriterT (fmap (\(defn, (imports, _)) -> ((), (imports, [pprinter defn]))))
+  mapRWS ((\(defn, (), (imports, _)) -> ((), (), (imports, [pprinter defn]))))

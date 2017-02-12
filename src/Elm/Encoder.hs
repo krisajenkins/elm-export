@@ -8,8 +8,7 @@ module Elm.Encoder
   , renderEncoder
   ) where
 
-import Control.Monad.Reader
-import Control.Monad.Writer
+import Control.Monad.RWS
 import qualified Data.Text as T
 import Elm.Common
 import Elm.Type
@@ -83,7 +82,7 @@ toElmEncoderRefWith
   :: ElmType a
   => Options -> a -> T.Text
 toElmEncoderRefWith options x =
-  pprinter . fst $ runReader (runWriterT (renderRef (toElmType x))) options
+  pprinter . fst $ evalRWS (renderRef (toElmType x)) options ()
 
 toElmEncoderRef
   :: ElmType a
@@ -94,7 +93,7 @@ toElmEncoderSourceWith
   :: ElmType a
   => Options -> a -> T.Text
 toElmEncoderSourceWith options x =
-  pprinter . fst $ runReader (runWriterT (render (toElmType x))) options
+  pprinter . fst $ evalRWS (render (toElmType x)) options ()
 
 toElmEncoderSource
   :: ElmType a

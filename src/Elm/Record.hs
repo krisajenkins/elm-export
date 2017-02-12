@@ -8,8 +8,7 @@ module Elm.Record
   , renderType
   ) where
 
-import Control.Monad.Reader
-import Control.Monad.Writer
+import Control.Monad.RWS
 import qualified Data.Text as T
 import Elm.Common
 import Elm.Type
@@ -88,7 +87,7 @@ toElmTypeRefWith
   :: ElmType a
   => Options -> a -> T.Text
 toElmTypeRefWith options x =
-  pprinter . fst $ runReader (runWriterT (renderRef (toElmType x))) options
+  pprinter . fst $ evalRWS (renderRef (toElmType x)) options ()
 
 toElmTypeRef
   :: ElmType a
@@ -99,7 +98,7 @@ toElmTypeSourceWith
   :: ElmType a
   => Options -> a -> T.Text
 toElmTypeSourceWith options x =
-  pprinter . fst $ runReader (runWriterT (render (toElmType x))) options
+  pprinter . fst $ evalRWS (render (toElmType x)) options ()
 
 toElmTypeSource
   :: ElmType a
