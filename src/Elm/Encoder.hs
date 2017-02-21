@@ -103,5 +103,6 @@ toElmEncoderSource = toElmEncoderSourceWith defaultOptions
 renderEncoder
   :: ElmType a
   => a -> RenderM ()
-renderEncoder x =
-  require "Json.Encode" >> (collectDeclaration . render . toElmType $ x)
+renderEncoder x = do
+  require "Json.Encode"
+  collectDeclaration . render . toElmType $ x

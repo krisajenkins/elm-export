@@ -106,7 +106,7 @@ toElmDecoderSource = toElmDecoderSourceWith defaultOptions
 renderDecoder
   :: ElmType a
   => a -> RenderM ()
-renderDecoder x =
-  require "Json.Decode exposing (..)" >>
-  require "Json.Decode.Pipeline exposing (..)" >>
-  (collectDeclaration . render . toElmType $ x)
+renderDecoder x = do
+  require "Json.Decode exposing (..)"
+  require "Json.Decode.Pipeline exposing (..)"
+  collectDeclaration . render . toElmType $ x
