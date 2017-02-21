@@ -1,46 +1,46 @@
-{-# LANGUAGE DeriveAnyClass    #-}
-{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module ExportSpec where
 
-import qualified Data.Algorithm.Diff       as Diff
+import qualified Data.Algorithm.Diff as Diff
 import qualified Data.Algorithm.DiffOutput as DiffOutput
-import           Data.Char
-import           Data.Int
-import           Data.IntMap
-import           Data.Map
-import           Data.Monoid
-import           Data.Proxy
-import           Data.Text                 hiding (head, lines, unlines)
-import           Data.Time
-import           Elm
-import           GHC.Generics
-import           Test.Hspec                hiding (Spec)
-import           Test.Hspec                as Hspec
-import           Test.HUnit                (Assertion, assertBool)
-import           Text.Printf
+import Data.Char
+import Data.Int
+import Data.IntMap
+import Data.Map
+import Data.Monoid
+import Data.Proxy
+import Data.Text hiding (head, lines, unlines)
+import Data.Time
+import Elm
+import GHC.Generics
+import Test.HUnit (Assertion, assertBool)
+import Test.Hspec hiding (Spec)
+import Test.Hspec as Hspec
+import Text.Printf
 
 -- Debugging hint:
 -- ghci> import GHC.Generics
 -- ghci> :kind! Rep Post
 -- ...
 data Post = Post
-  { id       :: Int
-  , name     :: String
-  , age      :: Maybe Double
+  { id :: Int
+  , name :: String
+  , age :: Maybe Double
   , comments :: [Comment]
   , promoted :: Maybe Comment
-  , author   :: Maybe String
+  , author :: Maybe String
   } deriving (Generic, ElmType)
 
 data Comment = Comment
-  { postId         :: Int
-  , text           :: Text
+  { postId :: Int
+  , text :: Text
   , mainCategories :: (String, String)
-  , published      :: Bool
-  , created        :: UTCTime
-  , tags           :: Map String Int
+  , published :: Bool
+  , created :: UTCTime
+  , tags :: Map String Int
   } deriving (Generic, ElmType)
 
 data Position
@@ -173,7 +173,8 @@ toElmTypeSpec =
       it "toElmTypeRef [Comment]" $
         toElmTypeRef (Proxy :: Proxy [Comment]) `shouldBe` "List (Comment)"
       it "toElmTypeRef (Comment, String)" $
-        toElmTypeRef (Proxy :: Proxy (Comment, String)) `shouldBe` "(Comment, String)"
+        toElmTypeRef (Proxy :: Proxy (Comment, String)) `shouldBe`
+        "(Comment, String)"
       it "toElmTypeRef String" $
         toElmTypeRef (Proxy :: Proxy String) `shouldBe` "String"
       it "toElmTypeRef (Maybe String)" $
@@ -374,7 +375,8 @@ moduleSpecsSpec =
       namespace mySpec `shouldBe` ["My", "Module"]
     it "inserts the correct imports" $
       head (declarations mySpec) `shouldBe`
-      intercalate "\n"
+      intercalate
+        "\n"
         [ "import Date"
         , "import Dict"
         , "import Json.Decode exposing (..)"
@@ -414,7 +416,7 @@ shouldBeDiff a (fpath, b) =
 initCap :: Text -> Text
 initCap t =
   case uncons t of
-    Nothing      -> t
+    Nothing -> t
     Just (c, cs) -> cons (Data.Char.toUpper c) cs
 
 withPrefix :: Text -> Text -> Text
