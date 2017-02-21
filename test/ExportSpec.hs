@@ -268,16 +268,16 @@ toElmDecoderSpec =
         toElmDecoderRef (Proxy :: Proxy String) `shouldBe` "string"
       it "toElmDecoderRef (Maybe String)" $
         toElmDecoderRef (Proxy :: Proxy (Maybe String)) `shouldBe`
-        "(maybe string)"
+        "(nullable string)"
       it "toElmDecoderRef [Maybe String]" $
         toElmDecoderRef (Proxy :: Proxy [Maybe String]) `shouldBe`
-        "(list (maybe string))"
+        "(list (nullable string))"
       it "toElmDecoderRef (Map String (Maybe String))" $
         toElmDecoderRef (Proxy :: Proxy (Map String (Maybe String))) `shouldBe`
-        "(map Dict.fromList (list (map2 (,) (index 0 string) (index 1 (maybe string)))))"
+        "(map Dict.fromList (list (map2 (,) (index 0 string) (index 1 (nullable string)))))"
       it "toElmDecoderRef (IntMap (Maybe String))" $
         toElmDecoderRef (Proxy :: Proxy (IntMap (Maybe String))) `shouldBe`
-        "(map Dict.fromList (list (map2 (,) (index 0 int) (index 1 (maybe string)))))"
+        "(map Dict.fromList (list (map2 (,) (index 0 int) (index 1 (nullable string)))))"
 
 toElmEncoderSpec :: Hspec.Spec
 toElmEncoderSpec =
