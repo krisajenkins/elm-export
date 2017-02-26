@@ -44,6 +44,56 @@ instance HasDecoder ElmConstructor where
     dv <- render value
     return $ "decode" <+> stext name <$$> indent 4 dv
 
+  render mc@(MultipleConstructors constrs) = do
+      cstrs <- mapM renderSum constrs
+      pure $ constructorName <+> "|> andThen" <+>
+        spaceparens ("\\x ->" <$$> indent 4 (hsep cstrs) <+>
+        "fail \"Constructor not matched\"")
+    where
+      constructorName :: Doc
+      constructorName =
+        if isEnumeration mc then "string" else "field \"tag\" string"
+
+-- | required "contents"
+requiredContents :: Doc
+requiredContents = "required" <+> dquotes "contents"
+
+-- | if x == "<name>" then decode <name>
+-- else
+renderSumCondition :: T.Text -> Doc -> RenderM Doc
+renderSumCondition name contents =
+  pure $ "if x ==" <+> dquotes (stext name) <+> "then decode" <+>
+    stext name <+> contents <$$> "else"
+
+-- | Render a sum type constructor in context of a data type with multiple
+-- constructors.
+renderSum :: ElmConstructor -> RenderM Doc
+renderSum (NamedConstructor name ElmEmpty) = renderSumCondition name mempty
+renderSum (NamedConstructor name v@(Values _ _)) = do
+  (_, val) <- renderConstructorArgs 0 v
+  renderSumCondition name val
+renderSum (NamedConstructor name value) = do
+  val <- render value
+  renderSumCondition name $ "|>" <+> requiredContents <+> val
+renderSum (RecordConstructor name value) = do
+  val <- render value
+  renderSumCondition name val
+renderSum (MultipleConstructors constrs) =
+  hsep <$> mapM renderSum constrs
+
+-- | Render the decoding of a constructor's arguments. Note the constructor must
+-- be from a data type with multiple constructors and that it has multiple
+-- constructors itself.
+renderConstructorArgs :: Int -> ElmValue -> RenderM (Int, Doc)
+renderConstructorArgs i (Values l r) = do
+  (iL, rndrL) <- renderConstructorArgs i l
+  (iR, rndrR) <- renderConstructorArgs (iL + 1) r
+  pure (iR, rndrL <+> rndrR)
+renderConstructorArgs i val = do
+  rndrVal <- render val
+  let index = parens $ "index" <+> int i <+> rndrVal
+  pure (i, "|>" <+> requiredContents <+> index)
+
 instance HasDecoder ElmValue where
   render (ElmRef name) = pure $ "decode" <> stext name
   render (ElmPrimitiveRef primitive) = renderRef primitive

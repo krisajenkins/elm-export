@@ -52,3 +52,9 @@ declarations.
 collectDeclaration :: RenderM Doc -> RenderM ()
 collectDeclaration =
   mapRWS ((\(defn, (), (imports, _)) -> ((), (), (imports, [pprinter defn]))))
+
+squarebracks :: Doc -> Doc
+squarebracks doc = "[" <+> doc <+> "]"
+
+pair :: Doc -> Doc -> Doc
+pair l r = spaceparens $ l <> comma <+> r

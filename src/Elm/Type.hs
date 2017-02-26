@@ -12,7 +12,7 @@ import Data.Int (Int16, Int32, Int64, Int8)
 import Data.IntMap
 import Data.Map
 import Data.Proxy
-import Data.Text
+import Data.Text hiding (all)
 import Data.Time
 import GHC.Generics
 import Prelude
@@ -199,3 +199,11 @@ instance ElmType Char where
 
 instance ElmType Bool where
   toElmType _ = ElmPrimitive EBool
+
+-- | Whether a set of constructors is an enumeration, i.e. whether they lack
+-- values. data A = A | B | C would be simple data A = A Int | B | C would not
+-- be simple.
+isEnumeration :: ElmConstructor -> Bool
+isEnumeration (NamedConstructor _ ElmEmpty) = True
+isEnumeration (MultipleConstructors cs) = all isEnumeration cs
+isEnumeration _ = False
