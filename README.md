@@ -80,6 +80,17 @@ stack build
 stack test --file-watch
 ```
 
+### Contributing guide
+
+Development happens on the `devel` branch. Pull requests target this branch.
+
+Generated Elm code adheres to the [`elm-format`][1] style.
+
+JSON encoders and decoders match the default behavior of [Aeson][2].
+
+[1]: https://github.com/avh4/elm-format
+[2]: https://hackage.haskell.org/package/aeson
+
 ## Change Log
 
 ### V0.6.x
