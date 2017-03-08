@@ -188,6 +188,9 @@ class HasElmComparable a where
 instance HasElmComparable String where
   toElmComparable _ = EString
 
+instance HasElmComparable Text where
+  toElmComparable _ = EString
+
 instance ElmType Int where
   toElmType _ = ElmPrimitive EInt
 
