@@ -7,8 +7,20 @@ import TimingType exposing (..)
 
 decodeTiming : Decoder Timing
 decodeTiming =
-    field "tag" string |> andThen ( \x ->
-        if x == "Start" then decode Start
-        else if x == "Continue" then decode Continue |> required "contents" float
-        else if x == "Stop" then decode Stop
-        else fail "Constructor not matched" )
+    field "tag" string
+        |> andThen
+            (\x ->
+                case x of
+                    "Start" ->
+                        decode Start
+
+                    "Continue" ->
+                        decode Continue
+                            |> required "contents" float
+
+                    "Stop" ->
+                        decode Stop
+
+                    _ ->
+                        fail "Constructor not matched"
+            )

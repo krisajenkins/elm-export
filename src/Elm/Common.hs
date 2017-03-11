@@ -36,6 +36,18 @@ stext = text . LT.fromStrict
 spaceparens :: Doc -> Doc
 spaceparens doc = "(" <+> doc <+> ")"
 
+-- | Parentheses of which the right parenthesis exists on a new line
+newlineparens :: Doc -> Doc
+newlineparens doc = "(" <> doc <$$> ")"
+
+-- | An empty line, regardless of current indentation
+emptyline :: Doc
+emptyline = nest minBound linebreak
+
+-- | Like <$$>, but with an empty line in between
+(<$+$>) :: Doc -> Doc -> Doc
+l <$+$> r = l <> emptyline <$$> r
+
 --
 type RenderM = RWS Options (Set Text -- The set of required imports
                             , [Text] -- Generated declarations

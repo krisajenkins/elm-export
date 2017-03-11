@@ -7,8 +7,19 @@ import PositionType exposing (..)
 
 decodePosition : Decoder Position
 decodePosition =
-    string |> andThen ( \x ->
-        if x == "Beginning" then decode Beginning
-        else if x == "Middle" then decode Middle
-        else if x == "End" then decode End
-        else fail "Constructor not matched" )
+    string
+        |> andThen
+            (\x ->
+                case x of
+                    "Beginning" ->
+                        decode Beginning
+
+                    "Middle" ->
+                        decode Middle
+
+                    "End" ->
+                        decode End
+
+                    _ ->
+                        fail "Constructor not matched"
+            )

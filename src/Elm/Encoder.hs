@@ -46,7 +46,7 @@ instance HasEncoder ElmConstructor where
 
     let cs = stext name <+> foldl1 (<+>) ps <+> "->"
     return . nest 4 $ "case x of" <$$>
-      (nest 4 $ cs <+> "Json.Encode.list" <$$> "[" <+> dv <$$> "]")
+      (nest 4 $ cs <$$> nest 4 ("Json.Encode.list" <$$> "[" <+> dv <$$> "]"))
 
   -- Single constructor, one value: skip constructor and render just the value
   render (NamedConstructor _name val) =
@@ -60,7 +60,14 @@ instance HasEncoder ElmConstructor where
   render mc@(MultipleConstructors constrs) = do
     let rndr = if isEnumeration mc then renderEnumeration else renderSum
     dc <- mapM rndr constrs
-    return . nest 4 $ "case x of" <$$> foldl1 (<$$>) dc
+    return . nest 4 $ "case x of" <$$> foldl1 (<$+$>) dc
+
+jsonEncodeObject :: Doc -> Doc -> Doc -> Doc
+jsonEncodeObject constructor tag contents =
+  nest 4 $ constructor <$$>
+    nest 4 ("Json.Encode.object" <$$> "[" <+> tag <$$>
+      contents <$$>
+    "]")
 
 renderSum :: ElmConstructor -> RenderM Doc
 renderSum c@(NamedConstructor name ElmEmpty) = do
@@ -68,9 +75,8 @@ renderSum c@(NamedConstructor name ElmEmpty) = do
   let cs = stext name <+> "->"
   let tag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
   let ct = comma <+> pair (dquotes "contents") dc
-  return . nest 4 $ cs <+> "Json.Encode.object" <$$> "[" <+> tag <$$>
-    ct <$$>
-    "]"
+
+  return $ jsonEncodeObject cs tag ct
 
 renderSum (NamedConstructor name value) = do
   let ps = constructorParameters 0 value
@@ -80,31 +86,28 @@ renderSum (NamedConstructor name value) = do
   let cs = stext name <+> foldl1 (<+>) ps <+> "->"
   let tag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
   let ct = comma <+> pair (dquotes "contents") dc'
-  return . nest 4 $ cs <+> "Json.Encode.object" <$$> "[" <+> tag <$$>
-    ct <$$>
-    "]"
+
+  return $ jsonEncodeObject cs tag ct
 
 renderSum (RecordConstructor name value) = do
   dv <- render value
   let cs = stext name <+> "->"
   let tag = pair (dquotes "tag") (dquotes $ stext name)
   let ct = comma <+> dv
-  return . nest 4 $ cs <+> "Json.Encode.object" <$$> "[" <+> tag <$$>
-    ct <$$>
-    "]"
+  return $ jsonEncodeObject cs tag ct
 
 renderSum (MultipleConstructors constrs) = do
   dc <- mapM renderSum constrs
-  return $ foldl1 (<$$>) dc
+  return $ foldl1 (<$+$>) dc
 
 
 renderEnumeration :: ElmConstructor -> RenderM Doc
 renderEnumeration (NamedConstructor name _) =
-  return $ stext name <+> "->" <+>
-    "Json.Encode.string" <+> dquotes (stext name)
+  return . nest 4 $ stext name <+> "->" <$$>
+      "Json.Encode.string" <+> dquotes (stext name)
 renderEnumeration (MultipleConstructors constrs) = do
   dc <- mapM renderEnumeration constrs
-  return $ foldl1 (<$$>) dc
+  return $ foldl1 (<$+$>) dc
 renderEnumeration c = render c
 
 

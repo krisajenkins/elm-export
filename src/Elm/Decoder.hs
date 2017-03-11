@@ -46,9 +46,16 @@ instance HasDecoder ElmConstructor where
 
   render mc@(MultipleConstructors constrs) = do
       cstrs <- mapM renderSum constrs
-      pure $ constructorName <+> "|> andThen" <+>
-        spaceparens ("\\x ->" <$$> indent 4 (hsep cstrs) <+>
-        "fail \"Constructor not matched\"")
+      pure $ constructorName <$$> indent 4
+        ("|> andThen" <$$>
+          indent 4 (newlineparens ("\\x ->" <$$>
+            (indent 4 $ "case x of" <$$>
+              (indent 4 $ foldl1 (<$+$>) cstrs <$+$>
+               "_ ->" <$$> indent 4 "fail \"Constructor not matched\""
+              )
+            )
+          ))
+        )
     where
       constructorName :: Doc
       constructorName =
@@ -58,12 +65,12 @@ instance HasDecoder ElmConstructor where
 requiredContents :: Doc
 requiredContents = "required" <+> dquotes "contents"
 
--- | if x == "<name>" then decode <name>
--- else
+-- | "<name>" -> decode <name>
 renderSumCondition :: T.Text -> Doc -> RenderM Doc
 renderSumCondition name contents =
-  pure $ "if x ==" <+> dquotes (stext name) <+> "then decode" <+>
-    stext name <+> contents <$$> "else"
+  pure $ dquotes (stext name) <+> "->" <$$>
+    indent 4
+      ("decode" <+> stext name <$$> indent 4 contents)
 
 -- | Render a sum type constructor in context of a data type with multiple
 -- constructors.
@@ -79,7 +86,7 @@ renderSum (RecordConstructor name value) = do
   val <- render value
   renderSumCondition name val
 renderSum (MultipleConstructors constrs) =
-  hsep <$> mapM renderSum constrs
+  foldl1 (<$+$>) <$> mapM renderSum constrs
 
 -- | Render the decoding of a constructor's arguments. Note the constructor must
 -- be from a data type with multiple constructors and that it has multiple
@@ -88,7 +95,7 @@ renderConstructorArgs :: Int -> ElmValue -> RenderM (Int, Doc)
 renderConstructorArgs i (Values l r) = do
   (iL, rndrL) <- renderConstructorArgs i l
   (iR, rndrR) <- renderConstructorArgs (iL + 1) r
-  pure (iR, rndrL <+> rndrR)
+  pure (iR, rndrL <$$> rndrR)
 renderConstructorArgs i val = do
   rndrVal <- render val
   let index = parens $ "index" <+> int i <+> rndrVal
