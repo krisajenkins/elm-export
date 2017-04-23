@@ -44,7 +44,7 @@ instance HasEncoder ElmValue where
     valueBody <- render value
     return . spaceparens $
       dquotes (stext (fieldModifier name)) <> comma <+>
-      (valueBody <+> "x." <> stext name)
+      (valueBody <+> "x." <> stext (fieldModifier name))
   render (ElmPrimitiveRef primitive) = renderRef primitive
   render (ElmRef name) = pure $ "encode" <> stext name
   render (Values x y) = do
