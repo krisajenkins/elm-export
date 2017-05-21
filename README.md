@@ -80,7 +80,7 @@ stack build
 stack test --file-watch
 ```
 
-### Contributing guide
+### Contribution Guide
 
 Development happens on the `devel` branch. Pull requests target this branch.
 
