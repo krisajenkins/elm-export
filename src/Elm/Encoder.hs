@@ -124,6 +124,7 @@ instance HasEncoder ElmValue where
     dx <- render x
     dy <- render y
     return $ dx <$$> comma <+> dy
+  render _ = error "HasEncoderRef ElmValue: should not happen"
 
 instance HasEncoderRef ElmPrimitive where
   renderRef EDate = pure $ parens "Json.Encode.string << toString"
