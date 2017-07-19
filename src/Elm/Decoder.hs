@@ -84,6 +84,7 @@ instance HasDecoderRef ElmPrimitive where
   renderRef EChar = pure "char"
   renderRef EFloat = pure "float"
   renderRef EString = pure "string"
+  renderRef EValue = pure "value"
 
 toElmDecoderRefWith
   :: ElmType a

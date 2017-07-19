@@ -79,6 +79,9 @@ instance HasTypeRef ElmPrimitive where
   renderRef EDate = do
     require "Date"
     pure "Date"
+  renderRef EValue = do
+    require "Json.Decode"
+    pure "Value"
   renderRef EBool = pure "Bool"
   renderRef EChar = pure "Char"
   renderRef EString = pure "String"
