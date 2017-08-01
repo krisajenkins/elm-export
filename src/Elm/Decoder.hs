@@ -65,6 +65,10 @@ instance HasDecoderRef ElmPrimitive where
     require "Dict"
     d <- renderRef value
     return . parens $ "dict" <+> d
+  renderRef (EDict EInt value) = do
+    require "Dict"
+    d <- renderRef value
+    return . parens $ "dict" <+> d <+> " |> map (Dict.toList >> List.filterMap (\\( k, v ) -> String.toInt k |> Result.toMaybe |> Maybe.map (\\i -> ( i, v ))) >> Dict.fromList)"
   renderRef (EDict key value) = do
     require "Dict"
     d <- renderRef (EList (ElmPrimitive (ETuple2 (ElmPrimitive key) value)))
