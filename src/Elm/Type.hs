@@ -174,11 +174,11 @@ instance (ElmType a) =>
          ElmType (Proxy a) where
   toElmType _ = toElmType (undefined :: a)
 
-instance (ElmType v) =>
+instance {-# OVERLAPS #-} (ElmType v) =>
          ElmType (Map String v) where
   toElmType _ = ElmPrimitive $ EDict EString (toElmType (Proxy :: Proxy v))
 
-instance {-# OVERLAPPING #-} (HasElmComparable k, ElmType v) =>
+instance {-# OVERLAPS #-} (HasElmComparable k, ElmType v) =>
          ElmType (Map k v) where
   toElmType _ =
     ElmPrimitive $
