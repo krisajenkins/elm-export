@@ -1,3 +1,5 @@
+{-| Generate Elm types, JSON decoders & JSON encoders from Haskell datatypes.
+-}
 module Elm
   ( module X
   ) where
