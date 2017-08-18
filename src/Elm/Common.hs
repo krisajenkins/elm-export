@@ -51,4 +51,4 @@ declarations.
 -}
 collectDeclaration :: RenderM Doc -> RenderM ()
 collectDeclaration =
-  mapRWS ((\(defn, (), (imports, _)) -> ((), (), (imports, [pprinter defn]))))
+  mapRWS (\(defn, (), (imports, _)) -> ((), (), (imports, [pprinter defn])))
