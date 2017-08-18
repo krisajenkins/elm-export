@@ -72,6 +72,10 @@ instance HasEncoderRef ElmPrimitive where
     dy <- renderRef y
     require "Exts.Json.Encode"
     return . parens $ "Exts.Json.Encode.tuple2" <+> dx <+> dy
+  renderRef (EMap _ v) = do
+    dv <- renderRef v
+    require "Exts.Json.Encode"
+    return . parens $ "Dict.toList >> (\\ (k,v) -> (toString k, (" <+> dv <+> ") v)) >> Json.encode.object"
   renderRef (EDict k v) = do
     dk <- renderRef k
     dv <- renderRef v

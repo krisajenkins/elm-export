@@ -61,14 +61,18 @@ instance HasDecoderRef ElmPrimitive where
   renderRef (EList datatype) = do
     dt <- renderRef datatype
     return . parens $ "list" <+> dt
+  renderRef (EMap EString value) = do
+    require "Dict"
+    d <- renderRef value
+    return . parens $ "dict" <+> d
+  renderRef (EMap EInt value) = do
+    require "Dict"
+    d <- renderRef value
+    return . parens $ "dict" <+> d <+> " |> map (Dict.toList >> List.filterMap (\\( k, v ) -> String.toInt k |> Result.toMaybe |> Maybe.map (\\i -> ( i, v ))) >> Dict.fromList)"
   renderRef (EDict EString value) = do
     require "Dict"
     d <- renderRef value
     return . parens $ "dict" <+> d
-  renderRef (EDict EInt value) = do
-    require "Dict"
-    d <- renderRef value
-    return . parens $ "dict" <+> d <+> " |> map (Dict.toList >> List.filterMap (\\( k, v ) -> String.toInt k |> Result.toMaybe |> Maybe.map (\\i -> ( i, v ))) >> Dict.fromList)"
   renderRef (EDict key value) = do
     require "Dict"
     d <- renderRef (EList (ElmPrimitive (ETuple2 (ElmPrimitive key) value)))
