@@ -278,6 +278,9 @@ toElmDecoderSpec =
       it "toElmDecoderRef (IntMap (Maybe String))" $
         toElmDecoderRef (Proxy :: Proxy (IntMap (Maybe String))) `shouldBe`
         "(map Dict.fromList (list (map2 (,) (index 0 int) (index 1 (nullable string)))))"
+      it "toElmDecoderRef (Map Int (Maybe String))" $
+        toElmDecoderRef (Proxy :: Proxy (Map Int (Maybe String))) `shouldBe`
+        "(dict (nullable string)  |> map (Dict.toList >> List.filterMap (\\( k, v ) -> String.toInt k |> Result.toMaybe |> Maybe.map (\\i -> ( i, v ))) >> Dict.fromList))"
 
 toElmEncoderSpec :: Hspec.Spec
 toElmEncoderSpec =

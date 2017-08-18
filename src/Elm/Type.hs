@@ -37,6 +37,8 @@ data ElmPrimitive
             ElmDatatype
   | EDict ElmPrimitive
           ElmDatatype
+  | EMap ElmPrimitive
+         ElmDatatype
   deriving (Show, Eq)
 
 data ElmConstructor
@@ -172,11 +174,15 @@ instance (ElmType a) =>
          ElmType (Proxy a) where
   toElmType _ = toElmType (undefined :: a)
 
-instance (HasElmComparable k, ElmType v) =>
+instance {-# OVERLAPS #-} (ElmType v) =>
+         ElmType (Map String v) where
+  toElmType _ = ElmPrimitive $ EDict EString (toElmType (Proxy :: Proxy v))
+
+instance {-# OVERLAPS #-} (HasElmComparable k, ElmType v) =>
          ElmType (Map k v) where
   toElmType _ =
     ElmPrimitive $
-    EDict (toElmComparable (undefined :: k)) (toElmType (Proxy :: Proxy v))
+    EMap (toElmComparable (undefined :: k)) (toElmType (Proxy :: Proxy v))
 
 instance (ElmType v) =>
          ElmType (IntMap v) where
@@ -187,6 +193,9 @@ class HasElmComparable a where
 
 instance HasElmComparable String where
   toElmComparable _ = EString
+
+instance HasElmComparable Int where
+  toElmComparable _ = EInt
 
 instance HasElmComparable Text where
   toElmComparable _ = EString

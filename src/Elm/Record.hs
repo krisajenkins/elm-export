@@ -70,6 +70,11 @@ instance HasTypeRef ElmPrimitive where
   renderRef (EMaybe datatype) = do
     dt <- renderRef datatype
     return $ "Maybe" <+> parens dt
+  renderRef (EMap k v) = do
+    require "Dict"
+    dk <- renderRef k
+    dv <- renderRef v
+    return $ "Dict" <+> parens dk <+> parens dv
   renderRef (EDict k v) = do
     require "Dict"
     dk <- renderRef k
