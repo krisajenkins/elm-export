@@ -112,7 +112,7 @@ instance HasDecoder ElmValue where
     fieldModifier <- asks fieldLabelModifier
     dv <- render value
     return $ "|> required" <+> dquotes (stext (fieldModifier name)) <+> dv
-  render _ = error "instance HasDecoder ElmValue: should not happen"
+  render v = error $ "instance HasDecoder ElmValue: should not happen (" ++ show v ++ ")"
 
 instance HasDecoderRef ElmPrimitive where
   renderRef (EList (ElmPrimitive EChar)) = pure "string"
