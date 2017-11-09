@@ -16,6 +16,7 @@ import           Data.Text
 import           Data.Time
 import           GHC.Generics
 import           Prelude
+import           Servant.API  (Headers(getResponse))
 
 data ElmDatatype
   = ElmDatatype Text
@@ -196,3 +197,8 @@ instance ElmType Char where
 
 instance ElmType Bool where
   toElmType _ = ElmPrimitive EBool
+
+-- We define this instance here because it is an orphan otherwise.
+
+instance ElmType a => ElmType (Headers headers a) where
+   toElmType = toElmType . getResponse

@@ -23,6 +23,7 @@ library
                      , directory
                      , formatting
                      , mtl
+                     , servant
                      , text
                      , time
                      , wl-pprint-text
