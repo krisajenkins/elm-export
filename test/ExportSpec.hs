@@ -55,6 +55,12 @@ data Timing
   | Stop
   deriving (Generic, ElmType)
 
+data Monstrosity
+  = NotSpecial
+  | OkayIGuess Monstrosity
+  | Ridiculous Int String [Monstrosity]
+  deriving (Generic, ElmType)
+
 newtype Useless =
   Useless ()
   deriving (Generic, ElmType)
@@ -120,6 +126,12 @@ toElmTypeSpec =
         defaultOptions
         (Proxy :: Proxy Timing)
         "test/TimingType.elm"
+    it "toElmTypeSource Monstrosity" $
+      shouldMatchTypeSource
+        (unlines ["module MonstrosityType exposing (..)", "", "", "%s"])
+        defaultOptions
+        (Proxy :: Proxy Monstrosity)
+        "test/MonstrosityType.elm"
     it "toElmTypeSource Useless" $
       shouldMatchTypeSource
         (unlines ["module UselessType exposing (..)", "", "", "%s"])
@@ -241,6 +253,51 @@ toElmDecoderSpec =
         (defaultOptions {fieldLabelModifier = withPrefix "post"})
         (Proxy :: Proxy Post)
         "test/PostDecoderWithOptions.elm"
+    it "toElmDecoderSource Position" $
+      shouldMatchDecoderSource
+        (unlines
+           [ "module PositionDecoder exposing (..)"
+           , ""
+           , "import Json.Decode exposing (..)"
+           , "import Json.Decode.Pipeline exposing (..)"
+           , "import PositionType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Position)
+        "test/PositionDecoder.elm"
+    it "toElmDecoderSource Timing" $
+      shouldMatchDecoderSource
+        (unlines
+           [ "module TimingDecoder exposing (..)"
+           , ""
+           , "import Json.Decode exposing (..)"
+           , "import Json.Decode.Pipeline exposing (..)"
+           , "import TimingType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Timing)
+        "test/TimingDecoder.elm"
+    it "toElmDecoderSource Monstrosity" $
+      shouldMatchDecoderSource
+        (unlines
+           [ "module MonstrosityDecoder exposing (..)"
+           , ""
+           , "import Json.Decode exposing (..)"
+           , "import Json.Decode.Pipeline exposing (..)"
+           , "import MonstrosityType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Monstrosity)
+        "test/MonstrosityDecoder.elm"
     it "toElmDecoderSourceWithOptions Comment" $
       shouldMatchDecoderSource
         (unlines
@@ -258,9 +315,30 @@ toElmDecoderSpec =
         (defaultOptions {fieldLabelModifier = withPrefix "comment"})
         (Proxy :: Proxy Comment)
         "test/CommentDecoderWithOptions.elm"
+    it "toElmDecoderSource Useless" $
+      shouldMatchDecoderSource
+        (unlines
+           [ "module UselessDecoder exposing (..)"
+           , ""
+           , "import Json.Decode exposing (..)"
+           , "import Json.Decode.Pipeline exposing (..)"
+           , "import UselessType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Useless)
+        "test/UselessDecoder.elm"
     describe "Convert to Elm decoder references." $ do
       it "toElmDecoderRef Post" $
         toElmDecoderRef (Proxy :: Proxy Post) `shouldBe` "decodePost"
+      it "toElmDecoderRef Position" $
+        toElmDecoderRef (Proxy :: Proxy Position) `shouldBe` "decodePosition"
+      it "toElmDecoderRef Timing" $
+        toElmDecoderRef (Proxy :: Proxy Timing) `shouldBe` "decodeTiming"
+      it "toElmDecoderRef Monstrosity" $
+        toElmDecoderRef (Proxy :: Proxy Monstrosity) `shouldBe` "decodeMonstrosity"
       it "toElmDecoderRef [Comment]" $
         toElmDecoderRef (Proxy :: Proxy [Comment]) `shouldBe`
         "(list decodeComment)"
@@ -342,12 +420,60 @@ toElmEncoderSpec =
         (defaultOptions {fieldLabelModifier = withPrefix "post"})
         (Proxy :: Proxy Post)
         "test/PostEncoderWithOptions.elm"
+    it "toElmEncoderSource Position" $
+      shouldMatchEncoderSource
+        (unlines
+           [ "module PositionEncoder exposing (..)"
+           , ""
+           , "import Json.Encode"
+           , "import PositionType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Position)
+        "test/PositionEncoder.elm"
+    it "toElmEncoderSourceWithOptions Timing" $
+      shouldMatchEncoderSource
+        (unlines
+           [ "module TimingEncoder exposing (..)"
+           , ""
+           , "import Json.Encode"
+           , "import TimingType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Timing)
+        "test/TimingEncoder.elm"
+    it "toElmEncoderSourceWithOptions Monstrosity" $
+      shouldMatchEncoderSource
+        (unlines
+           [ "module MonstrosityEncoder exposing (..)"
+           , ""
+           , "import Json.Encode"
+           , "import MonstrosityType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Monstrosity)
+        "test/MonstrosityEncoder.elm"
     describe "Convert to Elm encoder references." $ do
       it "toElmEncoderRef Post" $
         toElmEncoderRef (Proxy :: Proxy Post) `shouldBe` "encodePost"
       it "toElmEncoderRef [Comment]" $
         toElmEncoderRef (Proxy :: Proxy [Comment]) `shouldBe`
         "(Json.Encode.list << List.map encodeComment)"
+      it "toElmEncoderRef Position" $
+        toElmEncoderRef (Proxy :: Proxy Position) `shouldBe` "encodePosition"
+      it "toElmEncoderRef Timing" $
+        toElmEncoderRef (Proxy :: Proxy Timing) `shouldBe` "encodeTiming"
+      it "toElmEncoderRef Monstrosity" $
+        toElmEncoderRef (Proxy :: Proxy Monstrosity) `shouldBe` "encodeMonstrosity"
       it "toElmEncoderRef String" $
         toElmEncoderRef (Proxy :: Proxy String) `shouldBe` "Json.Encode.string"
       it "toElmEncoderRef (Maybe String)" $

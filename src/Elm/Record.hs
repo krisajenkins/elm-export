@@ -17,6 +17,9 @@ import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 class HasType a where
   render :: a -> RenderM Doc
 
+class HasRecordType a where
+  renderRecord :: a -> RenderM Doc
+
 class HasTypeRef a where
   renderRef :: a -> RenderM Doc
 
@@ -37,7 +40,7 @@ instance HasTypeRef ElmDatatype where
 
 instance HasType ElmConstructor where
   render (RecordConstructor _ value) = do
-    dv <- render value
+    dv <- renderRecord value
     return $ "{" <+> dv <$$> "}"
   render (NamedConstructor constructorName value) = do
     dv <- render value
@@ -47,16 +50,24 @@ instance HasType ElmConstructor where
 
 instance HasType ElmValue where
   render (ElmRef name) = pure (stext name)
-  render (ElmPrimitiveRef primitive) = renderRef primitive
+  render (ElmPrimitiveRef primitive) = elmRefParens primitive <$> renderRef primitive
   render ElmEmpty = pure (text "")
   render (Values x y) = do
     dx <- render x
     dy <- render y
-    return $ dx <$$> comma <+> dy
+    return $ dx <+> dy
   render (ElmField name value) = do
     fieldModifier <- asks fieldLabelModifier
-    dv <- render value
+    dv <- renderRecord value
     return $ stext (fieldModifier name) <+> ":" <+> dv
+
+instance HasRecordType ElmValue where
+  renderRecord (ElmPrimitiveRef primitive) = renderRef primitive
+  renderRecord (Values x y) = do
+    dx <- renderRecord x
+    dy <- renderRecord y
+    return $ dx <$$> comma <+> dy
+  renderRecord value = render value
 
 instance HasTypeRef ElmPrimitive where
   renderRef (EList (ElmPrimitive EChar)) = renderRef EString
@@ -84,6 +95,14 @@ instance HasTypeRef ElmPrimitive where
   renderRef EString = pure "String"
   renderRef EUnit = pure "()"
   renderRef EFloat = pure "Float"
+
+-- | Puts parentheses around the doc of an elm ref if it contains spaces.
+elmRefParens :: ElmPrimitive -> Doc -> Doc
+elmRefParens (EList (ElmPrimitive EChar)) = id
+elmRefParens (EList _) = parens
+elmRefParens (EMaybe _) = parens
+elmRefParens (EDict _ _) = parens
+elmRefParens _ = id
 
 toElmTypeRefWith
   :: ElmType a
