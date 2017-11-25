@@ -65,6 +65,9 @@ newtype Useless =
   Useless ()
   deriving (Generic, ElmType)
 
+data Unit = Unit
+  deriving (Generic, ElmType)
+
 newtype FavoritePlaces = FavoritePlaces
   { positionsByUser :: Map String [Position]
   } deriving (Generic, ElmType)
@@ -330,6 +333,21 @@ toElmDecoderSpec =
         defaultOptions
         (Proxy :: Proxy Useless)
         "test/UselessDecoder.elm"
+    it "toElmDecoderSource Unit" $
+      shouldMatchDecoderSource
+        (unlines
+           [ "module UnitDecoder exposing (..)"
+           , ""
+           , "import Json.Decode exposing (..)"
+           , "import Json.Decode.Pipeline exposing (..)"
+           , "import UnitType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Unit)
+        "test/UnitDecoder.elm"
     describe "Convert to Elm decoder references." $ do
       it "toElmDecoderRef Post" $
         toElmDecoderRef (Proxy :: Proxy Post) `shouldBe` "decodePost"
