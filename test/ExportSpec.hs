@@ -480,6 +480,34 @@ toElmEncoderSpec =
         defaultOptions
         (Proxy :: Proxy Monstrosity)
         "test/MonstrosityEncoder.elm"
+    it "toElmEncoderSourceWithOptions Useless" $
+      shouldMatchEncoderSource
+        (unlines
+           [ "module UselessEncoder exposing (..)"
+           , ""
+           , "import Json.Encode"
+           , "import UselessType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Useless)
+        "test/UselessEncoder.elm"
+    it "toElmEncoderSourceWithOptions Unit" $
+      shouldMatchEncoderSource
+        (unlines
+           [ "module UnitEncoder exposing (..)"
+           , ""
+           , "import Json.Encode"
+           , "import UnitType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Unit)
+        "test/UnitEncoder.elm"
     describe "Convert to Elm encoder references." $ do
       it "toElmEncoderRef Post" $
         toElmEncoderRef (Proxy :: Proxy Post) `shouldBe` "encodePost"
