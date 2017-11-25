@@ -141,6 +141,12 @@ toElmTypeSpec =
         defaultOptions
         (Proxy :: Proxy Useless)
         "test/UselessType.elm"
+    it "toElmTypeSource Unit" $
+      shouldMatchTypeSource
+        (unlines ["module UnitType exposing (..)", "", "", "%s"])
+        defaultOptions
+        (Proxy :: Proxy Unit)
+        "test/UnitType.elm"
     it "toElmTypeSource FavoritePlaces" $
       shouldMatchTypeSource
         (unlines
