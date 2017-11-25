@@ -1,46 +1,46 @@
-{-# LANGUAGE DeriveAnyClass    #-}
-{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module ExportSpec where
 
-import qualified Data.Algorithm.Diff       as Diff
+import qualified Data.Algorithm.Diff as Diff
 import qualified Data.Algorithm.DiffOutput as DiffOutput
-import           Data.Char
-import           Data.Int
-import           Data.IntMap
-import           Data.Map
-import           Data.Monoid
-import           Data.Proxy
-import           Data.Text                 hiding (lines, unlines)
-import           Data.Time
-import           Elm
-import           GHC.Generics
-import           Test.Hspec                hiding (Spec)
-import           Test.Hspec                as Hspec
-import           Test.HUnit                (Assertion, assertBool)
-import           Text.Printf
+import Data.Char
+import Data.Int
+import Data.IntMap
+import Data.Map
+import Data.Monoid
+import Data.Proxy
+import Data.Text hiding (head, lines, unlines)
+import Data.Time
+import Elm
+import GHC.Generics
+import Test.HUnit (Assertion, assertBool)
+import Test.Hspec hiding (Spec)
+import Test.Hspec as Hspec
+import Text.Printf
 
 -- Debugging hint:
 -- ghci> import GHC.Generics
 -- ghci> :kind! Rep Post
 -- ...
 data Post = Post
-  { id       :: Int
-  , name     :: String
-  , age      :: Maybe Double
+  { id :: Int
+  , name :: String
+  , age :: Maybe Double
   , comments :: [Comment]
   , promoted :: Maybe Comment
-  , author   :: Maybe String
+  , author :: Maybe String
   } deriving (Generic, ElmType)
 
 data Comment = Comment
-  { postId         :: Int
-  , text           :: Text
+  { postId :: Int
+  , text :: Text
   , mainCategories :: (String, String)
-  , published      :: Bool
-  , created        :: UTCTime
-  , tags           :: Map String Int
+  , published :: Bool
+  , created :: UTCTime
+  , tags :: Map String Int
   } deriving (Generic, ElmType)
 
 data Position
@@ -76,6 +76,7 @@ spec = do
   toElmTypeSpec
   toElmDecoderSpec
   toElmEncoderSpec
+  moduleSpecsSpec
 
 toElmTypeSpec :: Hspec.Spec
 toElmTypeSpec =
@@ -172,7 +173,8 @@ toElmTypeSpec =
       it "toElmTypeRef [Comment]" $
         toElmTypeRef (Proxy :: Proxy [Comment]) `shouldBe` "List (Comment)"
       it "toElmTypeRef (Comment, String)" $
-        toElmTypeRef (Proxy :: Proxy (Comment, String)) `shouldBe` "(Comment, String)"
+        toElmTypeRef (Proxy :: Proxy (Comment, String)) `shouldBe`
+        "(Comment, String)"
       it "toElmTypeRef String" $
         toElmTypeRef (Proxy :: Proxy String) `shouldBe` "String"
       it "toElmTypeRef (Maybe String)" $
@@ -266,16 +268,16 @@ toElmDecoderSpec =
         toElmDecoderRef (Proxy :: Proxy String) `shouldBe` "string"
       it "toElmDecoderRef (Maybe String)" $
         toElmDecoderRef (Proxy :: Proxy (Maybe String)) `shouldBe`
-        "(maybe string)"
+        "(nullable string)"
       it "toElmDecoderRef [Maybe String]" $
         toElmDecoderRef (Proxy :: Proxy [Maybe String]) `shouldBe`
-        "(list (maybe string))"
+        "(list (nullable string))"
       it "toElmDecoderRef (Map String (Maybe String))" $
         toElmDecoderRef (Proxy :: Proxy (Map String (Maybe String))) `shouldBe`
-        "(map Dict.fromList (list (map2 (,) (index 0 string) (index 1 (maybe string)))))"
+        "(dict (nullable string))"
       it "toElmDecoderRef (IntMap (Maybe String))" $
         toElmDecoderRef (Proxy :: Proxy (IntMap (Maybe String))) `shouldBe`
-        "(map Dict.fromList (list (map2 (,) (index 0 int) (index 1 (maybe string)))))"
+        "(map Dict.fromList (list (map2 (,) (index 0 int) (index 1 (nullable string)))))"
 
 toElmEncoderSpec :: Hspec.Spec
 toElmEncoderSpec =
@@ -356,10 +358,30 @@ toElmEncoderSpec =
         "(Json.Encode.list << List.map (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
       it "toElmEncoderRef (Map String (Maybe String))" $
         toElmEncoderRef (Proxy :: Proxy (Map String (Maybe String))) `shouldBe`
-        "(dict Json.Encode.string (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+        "(Exts.Json.Encode.dict Json.Encode.string (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
       it "toElmEncoderRef (IntMap (Maybe String))" $
         toElmEncoderRef (Proxy :: Proxy (IntMap (Maybe String))) `shouldBe`
-        "(dict Json.Encode.int (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+        "(Exts.Json.Encode.dict Json.Encode.int (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+
+moduleSpecsSpec :: Hspec.Spec
+moduleSpecsSpec =
+  describe "Generating a module Spec" $ do
+    let mySpec =
+          moduleSpec ["My", "Module"] $ do
+            renderType (Proxy :: Proxy Post)
+            renderDecoder (Proxy :: Proxy Post)
+            renderType (Proxy :: Proxy Comment)
+    it "sets the module namespace" $
+      namespace mySpec `shouldBe` ["My", "Module"]
+    it "inserts the correct imports" $
+      head (declarations mySpec) `shouldBe`
+      intercalate
+        "\n"
+        [ "import Date"
+        , "import Dict"
+        , "import Json.Decode exposing (..)"
+        , "import Json.Decode.Pipeline exposing (..)"
+        ]
 
 shouldMatchTypeSource
   :: ElmType a
@@ -394,7 +416,7 @@ shouldBeDiff a (fpath, b) =
 initCap :: Text -> Text
 initCap t =
   case uncons t of
-    Nothing      -> t
+    Nothing -> t
     Just (c, cs) -> cons (Data.Char.toUpper c) cs
 
 withPrefix :: Text -> Text -> Text
