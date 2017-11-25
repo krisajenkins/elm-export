@@ -38,6 +38,9 @@ instance HasEncoder ElmConstructor where
   render (NamedConstructor _name ElmEmpty) =
     return $ "Json.Encode.list []"
 
+  render (NamedConstructor _name (ElmPrimitiveRef EUnit)) =
+    return $ "Json.Encode.list []"
+
   -- Single constructor, multiple values: create array with values
   render (NamedConstructor name value@(Values _ _)) = do
     let ps = constructorParameters 0 value
