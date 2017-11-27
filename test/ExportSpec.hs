@@ -65,6 +65,12 @@ newtype Useless =
   Useless ()
   deriving (Generic, ElmType)
 
+data Unit = Unit
+  deriving (Generic, ElmType)
+
+newtype Wrapper = Wrapper Int
+  deriving (Generic, ElmType)
+
 newtype FavoritePlaces = FavoritePlaces
   { positionsByUser :: Map String [Position]
   } deriving (Generic, ElmType)
@@ -138,6 +144,18 @@ toElmTypeSpec =
         defaultOptions
         (Proxy :: Proxy Useless)
         "test/UselessType.elm"
+    it "toElmTypeSource Unit" $
+      shouldMatchTypeSource
+        (unlines ["module UnitType exposing (..)", "", "", "%s"])
+        defaultOptions
+        (Proxy :: Proxy Unit)
+        "test/UnitType.elm"
+    it "toElmTypeSource Wrapper" $
+      shouldMatchTypeSource
+        (unlines ["module WrapperType exposing (..)", "", "", "%s"])
+        defaultOptions
+        (Proxy :: Proxy Wrapper)
+        "test/WrapperType.elm"
     it "toElmTypeSource FavoritePlaces" $
       shouldMatchTypeSource
         (unlines
@@ -330,6 +348,36 @@ toElmDecoderSpec =
         defaultOptions
         (Proxy :: Proxy Useless)
         "test/UselessDecoder.elm"
+    it "toElmDecoderSource Unit" $
+      shouldMatchDecoderSource
+        (unlines
+           [ "module UnitDecoder exposing (..)"
+           , ""
+           , "import Json.Decode exposing (..)"
+           , "import Json.Decode.Pipeline exposing (..)"
+           , "import UnitType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Unit)
+        "test/UnitDecoder.elm"
+    it "toElmDecoderSource Wrapper" $
+      shouldMatchDecoderSource
+        (unlines
+           [ "module WrapperDecoder exposing (..)"
+           , ""
+           , "import Json.Decode exposing (..)"
+           , "import Json.Decode.Pipeline exposing (..)"
+           , "import WrapperType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Wrapper)
+        "test/WrapperDecoder.elm"
     describe "Convert to Elm decoder references." $ do
       it "toElmDecoderRef Post" $
         toElmDecoderRef (Proxy :: Proxy Post) `shouldBe` "decodePost"
@@ -462,6 +510,48 @@ toElmEncoderSpec =
         defaultOptions
         (Proxy :: Proxy Monstrosity)
         "test/MonstrosityEncoder.elm"
+    it "toElmEncoderSourceWithOptions Useless" $
+      shouldMatchEncoderSource
+        (unlines
+           [ "module UselessEncoder exposing (..)"
+           , ""
+           , "import Json.Encode"
+           , "import UselessType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Useless)
+        "test/UselessEncoder.elm"
+    it "toElmEncoderSourceWithOptions Unit" $
+      shouldMatchEncoderSource
+        (unlines
+           [ "module UnitEncoder exposing (..)"
+           , ""
+           , "import Json.Encode"
+           , "import UnitType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Unit)
+        "test/UnitEncoder.elm"
+    it "toElmEncoderSourceWithOptions Wrapper" $
+      shouldMatchEncoderSource
+        (unlines
+           [ "module WrapperEncoder exposing (..)"
+           , ""
+           , "import Json.Encode"
+           , "import WrapperType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Wrapper)
+        "test/WrapperEncoder.elm"
     describe "Convert to Elm encoder references." $ do
       it "toElmEncoderRef Post" $
         toElmEncoderRef (Proxy :: Proxy Post) `shouldBe` "encodePost"

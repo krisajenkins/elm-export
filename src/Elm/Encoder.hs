@@ -38,6 +38,9 @@ instance HasEncoder ElmConstructor where
   render (NamedConstructor _name ElmEmpty) =
     return $ "Json.Encode.list []"
 
+  render (NamedConstructor _name (ElmPrimitiveRef EUnit)) =
+    return $ "Json.Encode.list []"
+
   -- Single constructor, multiple values: create array with values
   render (NamedConstructor name value@(Values _ _)) = do
     let ps = constructorParameters 0 value
@@ -49,8 +52,12 @@ instance HasEncoder ElmConstructor where
       (nest 4 $ cs <$$> nest 4 ("Json.Encode.list" <$$> "[" <+> dv <$$> "]"))
 
   -- Single constructor, one value: skip constructor and render just the value
-  render (NamedConstructor _name val) =
-    render val
+  render (NamedConstructor name value) = do
+    dv <- render value
+
+    let cs = stext name <+> "y0 ->"
+    return . nest 4 $ "case x of" <$$>
+      nest 4 (cs <$$> nest 4 dv <+> "y0")
 
 
   render (RecordConstructor _ value) = do
