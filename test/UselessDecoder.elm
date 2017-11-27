@@ -7,5 +7,5 @@ import UselessType exposing (..)
 
 decodeUseless : Decoder Useless
 decodeUseless =
-    decode Useless
-        (succeed ())
+    (succeed ())
+        |> map Useless
