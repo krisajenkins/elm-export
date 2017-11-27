@@ -15,4 +15,4 @@ decodeComment =
         |> required "commentMainCategories" (map2 (,) (index 0 string) (index 1 string))
         |> required "commentPublished" bool
         |> required "commentCreated" decodeDate
-        |> required "commentTags" (map Dict.fromList (list (map2 (,) (index 0 string) (index 1 int))))
+        |> required "commentTags" (dict int)

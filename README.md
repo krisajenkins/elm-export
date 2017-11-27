@@ -42,13 +42,11 @@ import Elm
 
 spec :: Spec
 spec =
-  Spec
-    ["Db", "Types"]
-    [ "import Json.Decode exposing (..)"
-    , "import Json.Decode.Pipeline exposing (..)"
-    , toElmTypeSource (Proxy :: Proxy Person)
-    , toElmDecoderSource (Proxy :: Proxy Person)
-    ]
+  moduleSpec ["Db", "Types"] $ do
+    require "Date exposing (Date)"
+    renderType (Proxy :: Proxy Person)
+    renderDecoder (Proxy :: Proxy Person)
+    renderEncoder (Proxy :: Proxy Person)
 
 main :: IO ()
 main = specsToDir [spec] "some/where/output"
@@ -56,11 +54,6 @@ main = specsToDir [spec] "some/where/output"
 
 Run this and the directory `some/where/output` will be created, and
 under that the Elm source file `Db/Types.elm` will be found.
-
-All the hard work here is done by `toElmTypeSource` and
-`toElmDecoderSource`. The `Spec` code is just wrapping to make it easy
-to create a complete Elm file from the meat that `ElmType` gives
-you.
 
 ### Required Elm Packages
 
@@ -87,7 +80,27 @@ stack build
 stack test --file-watch
 ```
 
+### Contribution Guide
+
+Development happens on the `devel` branch. Pull requests target this branch.
+
+Generated Elm code adheres to the [`elm-format`][1] style.
+
+JSON encoders and decoders match the default behavior of [Aeson][2].
+
+[1]: https://github.com/avh4/elm-format
+[2]: https://hackage.haskell.org/package/aeson
+
 ## Change Log
+
+### V0.6.x
+Updated to Elm 0.18.
+
+### V0.5.x
+???
+
+### V0.4.x
+???
 
 ### V0.3.0.0
 * Renamed `ToElmType` to `ElmType`, for brevity.
@@ -100,8 +113,8 @@ stack test --file-watch
 
 ## Status
 
-Alpha. The author is using it in production, but it is not yet
-expected to work for every reasonable case.
+Beta. Several people are using it in production, reliably, but it is
+not yet expected to work for every reasonable datatype.
 
 There are some Haskell datatypes that cannot be represented in
 Elm. Obviously we will not support those. But there are some which are

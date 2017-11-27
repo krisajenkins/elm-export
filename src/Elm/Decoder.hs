@@ -8,20 +8,20 @@ module Elm.Decoder
   , toElmDecoderRefWith
   , toElmDecoderSource
   , toElmDecoderSourceWith
+  , renderDecoder
   ) where
 
-import Control.Monad.Reader
-import Data.Monoid
+import Control.Monad.RWS
 import qualified Data.Text as T
 import Elm.Common
 import Elm.Type
 import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 class HasDecoder a where
-  render :: a -> Reader Options Doc
+  render :: a -> RenderM Doc
 
 class HasDecoderRef a where
-  renderRef :: a -> Reader Options Doc
+  renderRef :: a -> RenderM Doc
 
 instance HasDecoder ElmDatatype where
   render d@(ElmDatatype name constructor) = do
@@ -44,6 +44,63 @@ instance HasDecoder ElmConstructor where
     dv <- render value
     return $ "decode" <+> stext name <$$> indent 4 dv
 
+  render mc@(MultipleConstructors constrs) = do
+      cstrs <- mapM renderSum constrs
+      pure $ constructorName <$$> indent 4
+        ("|> andThen" <$$>
+          indent 4 (newlineparens ("\\x ->" <$$>
+            (indent 4 $ "case x of" <$$>
+              (indent 4 $ foldl1 (<$+$>) cstrs <$+$>
+               "_ ->" <$$> indent 4 "fail \"Constructor not matched\""
+              )
+            )
+          ))
+        )
+    where
+      constructorName :: Doc
+      constructorName =
+        if isEnumeration mc then "string" else "field \"tag\" string"
+
+-- | required "contents"
+requiredContents :: Doc
+requiredContents = "required" <+> dquotes "contents"
+
+-- | "<name>" -> decode <name>
+renderSumCondition :: T.Text -> Doc -> RenderM Doc
+renderSumCondition name contents =
+  pure $ dquotes (stext name) <+> "->" <$$>
+    indent 4
+      ("decode" <+> stext name <$$> indent 4 contents)
+
+-- | Render a sum type constructor in context of a data type with multiple
+-- constructors.
+renderSum :: ElmConstructor -> RenderM Doc
+renderSum (NamedConstructor name ElmEmpty) = renderSumCondition name mempty
+renderSum (NamedConstructor name v@(Values _ _)) = do
+  (_, val) <- renderConstructorArgs 0 v
+  renderSumCondition name val
+renderSum (NamedConstructor name value) = do
+  val <- render value
+  renderSumCondition name $ "|>" <+> requiredContents <+> val
+renderSum (RecordConstructor name value) = do
+  val <- render value
+  renderSumCondition name val
+renderSum (MultipleConstructors constrs) =
+  foldl1 (<$+$>) <$> mapM renderSum constrs
+
+-- | Render the decoding of a constructor's arguments. Note the constructor must
+-- be from a data type with multiple constructors and that it has multiple
+-- constructors itself.
+renderConstructorArgs :: Int -> ElmValue -> RenderM (Int, Doc)
+renderConstructorArgs i (Values l r) = do
+  (iL, rndrL) <- renderConstructorArgs i l
+  (iR, rndrR) <- renderConstructorArgs (iL + 1) r
+  pure (iR, rndrL <$$> rndrR)
+renderConstructorArgs i val = do
+  rndrVal <- render val
+  let index = parens $ "index" <+> int i <+> rndrVal
+  pure (i, "|>" <+> requiredContents <+> index)
+
 instance HasDecoder ElmValue where
   render (ElmRef name) = pure $ "decode" <> stext name
   render (ElmPrimitiveRef primitive) = renderRef primitive
@@ -55,18 +112,24 @@ instance HasDecoder ElmValue where
     fieldModifier <- asks fieldLabelModifier
     dv <- render value
     return $ "|> required" <+> dquotes (stext (fieldModifier name)) <+> dv
+  render ElmEmpty = pure (stext "")
 
 instance HasDecoderRef ElmPrimitive where
   renderRef (EList (ElmPrimitive EChar)) = pure "string"
   renderRef (EList datatype) = do
     dt <- renderRef datatype
     return . parens $ "list" <+> dt
+  renderRef (EDict EString value) = do
+    require "Dict"
+    d <- renderRef value
+    return . parens $ "dict" <+> d
   renderRef (EDict key value) = do
+    require "Dict"
     d <- renderRef (EList (ElmPrimitive (ETuple2 (ElmPrimitive key) value)))
     return . parens $ "map Dict.fromList" <+> d
   renderRef (EMaybe datatype) = do
     dt <- renderRef datatype
-    return . parens $ "maybe" <+> dt
+    return . parens $ "nullable" <+> dt
   renderRef (ETuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y
@@ -83,7 +146,8 @@ instance HasDecoderRef ElmPrimitive where
 toElmDecoderRefWith
   :: ElmType a
   => Options -> a -> T.Text
-toElmDecoderRefWith options x = pprinter $ runReader (renderRef (toElmType x)) options
+toElmDecoderRefWith options x =
+  pprinter . fst $ evalRWS (renderRef (toElmType x)) options ()
 
 toElmDecoderRef
   :: ElmType a
@@ -93,9 +157,18 @@ toElmDecoderRef = toElmDecoderRefWith defaultOptions
 toElmDecoderSourceWith
   :: ElmType a
   => Options -> a -> T.Text
-toElmDecoderSourceWith options x = pprinter $ runReader (render (toElmType x)) options
+toElmDecoderSourceWith options x =
+  pprinter . fst $ evalRWS (render (toElmType x)) options ()
 
 toElmDecoderSource
   :: ElmType a
   => a -> T.Text
 toElmDecoderSource = toElmDecoderSourceWith defaultOptions
+
+renderDecoder
+  :: ElmType a
+  => a -> RenderM ()
+renderDecoder x = do
+  require "Json.Decode exposing (..)"
+  require "Json.Decode.Pipeline exposing (..)"
+  collectDeclaration . render . toElmType $ x
