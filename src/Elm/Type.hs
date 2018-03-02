@@ -15,6 +15,7 @@ import Data.Proxy
 import Data.Text hiding (all)
 import Data.Time
 import GHC.Generics
+import Numeric.Natural (Natural)
 import Prelude
 
 data ElmDatatype
@@ -160,6 +161,9 @@ instance ElmType Int32 where
   toElmType _ = ElmPrimitive EInt
 
 instance ElmType Int64 where
+  toElmType _ = ElmPrimitive EInt
+
+instance ElmType Natural where
   toElmType _ = ElmPrimitive EInt
 
 instance (ElmType a, ElmType b) =>
