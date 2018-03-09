@@ -23,6 +23,7 @@ library
                      , directory
                      , formatting
                      , mtl
+                     , semigroups
                      , text
                      , time
                      , wl-pprint-text

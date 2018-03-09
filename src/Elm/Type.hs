@@ -10,6 +10,7 @@ module Elm.Type where
 
 import Data.Int (Int16, Int32, Int64, Int8)
 import Data.IntMap
+import Data.List.NonEmpty (NonEmpty)
 import Data.Map
 import Data.Proxy
 import Data.Text hiding (all)
@@ -128,6 +129,10 @@ instance ElmType a =>
 instance ElmType a =>
          ElmType [a] where
   toElmType _ = ElmPrimitive (EList (toElmType (Proxy :: Proxy a)))
+
+instance ElmType a =>
+         ElmType (NonEmpty a) where
+  toElmType _ = toElmType (Proxy :: Proxy [a])
 
 instance ElmType a =>
          ElmType (Maybe a) where
