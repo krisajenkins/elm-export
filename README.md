@@ -62,6 +62,7 @@ The decoders we produce require these extra Elm packages installed:
 ``` sh
 elm package install NoRedInk/elm-decode-pipeline
 elm package install krisajenkins/elm-exts
+elm-package install justinmimbs/elm-date-extra
 ```
 
 ## Development
