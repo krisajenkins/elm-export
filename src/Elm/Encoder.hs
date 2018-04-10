@@ -40,12 +40,11 @@ instance HasEncoder ElmConstructor where
 
 instance HasEncoder ElmValue where
   render (ElmField name value) = do
-    fieldLabelModifier' <- asks fieldLabelModifier
-    fieldValueModifier' <- asks fieldValueModifier
+    fieldModifier <- asks fieldLabelModifier
     valueBody <- render value
     return . spaceparens $
-      dquotes (stext (fieldLabelModifier' name)) <> comma <+>
-      (valueBody <+> "x." <> stext (fieldValueModifier' name))
+      dquotes (stext (fieldModifier name)) <> comma <+>
+      (valueBody <+> "x." <> stext (fieldModifier name))
   render (ElmPrimitiveRef primitive) = renderRef primitive
   render (ElmRef name) = pure $ "encode" <> stext name
   render (Values x y) = do

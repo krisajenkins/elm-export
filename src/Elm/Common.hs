@@ -10,11 +10,10 @@ import           Formatting hiding (text)
 
 data Options = Options
   { fieldLabelModifier :: Text -> Text
-  , fieldValueModifier :: Text -> Text
   }
 
 defaultOptions :: Options
-defaultOptions = Options {fieldLabelModifier = id, fieldValueModifier = id}
+defaultOptions = Options {fieldLabelModifier = id}
 
 cr :: Format r r
 cr = now "\n"
