@@ -151,13 +151,12 @@ instance HasEncoderRef ElmPrimitive where
   renderRef (ETuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y
-    require "Exts.Json.Encode"
-    return . parens $ "Exts.Json.Encode.tuple2" <+> dx <+> dy
+    return . parens $ "Tuple.mapFirst" <+> parens dx <+> ">> Tuple.mapSecond" <+> parens dy <+> ">> (\\( x, y ) -> Json.Encode.list [ x, y ])" <+> ">> Json.Encode.list"
   renderRef (EDict k v) = do
     dk <- renderRef k
     dv <- renderRef v
-    require "Exts.Json.Encode"
-    return . parens $ "Exts.Json.Encode.dict" <+> dk <+> dv
+    require "Dict"
+    return . parens $ "Dict.toList >> List.map" <+> parens ("Tuple.mapFirst" <+> parens dk <+> ">> Tuple.mapSecond" <+> parens dv <+> ">> (\\( x, y ) -> Json.Encode.list [ x, y ])") <+> ">> Json.Encode.list"
 
 toElmEncoderRefWith
   :: ElmType a

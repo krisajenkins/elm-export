@@ -228,8 +228,6 @@ toElmDecoderSpec =
            [ "module CommentDecoder exposing (..)"
            , ""
            , "import CommentType exposing (..)"
-           , "import Dict"
-           , "import Exts.Json.Decode exposing (..)"
            , "import Json.Decode exposing (..)"
            , "import Json.Decode.Pipeline exposing (..)"
            , ""
@@ -323,7 +321,6 @@ toElmDecoderSpec =
            , ""
            , "import CommentType exposing (..)"
            , "import Dict"
-           , "import Exts.Json.Decode exposing (..)"
            , "import Json.Decode exposing (..)"
            , "import Json.Decode.Pipeline exposing (..)"
            , ""
@@ -414,7 +411,6 @@ toElmEncoderSpec =
            [ "module CommentEncoder exposing (..)"
            , ""
            , "import CommentType exposing (..)"
-           , "import Exts.Json.Encode exposing (..)"
            , "import Json.Encode"
            , ""
            , ""
@@ -444,7 +440,6 @@ toElmEncoderSpec =
            [ "module CommentEncoderWithOptions exposing (..)"
            , ""
            , "import CommentType exposing (..)"
-           , "import Exts.Json.Encode exposing (..)"
            , "import Json.Encode"
            , ""
            , ""
@@ -574,10 +569,10 @@ toElmEncoderSpec =
         "(Json.Encode.list << List.map (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
       it "toElmEncoderRef (Map String (Maybe String))" $
         toElmEncoderRef (Proxy :: Proxy (Map String (Maybe String))) `shouldBe`
-        "(Exts.Json.Encode.dict Json.Encode.string (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+        "(Dict.toList >> List.map (Tuple.mapFirst (Json.Encode.string) >> Tuple.mapSecond ((Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string)) >> (\\( x, y ) -> Json.Encode.list [ x, y ])) >> Json.Encode.list)"
       it "toElmEncoderRef (IntMap (Maybe String))" $
         toElmEncoderRef (Proxy :: Proxy (IntMap (Maybe String))) `shouldBe`
-        "(Exts.Json.Encode.dict Json.Encode.int (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+        "(Dict.toList >> List.map (Tuple.mapFirst (Json.Encode.int) >> Tuple.mapSecond ((Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string)) >> (\\( x, y ) -> Json.Encode.list [ x, y ])) >> Json.Encode.list)"
 
 moduleSpecsSpec :: Hspec.Spec
 moduleSpecsSpec =

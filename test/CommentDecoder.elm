@@ -1,8 +1,6 @@
 module CommentDecoder exposing (..)
 
 import CommentType exposing (..)
-import Dict
-import Exts.Json.Decode exposing (..)
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
 
