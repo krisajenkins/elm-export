@@ -1,0 +1,53 @@
+name: elm-export
+version: '0.6.0.1'
+synopsis: A library to generate Elm types from Haskell source.
+description: Generate Elm source code automatically from Haskell types. Using GHC.Generics,
+  we can automatically derive Elm type declarations, and Aeson-compatible JSON decoders
+  & encoders.
+category: Web
+author: Kris Jenkins
+maintainer: kris.jenkins@clearercode.com
+copyright: 2015-2017 Kris Jenkins
+license: OtherLicense
+license-file: LICENSE.txt
+github: krisajenkins/elm-export
+homepage: http://github.com/krisajenkins/elm-export
+stability: alpha
+extra-source-files:
+- test/*.elm
+dependencies:
+- base
+- bytestring
+- containers
+- text
+- time
+ghc-options:
+- -Wall
+
+library:
+  source-dirs: src
+  exposed-modules:
+  - Elm
+  dependencies:
+  - directory
+  - formatting
+  - mtl
+  - servant
+  - wl-pprint-text
+
+tests:
+  elm-export-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - Diff
+    - HUnit
+    - QuickCheck
+    - elm-export
+    - hspec
+    - hspec-core
+    - quickcheck-instances

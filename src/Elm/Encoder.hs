@@ -5,20 +5,20 @@ module Elm.Encoder
   , toElmEncoderRefWith
   , toElmEncoderSource
   , toElmEncoderSourceWith
+  , renderEncoder
   ) where
 
-import Control.Monad.Reader
-import Data.Monoid
+import Control.Monad.RWS
 import qualified Data.Text as T
 import Elm.Common
 import Elm.Type
 import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
 class HasEncoder a where
-  render :: a -> Reader Options Doc
+  render :: a -> RenderM Doc
 
 class HasEncoderRef a where
-  renderRef :: a -> Reader Options Doc
+  renderRef :: a -> RenderM Doc
 
 instance HasEncoder ElmDatatype where
   render d@(ElmDatatype name constructor) = do
@@ -34,9 +34,89 @@ instance HasEncoderRef ElmDatatype where
   renderRef (ElmPrimitive primitive) = renderRef primitive
 
 instance HasEncoder ElmConstructor where
+  -- Single constructor, no values: empty array
+  render (NamedConstructor _name ElmEmpty) =
+    return $ "Json.Encode.list []"
+
+  render (NamedConstructor _name (ElmPrimitiveRef EUnit)) =
+    return $ "Json.Encode.list []"
+
+  -- Single constructor, multiple values: create array with values
+  render (NamedConstructor name value@(Values _ _)) = do
+    let ps = constructorParameters 0 value
+
+    (dv, _) <- renderVariable ps value
+
+    let cs = stext name <+> foldl1 (<+>) ps <+> "->"
+    return . nest 4 $ "case x of" <$$>
+      (nest 4 $ cs <$$> nest 4 ("Json.Encode.list" <$$> "[" <+> dv <$$> "]"))
+
+  -- Single constructor, one value: skip constructor and render just the value
+  render (NamedConstructor name value) = do
+    dv <- render value
+
+    let cs = stext name <+> "y0 ->"
+    return . nest 4 $ "case x of" <$$>
+      nest 4 (cs <$$> nest 4 dv <+> "y0")
+
+
   render (RecordConstructor _ value) = do
     dv <- render value
     return . nest 4 $ "Json.Encode.object" <$$> "[" <+> dv <$$> "]"
+
+  render mc@(MultipleConstructors constrs) = do
+    let rndr = if isEnumeration mc then renderEnumeration else renderSum
+    dc <- mapM rndr constrs
+    return . nest 4 $ "case x of" <$$> foldl1 (<$+$>) dc
+
+jsonEncodeObject :: Doc -> Doc -> Doc -> Doc
+jsonEncodeObject constructor tag contents =
+  nest 4 $ constructor <$$>
+    nest 4 ("Json.Encode.object" <$$> "[" <+> tag <$$>
+      contents <$$>
+    "]")
+
+renderSum :: ElmConstructor -> RenderM Doc
+renderSum c@(NamedConstructor name ElmEmpty) = do
+  dc <- render c
+  let cs = stext name <+> "->"
+  let tag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
+  let ct = comma <+> pair (dquotes "contents") dc
+
+  return $ jsonEncodeObject cs tag ct
+
+renderSum (NamedConstructor name value) = do
+  let ps = constructorParameters 0 value
+
+  (dc, _) <- renderVariable ps value
+  let dc' = if length ps > 1 then "Json.Encode.list" <+> squarebracks dc else dc
+  let cs = stext name <+> foldl1 (<+>) ps <+> "->"
+  let tag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
+  let ct = comma <+> pair (dquotes "contents") dc'
+
+  return $ jsonEncodeObject cs tag ct
+
+renderSum (RecordConstructor name value) = do
+  dv <- render value
+  let cs = stext name <+> "->"
+  let tag = pair (dquotes "tag") (dquotes $ stext name)
+  let ct = comma <+> dv
+  return $ jsonEncodeObject cs tag ct
+
+renderSum (MultipleConstructors constrs) = do
+  dc <- mapM renderSum constrs
+  return $ foldl1 (<$+$>) dc
+
+
+renderEnumeration :: ElmConstructor -> RenderM Doc
+renderEnumeration (NamedConstructor name _) =
+  return . nest 4 $ stext name <+> "->" <$$>
+      "Json.Encode.string" <+> dquotes (stext name)
+renderEnumeration (MultipleConstructors constrs) = do
+  dc <- mapM renderEnumeration constrs
+  return $ foldl1 (<$+$>) dc
+renderEnumeration c = render c
+
 
 instance HasEncoder ElmValue where
   render (ElmField name value) = do
@@ -51,6 +131,7 @@ instance HasEncoder ElmValue where
     dx <- render x
     dy <- render y
     return $ dx <$$> comma <+> dy
+  render _ = error "HasEncoderRef ElmValue: should not happen"
 
 instance HasEncoderRef ElmPrimitive where
   renderRef EDate = pure $ parens "Json.Encode.string << toString"
@@ -70,17 +151,18 @@ instance HasEncoderRef ElmPrimitive where
   renderRef (ETuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y
-    return . parens $ "tuple2" <+> dx <+> dy
+    return . parens $ "Tuple.mapFirst" <+> parens dx <+> ">> Tuple.mapSecond" <+> parens dy <+> ">> (\\( x, y ) -> Json.Encode.list [ x, y ])" <+> ">> Json.Encode.list"
   renderRef (EDict k v) = do
     dk <- renderRef k
     dv <- renderRef v
-    return . parens $ "dict" <+> dk <+> dv
+    require "Dict"
+    return . parens $ "Dict.toList >> List.map" <+> parens ("Tuple.mapFirst" <+> parens dk <+> ">> Tuple.mapSecond" <+> parens dv <+> ">> (\\( x, y ) -> Json.Encode.list [ x, y ])") <+> ">> Json.Encode.list"
 
 toElmEncoderRefWith
   :: ElmType a
   => Options -> a -> T.Text
 toElmEncoderRefWith options x =
-  pprinter $ runReader (renderRef (toElmType x)) options
+  pprinter . fst $ evalRWS (renderRef (toElmType x)) options ()
 
 toElmEncoderRef
   :: ElmType a
@@ -91,9 +173,48 @@ toElmEncoderSourceWith
   :: ElmType a
   => Options -> a -> T.Text
 toElmEncoderSourceWith options x =
-  pprinter $ runReader (render (toElmType x)) options
+  pprinter . fst $ evalRWS (render (toElmType x)) options ()
 
 toElmEncoderSource
   :: ElmType a
   => a -> T.Text
 toElmEncoderSource = toElmEncoderSourceWith defaultOptions
+
+renderEncoder
+  :: ElmType a
+  => a -> RenderM ()
+renderEncoder x = do
+  require "Json.Encode"
+  collectDeclaration . render . toElmType $ x
+
+-- | Variable names for the members of constructors
+-- Used in pattern matches
+constructorParameters :: Int -> ElmValue -> [Doc]
+constructorParameters _ ElmEmpty = [ empty ]
+constructorParameters i (Values l r) =
+    left ++ right
+  where
+    left = constructorParameters i l
+    right = constructorParameters (length left + i) r
+constructorParameters i _ = [ "y" <> int i ]
+
+
+-- | Encode variables following the recipe of an ElmValue
+renderVariable :: [Doc] -> ElmValue -> RenderM (Doc, [Doc])
+renderVariable (d : ds) v@(ElmRef {}) = do
+  v' <- render v
+  return (v' <+> d, ds)
+renderVariable ds ElmEmpty = return (empty, ds)
+renderVariable (_ : ds) (ElmPrimitiveRef EUnit) =
+  return ("Json.Encode.null", ds)
+renderVariable (d : ds) (ElmPrimitiveRef ref) = do
+  r <- renderRef ref
+  return (r <+> d, ds)
+renderVariable ds (Values l r) = do
+  (left, dsl) <- renderVariable ds l
+  (right, dsr) <- renderVariable dsl r
+  return (left <> comma <+> right, dsr)
+renderVariable ds f@(ElmField _ _) = do
+  f' <- render f
+  return (f', ds)
+renderVariable [] _ = error "Amount of variables does not match variables"
