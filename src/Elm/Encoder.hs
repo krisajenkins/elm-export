@@ -36,7 +36,7 @@ instance HasEncoderRef ElmDatatype where
 instance HasEncoder ElmConstructor where
   -- Single constructor, no values: empty array
   render (NamedConstructor _name ElmEmpty) =
-    return $ "Json.Encode.list []"
+    return $ "Json.Encode.list Json.Encode.bool []"
 
   -- Single constructor, multiple values: create array with values
   render (NamedConstructor name value@(Values _ _)) = do
@@ -137,7 +137,7 @@ instance HasEncoderRef ElmPrimitive where
   renderRef (EList (ElmPrimitive EChar)) = pure "Json.Encode.string"
   renderRef (EList datatype) = do
     dd <- renderRef datatype
-    return . parens $ "Json.Encode.list << List.map" <+> dd
+    return . parens $ "Json.Encode.list" <+> dd
   renderRef (EMaybe datatype) = do
     dd <- renderRef datatype
     return . parens $ "Maybe.withDefault Json.Encode.null << Maybe.map" <+> dd
