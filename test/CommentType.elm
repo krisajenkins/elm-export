@@ -7,8 +7,8 @@ import Time
 type alias Comment =
     { postId : Int
     , text : String
-    , mainCategories : ( String, String )
+    , mainCategories : (String, String)
     , published : Bool
     , created : Time.Posix
-    , tags : Dict String Int
+    , tags : Dict (String) (Int)
     }

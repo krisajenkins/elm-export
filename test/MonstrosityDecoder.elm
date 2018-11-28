@@ -1,4 +1,4 @@
-module MonstrosityDecoder exposing (decodeMonstrosity)
+module MonstrosityDecoder exposing (..)
 
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)

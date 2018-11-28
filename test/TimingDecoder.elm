@@ -1,4 +1,4 @@
-module TimingDecoder exposing (decodeTiming)
+module TimingDecoder exposing (..)
 
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)

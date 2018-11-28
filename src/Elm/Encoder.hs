@@ -134,7 +134,7 @@ instance HasEncoder ElmValue where
   render _ = error "HasEncoderRef ElmValue: should not happen"
 
 instance HasEncoderRef ElmPrimitive where
-  renderRef EDate = pure $ parens "Iso8601.encode"
+  renderRef ETimePosix = pure $ parens "Iso8601.encode"
   renderRef EUnit = pure "Json.Encode.null"
   renderRef EInt = pure "Json.Encode.int"
   renderRef EChar = pure "Json.Encode.char"
@@ -144,20 +144,18 @@ instance HasEncoderRef ElmPrimitive where
   renderRef (EList (ElmPrimitive EChar)) = pure "Json.Encode.string"
   renderRef (EList datatype) = do
     dd <- renderRef datatype
-    return . parens $ "Json.Encode.list identity << List.map" <+> dd
+    return . parens $ "Json.Encode.list" <+> dd
   renderRef (EMaybe datatype) = do
     dd <- renderRef datatype
     return . parens $ "Maybe.withDefault Json.Encode.null << Maybe.map" <+> dd
   renderRef (ETuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y
-    require "Exts.Json.Encode"
-    return . parens $ "Exts.Json.Encode.tuple2" <+> dx <+> dy
+    return . parens $ "\\(x, y) -> list identity [" <+> dx <+> "x," <+> dy <+> "y ]"
   renderRef (EDict k v) = do
     dk <- renderRef k
     dv <- renderRef v
-    require "Exts.Json.Encode"
-    return . parens $ "Exts.Json.Encode.dict" <+> dk <+> dv
+    return . parens $ "Json.Encode.dict" <+> dk <+> dv
 
 toElmEncoderRefWith
   :: ElmType a

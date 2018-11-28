@@ -1,4 +1,4 @@
-module PostDecoderWithOptions exposing (decodePost)
+module PostDecoderWithOptions exposing (..)
 
 import CommentDecoder exposing (..)
 import Json.Decode exposing (..)

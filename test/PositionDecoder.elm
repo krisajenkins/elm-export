@@ -1,4 +1,4 @@
-module PositionDecoder exposing (decodePosition)
+module PositionDecoder exposing (..)
 
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)

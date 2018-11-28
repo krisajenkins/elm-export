@@ -10,7 +10,7 @@ encodeTiming x =
         Start ->
             Json.Encode.object
                 [ ( "tag", Json.Encode.string "Start" )
-                , ( "contents", Json.Encode.list [] )
+                , ( "contents", Json.Encode.list identity [] )
                 ]
 
         Continue y0 ->
@@ -22,5 +22,5 @@ encodeTiming x =
         Stop ->
             Json.Encode.object
                 [ ( "tag", Json.Encode.string "Stop" )
-                , ( "contents", Json.Encode.list [] )
+                , ( "contents", Json.Encode.list identity [] )
                 ]
