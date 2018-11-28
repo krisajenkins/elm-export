@@ -1,4 +1,4 @@
-module MonstrosityDecoder exposing (..)
+module MonstrosityDecoder exposing (decodeMonstrosity)
 
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
@@ -12,14 +12,14 @@ decodeMonstrosity =
             (\x ->
                 case x of
                     "NotSpecial" ->
-                        decode NotSpecial
+                        succeed NotSpecial
 
                     "OkayIGuess" ->
-                        decode OkayIGuess
+                        succeed OkayIGuess
                             |> required "contents" decodeMonstrosity
 
                     "Ridiculous" ->
-                        decode Ridiculous
+                        succeed Ridiculous
                             |> required "contents" (index 0 int)
                             |> required "contents" (index 1 string)
                             |> required "contents" (index 2 (list decodeMonstrosity))

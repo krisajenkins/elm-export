@@ -1,4 +1,4 @@
-module PostDecoderWithOptions exposing (..)
+module PostDecoderWithOptions exposing (decodePost)
 
 import CommentDecoder exposing (..)
 import Json.Decode exposing (..)
@@ -8,7 +8,7 @@ import PostType exposing (..)
 
 decodePost : Decoder Post
 decodePost =
-    decode Post
+    succeed Post
         |> required "postId" int
         |> required "postName" string
         |> required "postAge" (nullable float)
