@@ -83,6 +83,12 @@ data LotsOfInts = LotsOfInts
   , intD :: Int64
   } deriving (Generic, ElmType)
 
+
+data Shadowing = Shadowing
+  { prop :: ( (Int, Int), ( String, String ) )
+  } deriving (Generic, ElmType)
+
+
 spec :: Hspec.Spec
 spec = do
   toElmTypeSpec
@@ -197,6 +203,17 @@ toElmTypeSpec =
         (defaultOptions {fieldLabelModifier = withPrefix "comment"})
         (Proxy :: Proxy Comment)
         "test/CommentTypeWithOptions.elm"
+    it "toElmTypeSource Shadowing" $
+      shouldMatchTypeSource
+        (unlines
+          [ "module ShadowingType exposing (..)"
+          , ""
+          , ""
+          , "%s"
+          ])
+        defaultOptions
+        (Proxy :: Proxy Shadowing)
+        "test/ShadowingType.elm"
     describe "Convert to Elm type references." $ do
       it "toElmTypeRef Post" $
         toElmTypeRef (Proxy :: Proxy Post) `shouldBe` "Post"
@@ -378,6 +395,21 @@ toElmDecoderSpec =
         defaultOptions
         (Proxy :: Proxy Wrapper)
         "test/WrapperDecoder.elm"
+    it "toElmDecoderSource Shadowing" $
+      shouldMatchDecoderSource
+        (unlines
+            [ "module ShadowingDecoder exposing (..)"
+            , ""
+            , "import Json.Decode exposing (..)"
+            , "import Json.Decode.Pipeline exposing (..)"
+            , "import ShadowingType exposing (..)"
+            , ""
+            , ""
+            , "%s"
+            ])
+        defaultOptions
+        (Proxy :: Proxy Shadowing)
+        "test/ShadowingDecoder.elm"
     describe "Convert to Elm decoder references." $ do
       it "toElmDecoderRef Post" $
         toElmDecoderRef (Proxy :: Proxy Post) `shouldBe` "decodePost"
@@ -482,6 +514,20 @@ toElmEncoderSpec =
         defaultOptions
         (Proxy :: Proxy Position)
         "test/PositionEncoder.elm"
+    it "toElmEncoderSource Position" $
+      shouldMatchEncoderSource
+        (unlines
+            [ "module ShadowingEncoder exposing (..)"
+            , ""
+            , "import Json.Encode"
+            , "import ShadowingType exposing (..)"
+            , ""
+            , ""
+            , "%s"
+            ])
+        defaultOptions
+        (Proxy :: Proxy Shadowing)
+        "test/ShadowingEncoder.elm"
     it "toElmEncoderSourceWithOptions Timing" $
       shouldMatchEncoderSource
         (unlines

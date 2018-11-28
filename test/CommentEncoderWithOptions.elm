@@ -10,7 +10,7 @@ encodeComment x =
     Json.Encode.object
         [ ( "commentPostId", Json.Encode.int x.postId )
         , ( "commentText", Json.Encode.string x.text )
-        , ( "commentMainCategories", (\(x, y) -> list identity [ Json.Encode.string x, Json.Encode.string y ]) x.mainCategories )
+        , ( "commentMainCategories", (\(m0, n0) -> Json.Encode.list identity [ Json.Encode.string m0, Json.Encode.string n0 ]) x.mainCategories )
         , ( "commentPublished", Json.Encode.bool x.published )
         , ( "commentCreated", (Iso8601.encode) x.created )
         , ( "commentTags", (Json.Encode.dict Json.Encode.string Json.Encode.int) x.tags )
