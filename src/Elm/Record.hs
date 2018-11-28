@@ -88,8 +88,8 @@ instance HasTypeRef ElmPrimitive where
     return $ "Dict" <+> parens dk <+> parens dv
   renderRef EInt = pure "Int"
   renderRef EDate = do
-    require "Date"
-    pure "Date"
+    require "Time"
+    pure "Time.Posix"
   renderRef EBool = pure "Bool"
   renderRef EChar = pure "Char"
   renderRef EString = pure "String"

@@ -1,4 +1,4 @@
-module CommentDecoderWithOptions exposing (..)
+module CommentDecoderWithOptions exposing (decodeComment)
 
 import CommentType exposing (..)
 import Dict
@@ -9,7 +9,7 @@ import Json.Decode.Pipeline exposing (..)
 
 decodeComment : Decoder Comment
 decodeComment =
-    decode Comment
+    succeed Comment
         |> required "commentPostId" int
         |> required "commentText" string
         |> required "commentMainCategories" (map2 (,) (index 0 string) (index 1 string))

@@ -36,10 +36,10 @@ instance HasEncoderRef ElmDatatype where
 instance HasEncoder ElmConstructor where
   -- Single constructor, no values: empty array
   render (NamedConstructor _name ElmEmpty) =
-    return $ "Json.Encode.list []"
+    return $ "Json.Encode.list identity []"
 
   render (NamedConstructor _name (ElmPrimitiveRef EUnit)) =
-    return $ "Json.Encode.list []"
+    return $ "Json.Encode.list identity []"
 
   -- Single constructor, multiple values: create array with values
   render (NamedConstructor name value@(Values _ _)) = do
@@ -49,7 +49,7 @@ instance HasEncoder ElmConstructor where
 
     let cs = stext name <+> foldl1 (<+>) ps <+> "->"
     return . nest 4 $ "case x of" <$$>
-      (nest 4 $ cs <$$> nest 4 ("Json.Encode.list" <$$> "[" <+> dv <$$> "]"))
+      (nest 4 $ cs <$$> nest 4 ("Json.Encode.list identity" <$$> "[" <+> dv <$$> "]"))
 
   -- Single constructor, one value: skip constructor and render just the value
   render (NamedConstructor name value) = do
@@ -89,7 +89,7 @@ renderSum (NamedConstructor name value) = do
   let ps = constructorParameters 0 value
 
   (dc, _) <- renderVariable ps value
-  let dc' = if length ps > 1 then "Json.Encode.list" <+> squarebracks dc else dc
+  let dc' = if length ps > 1 then "Json.Encode.list identity" <+> squarebracks dc else dc
   let cs = stext name <+> foldl1 (<+>) ps <+> "->"
   let tag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
   let ct = comma <+> pair (dquotes "contents") dc'
@@ -134,7 +134,7 @@ instance HasEncoder ElmValue where
   render _ = error "HasEncoderRef ElmValue: should not happen"
 
 instance HasEncoderRef ElmPrimitive where
-  renderRef EDate = pure $ parens "Json.Encode.string << toString"
+  renderRef EDate = pure $ parens "Iso8601.encode"
   renderRef EUnit = pure "Json.Encode.null"
   renderRef EInt = pure "Json.Encode.int"
   renderRef EChar = pure "Json.Encode.char"
@@ -144,7 +144,7 @@ instance HasEncoderRef ElmPrimitive where
   renderRef (EList (ElmPrimitive EChar)) = pure "Json.Encode.string"
   renderRef (EList datatype) = do
     dd <- renderRef datatype
-    return . parens $ "Json.Encode.list << List.map" <+> dd
+    return . parens $ "Json.Encode.list identity << List.map" <+> dd
   renderRef (EMaybe datatype) = do
     dd <- renderRef datatype
     return . parens $ "Maybe.withDefault Json.Encode.null << Maybe.map" <+> dd

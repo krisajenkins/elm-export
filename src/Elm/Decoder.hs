@@ -33,7 +33,7 @@ instance HasDecoder ElmDatatype where
   render (ElmPrimitive primitive) = renderRef primitive
 
 instance HasDecoderRef ElmDatatype where
-  renderRef (ElmDatatype name _) = pure $ "decode" <> stext name
+  renderRef (ElmDatatype name _) = pure $ "Json.Decode.succeed" <> stext name
   renderRef (ElmPrimitive primitive) = renderRef primitive
 
 instance HasDecoder ElmConstructor where
@@ -44,7 +44,7 @@ instance HasDecoder ElmConstructor where
     return $ dv <$$> indent 4 ("|> map" <+> stext name)
   render (RecordConstructor name value) = do
     dv <- render value
-    return $ "decode" <+> stext name <$$> indent 4 dv
+    return $ "Json.Decode.succeed" <+> stext name <$$> indent 4 dv
 
   render mc@(MultipleConstructors constrs) = do
       cstrs <- mapM renderSum constrs
@@ -72,7 +72,7 @@ renderSumCondition :: T.Text -> Doc -> RenderM Doc
 renderSumCondition name contents =
   pure $ dquotes (stext name) <+> "->" <$$>
     indent 4
-      ("decode" <+> stext name <$$> indent 4 contents)
+      ("Json.Decode.succeed" <+> stext name <$$> indent 4 contents)
 
 -- | Render a sum type constructor in context of a data type with multiple
 -- constructors.
@@ -104,7 +104,7 @@ renderConstructorArgs i val = do
   pure (i, "|>" <+> requiredContents <+> index)
 
 instance HasDecoder ElmValue where
-  render (ElmRef name) = pure $ "decode" <> stext name
+  render (ElmRef name) = pure $ "Json.Decode.succeed" <> stext name
   render (ElmPrimitiveRef primitive) = renderRef primitive
   render (Values x y) = do
     dx <- render x
@@ -138,7 +138,7 @@ instance HasDecoderRef ElmPrimitive where
     return . parens $
       "map2 (,)" <+> parens ("index 0" <+> dx) <+> parens ("index 1" <+> dy)
   renderRef EUnit = pure $ parens "succeed ()"
-  renderRef EDate = pure "decodeDate"
+  renderRef EDate = pure "Iso8601.decoder"
   renderRef EInt = pure "int"
   renderRef EBool = pure "bool"
   renderRef EChar = pure "char"

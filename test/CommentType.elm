@@ -1,14 +1,14 @@
-module CommentType exposing (..)
+module CommentType exposing (Comment)
 
-import Date exposing (Date)
 import Dict exposing (Dict)
+import Time
 
 
 type alias Comment =
     { postId : Int
     , text : String
-    , mainCategories : (String, String)
+    , mainCategories : ( String, String )
     , published : Bool
-    , created : Date
-    , tags : Dict (String) (Int)
+    , created : Time.Posix
+    , tags : Dict String Int
     }

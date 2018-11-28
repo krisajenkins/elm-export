@@ -1,4 +1,4 @@
-module PositionDecoder exposing (..)
+module PositionDecoder exposing (decodePosition)
 
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
@@ -12,13 +12,13 @@ decodePosition =
             (\x ->
                 case x of
                     "Beginning" ->
-                        decode Beginning
+                        succeed Beginning
 
                     "Middle" ->
-                        decode Middle
+                        succeed Middle
 
                     "End" ->
-                        decode End
+                        succeed End
 
                     _ ->
                         fail "Constructor not matched"
