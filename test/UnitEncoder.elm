@@ -6,4 +6,4 @@ import UnitType exposing (..)
 
 encodeUnit : Unit -> Json.Encode.Value
 encodeUnit x =
-    Json.Encode.list []
+    Json.Encode.list identity []

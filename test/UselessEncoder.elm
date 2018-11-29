@@ -6,4 +6,4 @@ import UselessType exposing (..)
 
 encodeUseless : Useless -> Json.Encode.Value
 encodeUseless x =
-    Json.Encode.list []
+    Json.Encode.list identity []

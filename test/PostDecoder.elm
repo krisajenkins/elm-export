@@ -8,7 +8,7 @@ import PostType exposing (..)
 
 decodePost : Decoder Post
 decodePost =
-    decode Post
+    succeed Post
         |> required "id" int
         |> required "name" string
         |> required "age" (nullable float)

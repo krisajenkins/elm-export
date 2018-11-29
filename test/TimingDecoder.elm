@@ -12,14 +12,14 @@ decodeTiming =
             (\x ->
                 case x of
                     "Start" ->
-                        decode Start
+                        succeed Start
 
                     "Continue" ->
-                        decode Continue
+                        succeed Continue
                             |> required "contents" float
 
                     "Stop" ->
-                        decode Stop
+                        succeed Stop
 
                     _ ->
                         fail "Constructor not matched"

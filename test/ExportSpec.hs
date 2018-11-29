@@ -83,6 +83,12 @@ data LotsOfInts = LotsOfInts
   , intD :: Int64
   } deriving (Generic, ElmType)
 
+
+data Shadowing = Shadowing
+  { prop :: ( (Int, Int), ( String, String ) )
+  } deriving (Generic, ElmType)
+
+
 spec :: Hspec.Spec
 spec = do
   toElmTypeSpec
@@ -109,10 +115,10 @@ toElmTypeSpec =
     it "toElmTypeSource Comment" $
       shouldMatchTypeSource
         (unlines
-           [ "module CommentType exposing (..)"
+           [ "module CommentType exposing (Comment)"
            , ""
-           , "import Date exposing (Date)"
            , "import Dict exposing (Dict)"
+           , "import Time"
            , ""
            , ""
            , "%s"
@@ -186,10 +192,10 @@ toElmTypeSpec =
     it "toElmTypeSourceWithOptions Comment" $
       shouldMatchTypeSource
         (unlines
-           [ "module CommentTypeWithOptions exposing (..)"
+           [ "module CommentTypeWithOptions exposing (Comment)"
            , ""
-           , "import Date exposing (Date)"
            , "import Dict exposing (Dict)"
+           , "import Time"
            , ""
            , ""
            , "%s"
@@ -197,6 +203,17 @@ toElmTypeSpec =
         (defaultOptions {fieldLabelModifier = withPrefix "comment"})
         (Proxy :: Proxy Comment)
         "test/CommentTypeWithOptions.elm"
+    it "toElmTypeSource Shadowing" $
+      shouldMatchTypeSource
+        (unlines
+          [ "module ShadowingType exposing (..)"
+          , ""
+          , ""
+          , "%s"
+          ])
+        defaultOptions
+        (Proxy :: Proxy Shadowing)
+        "test/ShadowingType.elm"
     describe "Convert to Elm type references." $ do
       it "toElmTypeRef Post" $
         toElmTypeRef (Proxy :: Proxy Post) `shouldBe` "Post"
@@ -229,7 +246,7 @@ toElmDecoderSpec =
            , ""
            , "import CommentType exposing (..)"
            , "import Dict"
-           , "import Exts.Json.Decode exposing (..)"
+           , "import Iso8601"
            , "import Json.Decode exposing (..)"
            , "import Json.Decode.Pipeline exposing (..)"
            , ""
@@ -323,7 +340,7 @@ toElmDecoderSpec =
            , ""
            , "import CommentType exposing (..)"
            , "import Dict"
-           , "import Exts.Json.Decode exposing (..)"
+           , "import Iso8601"
            , "import Json.Decode exposing (..)"
            , "import Json.Decode.Pipeline exposing (..)"
            , ""
@@ -378,6 +395,21 @@ toElmDecoderSpec =
         defaultOptions
         (Proxy :: Proxy Wrapper)
         "test/WrapperDecoder.elm"
+    it "toElmDecoderSource Shadowing" $
+      shouldMatchDecoderSource
+        (unlines
+            [ "module ShadowingDecoder exposing (..)"
+            , ""
+            , "import Json.Decode exposing (..)"
+            , "import Json.Decode.Pipeline exposing (..)"
+            , "import ShadowingType exposing (..)"
+            , ""
+            , ""
+            , "%s"
+            ])
+        defaultOptions
+        (Proxy :: Proxy Shadowing)
+        "test/ShadowingDecoder.elm"
     describe "Convert to Elm decoder references." $ do
       it "toElmDecoderRef Post" $
         toElmDecoderRef (Proxy :: Proxy Post) `shouldBe` "decodePost"
@@ -403,7 +435,7 @@ toElmDecoderSpec =
         "(dict (nullable string))"
       it "toElmDecoderRef (IntMap (Maybe String))" $
         toElmDecoderRef (Proxy :: Proxy (IntMap (Maybe String))) `shouldBe`
-        "(map Dict.fromList (list (map2 (,) (index 0 int) (index 1 (nullable string)))))"
+        "(map Dict.fromList (list (map2 Tuple.pair (index 0 int) (index 1 (nullable string)))))"
 
 toElmEncoderSpec :: Hspec.Spec
 toElmEncoderSpec =
@@ -414,7 +446,7 @@ toElmEncoderSpec =
            [ "module CommentEncoder exposing (..)"
            , ""
            , "import CommentType exposing (..)"
-           , "import Exts.Json.Encode exposing (..)"
+           , "import Iso8601"
            , "import Json.Encode"
            , ""
            , ""
@@ -444,7 +476,7 @@ toElmEncoderSpec =
            [ "module CommentEncoderWithOptions exposing (..)"
            , ""
            , "import CommentType exposing (..)"
-           , "import Exts.Json.Encode exposing (..)"
+           , "import Iso8601"
            , "import Json.Encode"
            , ""
            , ""
@@ -482,6 +514,20 @@ toElmEncoderSpec =
         defaultOptions
         (Proxy :: Proxy Position)
         "test/PositionEncoder.elm"
+    it "toElmEncoderSource Position" $
+      shouldMatchEncoderSource
+        (unlines
+            [ "module ShadowingEncoder exposing (..)"
+            , ""
+            , "import Json.Encode"
+            , "import ShadowingType exposing (..)"
+            , ""
+            , ""
+            , "%s"
+            ])
+        defaultOptions
+        (Proxy :: Proxy Shadowing)
+        "test/ShadowingEncoder.elm"
     it "toElmEncoderSourceWithOptions Timing" $
       shouldMatchEncoderSource
         (unlines
@@ -557,7 +603,7 @@ toElmEncoderSpec =
         toElmEncoderRef (Proxy :: Proxy Post) `shouldBe` "encodePost"
       it "toElmEncoderRef [Comment]" $
         toElmEncoderRef (Proxy :: Proxy [Comment]) `shouldBe`
-        "(Json.Encode.list << List.map encodeComment)"
+        "(Json.Encode.list encodeComment)"
       it "toElmEncoderRef Position" $
         toElmEncoderRef (Proxy :: Proxy Position) `shouldBe` "encodePosition"
       it "toElmEncoderRef Timing" $
@@ -571,13 +617,13 @@ toElmEncoderSpec =
         "(Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string)"
       it "toElmEncoderRef [Maybe String]" $
         toElmEncoderRef (Proxy :: Proxy [Maybe String]) `shouldBe`
-        "(Json.Encode.list << List.map (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+        "(Json.Encode.list (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
       it "toElmEncoderRef (Map String (Maybe String))" $
         toElmEncoderRef (Proxy :: Proxy (Map String (Maybe String))) `shouldBe`
-        "(Exts.Json.Encode.dict Json.Encode.string (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+        "(Json.Encode.dict Json.Encode.string (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
       it "toElmEncoderRef (IntMap (Maybe String))" $
         toElmEncoderRef (Proxy :: Proxy (IntMap (Maybe String))) `shouldBe`
-        "(Exts.Json.Encode.dict Json.Encode.int (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+        "(Json.Encode.dict Json.Encode.int (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
 
 moduleSpecsSpec :: Hspec.Spec
 moduleSpecsSpec =
@@ -593,10 +639,10 @@ moduleSpecsSpec =
       head (declarations mySpec) `shouldBe`
       intercalate
         "\n"
-        [ "import Date"
-        , "import Dict"
+        [ "import Dict"
         , "import Json.Decode exposing (..)"
         , "import Json.Decode.Pipeline exposing (..)"
+        , "import Time"
         ]
 
 shouldMatchTypeSource

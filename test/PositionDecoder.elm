@@ -12,13 +12,13 @@ decodePosition =
             (\x ->
                 case x of
                     "Beginning" ->
-                        decode Beginning
+                        succeed Beginning
 
                     "Middle" ->
-                        decode Middle
+                        succeed Middle
 
                     "End" ->
-                        decode End
+                        succeed End
 
                     _ ->
                         fail "Constructor not matched"
