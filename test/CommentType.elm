@@ -1,6 +1,6 @@
 module CommentType exposing (..)
 
-import Date exposing (Date)
+import Time
 import Dict exposing (Dict)
 
 
@@ -9,6 +9,6 @@ type alias Comment =
     , text : String
     , mainCategories : (String, String)
     , published : Bool
-    , created : Date
+    , created : Time.Posix
     , tags : Dict (String) (Int)
     }
