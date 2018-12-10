@@ -132,7 +132,9 @@ instance HasDecoderRef ElmPrimitive where
     return . parens $
       "map2 (,)" <+> parens ("index 0" <+> dx) <+> parens ("index 1" <+> dy)
   renderRef EUnit = pure $ parens "succeed ()"
-  renderRef EDate = pure "Iso8601.decoder"
+  renderRef EDate = do
+    require "Iso8601"
+    pure "Iso8601.decoder"
   renderRef EInt = pure "int"
   renderRef EBool = pure "bool"
   renderRef EChar = pure "char"

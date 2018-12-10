@@ -12,14 +12,14 @@ decodeMonstrosity =
             (\x ->
                 case x of
                     "NotSpecial" ->
-                        decode NotSpecial
+                        Json.Decode.succeed NotSpecial
 
                     "OkayIGuess" ->
-                        decode OkayIGuess
+                        Json.Decode.succeed OkayIGuess
                             |> required "contents" decodeMonstrosity
 
                     "Ridiculous" ->
-                        decode Ridiculous
+                        Json.Decode.succeed Ridiculous
                             |> required "contents" (index 0 int)
                             |> required "contents" (index 1 string)
                             |> required "contents" (index 2 (list decodeMonstrosity))

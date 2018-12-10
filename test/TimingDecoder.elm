@@ -12,14 +12,14 @@ decodeTiming =
             (\x ->
                 case x of
                     "Start" ->
-                        decode Start
+                        Json.Decode.succeed Start
 
                     "Continue" ->
-                        decode Continue
+                        Json.Decode.succeed Continue
                             |> required "contents" float
 
                     "Stop" ->
-                        decode Stop
+                        Json.Decode.succeed Stop
 
                     _ ->
                         fail "Constructor not matched"

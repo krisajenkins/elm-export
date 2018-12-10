@@ -12,13 +12,13 @@ decodePosition =
             (\x ->
                 case x of
                     "Beginning" ->
-                        decode Beginning
+                        Json.Decode.succeed Beginning
 
                     "Middle" ->
-                        decode Middle
+                        Json.Decode.succeed Middle
 
                     "End" ->
-                        decode End
+                        Json.Decode.succeed End
 
                     _ ->
                         fail "Constructor not matched"

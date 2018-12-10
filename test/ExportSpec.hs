@@ -105,7 +105,7 @@ toElmTypeSpec =
         (unlines
            [ "module CommentType exposing (..)"
            , ""
-           , "import Date exposing (Date)"
+           , "import Time"
            , "import Dict exposing (Dict)"
            , ""
            , ""
@@ -170,7 +170,7 @@ toElmTypeSpec =
         (unlines
            [ "module CommentTypeWithOptions exposing (..)"
            , ""
-           , "import Date exposing (Date)"
+           , "import Time"
            , "import Dict exposing (Dict)"
            , ""
            , ""
@@ -212,6 +212,7 @@ toElmDecoderSpec =
            , "import CommentType exposing (..)"
            , "import Dict"
            , "import Exts.Json.Decode exposing (..)"
+           , "import Iso8601"
            , "import Json.Decode exposing (..)"
            , "import Json.Decode.Pipeline exposing (..)"
            , ""
@@ -306,6 +307,7 @@ toElmDecoderSpec =
            , "import CommentType exposing (..)"
            , "import Dict"
            , "import Exts.Json.Decode exposing (..)"
+           , "import Iso8601"
            , "import Json.Decode exposing (..)"
            , "import Json.Decode.Pipeline exposing (..)"
            , ""
@@ -367,6 +369,7 @@ toElmEncoderSpec =
            , ""
            , "import CommentType exposing (..)"
            , "import Exts.Json.Encode exposing (..)"
+           , "import Iso8601"
            , "import Json.Encode"
            , ""
            , ""
@@ -397,6 +400,7 @@ toElmEncoderSpec =
            , ""
            , "import CommentType exposing (..)"
            , "import Exts.Json.Encode exposing (..)"
+           , "import Iso8601"
            , "import Json.Encode"
            , ""
            , ""
@@ -467,7 +471,7 @@ toElmEncoderSpec =
         toElmEncoderRef (Proxy :: Proxy Post) `shouldBe` "encodePost"
       it "toElmEncoderRef [Comment]" $
         toElmEncoderRef (Proxy :: Proxy [Comment]) `shouldBe`
-        "(Json.Encode.list << List.map encodeComment)"
+        "(Json.Encode.list encodeComment)"
       it "toElmEncoderRef Position" $
         toElmEncoderRef (Proxy :: Proxy Position) `shouldBe` "encodePosition"
       it "toElmEncoderRef Timing" $
@@ -481,7 +485,7 @@ toElmEncoderSpec =
         "(Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string)"
       it "toElmEncoderRef [Maybe String]" $
         toElmEncoderRef (Proxy :: Proxy [Maybe String]) `shouldBe`
-        "(Json.Encode.list << List.map (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+        "(Json.Encode.list (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
       it "toElmEncoderRef (Map String (Maybe String))" $
         toElmEncoderRef (Proxy :: Proxy (Map String (Maybe String))) `shouldBe`
         "(Exts.Json.Encode.dict Json.Encode.string (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
@@ -503,10 +507,10 @@ moduleSpecsSpec =
       head (declarations mySpec) `shouldBe`
       intercalate
         "\n"
-        [ "import Date"
-        , "import Dict"
+        [ "import Dict"
         , "import Json.Decode exposing (..)"
         , "import Json.Decode.Pipeline exposing (..)"
+        , "import Time"
         ]
 
 shouldMatchTypeSource
