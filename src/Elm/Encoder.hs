@@ -127,7 +127,9 @@ instance HasEncoder ElmValue where
   render _ = error "HasEncoderRef ElmValue: should not happen"
 
 instance HasEncoderRef ElmPrimitive where
-  renderRef EDate = pure "Iso8601.encode"
+  renderRef EDate = do
+    require "Iso8601"
+    pure "Iso8601.encode"
   renderRef EUnit = pure "Json.Encode.null"
   renderRef EInt = pure "Json.Encode.int"
   renderRef EChar = pure "Json.Encode.char"
