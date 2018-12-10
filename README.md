@@ -59,10 +59,10 @@ under that the Elm source file `Db/Types.elm` will be found.
 
 The decoders we produce require these extra Elm packages installed:
 
-``` sh
-elm package install NoRedInk/elm-decode-pipeline
+```sh
+elm package install NoRedInk/elm-json-decode-pipeline
 elm package install krisajenkins/elm-exts
-elm-package install justinmimbs/elm-date-extra
+elm package install rtfeldman/elm-iso8601-date-strings
 ```
 
 ## Development
