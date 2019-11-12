@@ -43,7 +43,7 @@ specToFile rootDir spec =
           "\n\n"
           (sformat ("module " % F.stext % " exposing (..)") namespaceText :
            declarations spec)
-  in do fprint ("Writing: " % F.stext % "\n") file
+  in do fprint (F.stext % "\n") file
         T.writeFile (T.unpack file) body
 
 specsToDir :: [Spec] -> FilePath -> IO ()
