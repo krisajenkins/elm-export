@@ -8,6 +8,7 @@
 
 module Elm.Type where
 
+import qualified Data.Aeson as Aeson
 import Data.Int (Int16, Int32, Int64, Int8)
 import Data.IntMap
 import Data.Map
@@ -32,6 +33,7 @@ data ElmPrimitive
   | EFloat
   | EString
   | EUnit
+  | EJsonValue
   | EList ElmDatatype
   | EMaybe ElmDatatype
   | ETuple2 ElmDatatype
@@ -162,6 +164,9 @@ instance ElmType Int32 where
 
 instance ElmType Int64 where
   toElmType _ = ElmPrimitive EInt
+
+instance ElmType Aeson.Value where
+  toElmType _ = ElmPrimitive EJsonValue
 
 instance (ElmType a, ElmType b) =>
          ElmType (a, b) where

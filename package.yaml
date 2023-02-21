@@ -21,6 +21,7 @@ dependencies:
 - containers
 - text
 - time
+- aeson
 ghc-options:
 - -Wall
 

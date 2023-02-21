@@ -4,6 +4,7 @@
 
 module ExportSpec where
 
+import qualified Data.Aeson as Aeson
 import qualified Data.Algorithm.Diff as Diff
 import qualified Data.Algorithm.DiffOutput as DiffOutput
 import Data.Char
@@ -87,6 +88,11 @@ data LotsOfInts = LotsOfInts
 data Shadowing = Shadowing
   { prop :: ( (Int, Int), ( String, String ) )
   } deriving (Generic, ElmType)
+
+data AesonValue = AesonValue 
+  { aesonValue :: Aeson.Value 
+  } deriving (Generic, ElmType)
+
 
 
 spec :: Hspec.Spec
@@ -214,6 +220,19 @@ toElmTypeSpec =
         defaultOptions
         (Proxy :: Proxy Shadowing)
         "test/ShadowingType.elm"
+    it "toElmTypeSource AesonValue" $
+      shouldMatchTypeSource
+        (unlines
+          ["module AesonValueType exposing (..)"
+          , ""
+          , "import Json.Decode"
+          , ""
+          , ""
+          , "%s"
+          ])
+        defaultOptions
+        (Proxy :: Proxy AesonValue)
+        "test/AesonValueType.elm"
     describe "Convert to Elm type references." $ do
       it "toElmTypeRef Post" $
         toElmTypeRef (Proxy :: Proxy Post) `shouldBe` "Post"
@@ -410,6 +429,21 @@ toElmDecoderSpec =
         defaultOptions
         (Proxy :: Proxy Shadowing)
         "test/ShadowingDecoder.elm"
+    it "toElmDecoderSource AesonValue" $
+      shouldMatchDecoderSource
+        (unlines
+            [ "module AesonValueDecoder exposing (..)"
+            , ""
+            , "import Json.Decode exposing (..)"
+            , "import Json.Decode.Pipeline exposing (..)"
+            , "import AesonValueType exposing (..)"
+            , ""
+            , ""
+            , "%s"
+            ])
+        defaultOptions
+        (Proxy :: Proxy AesonValue)
+        "test/AesonValueDecoder.elm"
     describe "Convert to Elm decoder references." $ do
       it "toElmDecoderRef Post" $
         toElmDecoderRef (Proxy :: Proxy Post) `shouldBe` "decodePost"
@@ -598,6 +632,20 @@ toElmEncoderSpec =
         defaultOptions
         (Proxy :: Proxy Wrapper)
         "test/WrapperEncoder.elm"
+    it "toElmEncoderSourceWithOptions AesonValue" $
+      shouldMatchEncoderSource
+        (unlines
+           [ "module AesonValueEncoder exposing (..)"
+           , ""
+           , "import Json.Encode"
+           , "import AesonValueType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy AesonValue)
+        "test/AesonValueEncoder.elm"
     describe "Convert to Elm encoder references." $ do
       it "toElmEncoderRef Post" $
         toElmEncoderRef (Proxy :: Proxy Post) `shouldBe` "encodePost"

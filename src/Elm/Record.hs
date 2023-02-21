@@ -95,6 +95,9 @@ instance HasTypeRef ElmPrimitive where
   renderRef EString = pure "String"
   renderRef EUnit = pure "()"
   renderRef EFloat = pure "Float"
+  renderRef EJsonValue = do
+    require "Json.Decode"
+    pure "Json.Decode.Value"
 
 -- | Puts parentheses around the doc of an elm ref if it contains spaces.
 elmRefParens :: ElmPrimitive -> Doc -> Doc
