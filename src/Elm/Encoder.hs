@@ -141,6 +141,7 @@ instance HasEncoderRef ElmPrimitive where
   renderRef _ EBool = pure "Json.Encode.bool"
   renderRef _ EFloat = pure "Json.Encode.float"
   renderRef _ EString = pure "Json.Encode.string"
+  renderRef _ EJsonValue = pure "identity"
   renderRef _ (EList (ElmPrimitive EChar)) = pure "Json.Encode.string"
   renderRef level (EList datatype) = do
     dd <- renderRef level datatype
