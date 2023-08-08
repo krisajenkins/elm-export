@@ -197,6 +197,24 @@ instance HasElmComparable String where
 instance HasElmComparable Text where
   toElmComparable _ = EString
 
+instance HasElmComparable Float where
+  toElmComparable _ = EFloat
+
+instance HasElmComparable Double where
+  toElmComparable _ = EFloat
+
+instance HasElmComparable Int8 where
+  toElmComparable _ = EInt
+
+instance HasElmComparable Int16 where
+  toElmComparable _ = EInt
+
+instance HasElmComparable Int32 where
+  toElmComparable _ = EInt
+
+instance HasElmComparable Int64 where
+  toElmComparable _ = EInt
+
 instance ElmType Int where
   toElmType _ = ElmPrimitive EInt
 
