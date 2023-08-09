@@ -106,6 +106,7 @@ instance HasTypeRef ElmPrimitive where
 elmRefParens :: ElmPrimitive -> Doc -> Doc
 elmRefParens (EList (ElmPrimitive EChar)) = id
 elmRefParens (EList _) = parens
+elmRefParens (ESet _) = parens
 elmRefParens (EMaybe _) = parens
 elmRefParens (EDict _ _) = parens
 elmRefParens _ = id
