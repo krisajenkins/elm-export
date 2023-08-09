@@ -11,7 +11,6 @@ module Elm.Type where
 import qualified Data.Aeson as Aeson
 import Data.Int (Int16, Int32, Int64, Int8)
 import Data.IntMap
-import Data.List.NonEmpty (NonEmpty)
 import Data.Map
 import Data.Proxy
 import Data.Set (Set)
@@ -137,11 +136,6 @@ instance ElmType a =>
 instance ElmType a =>
          ElmType (Maybe a) where
   toElmType _ = ElmPrimitive (EMaybe (toElmType (Proxy :: Proxy a)))
-
-instance ElmType a =>
-         ElmType (NonEmpty a) where
-  toElmType _ = ElmPrimitive (ETuple2 elementType (ElmPrimitive (EList elementType)))
-    where elementType = toElmType (Proxy :: Proxy a)
 
 instance ElmType () where
   toElmType _ = ElmPrimitive EUnit
