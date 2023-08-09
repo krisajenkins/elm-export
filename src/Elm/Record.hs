@@ -85,11 +85,11 @@ instance HasTypeRef ElmPrimitive where
     require "Dict"
     dk <- renderRef k
     dv <- renderRef v
-    return $ "Dict.Dict" <+> parens dk <+> parens dv
+    return $ "Dict" <+> parens dk <+> parens dv
   renderRef (ESet datatype) = do
     require "Set"
     dt <- renderRef datatype
-    return $ "Set.Set" <+> parens dt
+    return $ "Set" <+> parens dt
   renderRef EInt = pure "Int"
   renderRef ETimePosix = do
     require "Time"

@@ -125,6 +125,16 @@ instance HasDecoderRef ElmPrimitive where
     require "Dict"
     d <- renderRef value
     return . parens $ "dict" <+> d
+  renderRef (EDict EInt value) = do
+    require "Dict"
+    require "Json.Decode.Extra"
+    d <- renderRef value
+    return . parens $ "Json.Decode.Extra.dict2 int" <+> d
+  renderRef (EDict EFloat value) = do
+    require "Dict"
+    require "Json.Decode.Extra"
+    d <- renderRef value
+    return . parens $ "Json.Decode.Extra.dict2 float" <+> d
   renderRef (EDict key value) = do
     require "Dict"
     d <- renderRef (EList (ElmPrimitive (ETuple2 (ElmPrimitive key) value)))
