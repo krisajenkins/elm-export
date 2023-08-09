@@ -129,6 +129,10 @@ instance HasDecoderRef ElmPrimitive where
     require "Dict"
     d <- renderRef (EList (ElmPrimitive (ETuple2 (ElmPrimitive key) value)))
     return . parens $ "map Dict.fromList" <+> d
+  renderRef (ESet datatype) = do
+    require "Set"
+    d <- renderRef (EList (ElmPrimitive datatype))
+    return . parens $ "map Set.fromList" <+> d
   renderRef (EMaybe datatype) = do
     dt <- renderRef datatype
     return . parens $ "nullable" <+> dt

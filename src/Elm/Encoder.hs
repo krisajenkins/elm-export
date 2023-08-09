@@ -159,6 +159,9 @@ instance HasEncoderRef ElmPrimitive where
     dk <- renderRef level k
     dv <- renderRef level v
     return . parens $ "Json.Encode.dict" <+> dk <+> dv
+  renderRef level (ESet datatype) = do
+    dd <- renderRef level datatype
+    return . parens $ "Json.Encode.set" <+> dd
 
 toElmEncoderRefWith
   :: ElmType a
