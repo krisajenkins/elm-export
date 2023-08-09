@@ -24,3 +24,9 @@ encodeMonstrosity x =
                 [ ( "tag", Json.Encode.string "Ridiculous" )
                 , ( "contents", Json.Encode.list identity [ Json.Encode.int y0, Json.Encode.string y1, (Json.Encode.list encodeMonstrosity) y2, (Json.Encode.set Json.Encode.float) y3 ] )
                 ]
+
+        Dicts y0 y1 ->
+            Json.Encode.object
+                [ ( "tag", Json.Encode.string "Dicts" )
+                , ( "contents", Json.Encode.list identity [ (Json.Encode.dict String.fromInt Json.Encode.null) y0, (Json.Encode.dict String.fromFloat Json.Encode.float) y1 ] )
+                ]
