@@ -15,7 +15,7 @@ import Control.Monad.RWS
 import qualified Data.Text as T
 import Elm.Common
 import Elm.Type
-import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+import Text.PrettyPrint.Leijen.Text hiding ((<$>))
 
 class HasDecoder a where
   render :: a -> RenderM Doc

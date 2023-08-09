@@ -8,7 +8,7 @@ import qualified Data.Set as S
 import Data.Text (Text)
 import qualified Data.Text.Lazy as LT
 import Formatting hiding (text)
-import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+import Text.PrettyPrint.Leijen.Text hiding ((<$>))
 
 data Options = Options
   { fieldLabelModifier :: Text -> Text
