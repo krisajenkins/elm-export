@@ -19,8 +19,8 @@ encodeMonstrosity x =
                 , ( "contents", encodeMonstrosity y0 )
                 ]
 
-        Ridiculous y0 y1 y2 ->
+        Ridiculous y0 y1 y2 y3 ->
             Json.Encode.object
                 [ ( "tag", Json.Encode.string "Ridiculous" )
-                , ( "contents", Json.Encode.list identity [ Json.Encode.int y0, Json.Encode.string y1, (Json.Encode.list encodeMonstrosity) y2 ] )
+                , ( "contents", Json.Encode.list identity [ Json.Encode.int y0, Json.Encode.string y1, (Json.Encode.list encodeMonstrosity) y2, (Json.Encode.set Json.Encode.float) y3 ] )
                 ]

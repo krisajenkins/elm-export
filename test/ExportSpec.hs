@@ -13,6 +13,7 @@ import Data.IntMap
 import Data.Map
 import Data.Monoid
 import Data.Proxy
+import Data.Set (Set)
 import Data.Text hiding (head, lines, unlines)
 import Data.Time
 import Elm
@@ -59,7 +60,7 @@ data Timing
 data Monstrosity
   = NotSpecial
   | OkayIGuess Monstrosity
-  | Ridiculous Int String [Monstrosity]
+  | Ridiculous Int String [Monstrosity] (Set Float)
   deriving (Generic, ElmType)
 
 newtype Useless =
