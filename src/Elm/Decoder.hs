@@ -15,7 +15,7 @@ import Control.Monad.RWS
 import qualified Data.Text as T
 import Elm.Common
 import Elm.Type
-import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+import Text.PrettyPrint.Leijen.Text hiding ((<$>))
 
 class HasDecoder a where
   render :: a -> RenderM Doc
@@ -125,10 +125,24 @@ instance HasDecoderRef ElmPrimitive where
     require "Dict"
     d <- renderRef value
     return . parens $ "dict" <+> d
+  renderRef (EDict EInt value) = do
+    require "Dict"
+    require "Json.Decode.Extra"
+    d <- renderRef value
+    return . parens $ "Json.Decode.Extra.dict2 int" <+> d
+  renderRef (EDict EFloat value) = do
+    require "Dict"
+    require "Json.Decode.Extra"
+    d <- renderRef value
+    return . parens $ "Json.Decode.Extra.dict2 float" <+> d
   renderRef (EDict key value) = do
     require "Dict"
     d <- renderRef (EList (ElmPrimitive (ETuple2 (ElmPrimitive key) value)))
     return . parens $ "map Dict.fromList" <+> d
+  renderRef (ESet datatype) = do
+    require "Set"
+    d <- renderRef (EList (ElmPrimitive datatype))
+    return . parens $ "map Set.fromList" <+> d
   renderRef (EMaybe datatype) = do
     dt <- renderRef datatype
     return . parens $ "nullable" <+> dt

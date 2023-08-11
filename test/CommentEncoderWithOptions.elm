@@ -13,5 +13,5 @@ encodeComment x =
         , ( "commentMainCategories", (\(m0, n0) -> Json.Encode.list identity [ Json.Encode.string m0, Json.Encode.string n0 ]) x.commentMainCategories )
         , ( "commentPublished", Json.Encode.bool x.commentPublished )
         , ( "commentCreated", (Iso8601.encode) x.commentCreated )
-        , ( "commentTags", (Json.Encode.dict Json.Encode.string Json.Encode.int) x.commentTags )
+        , ( "commentTags", (Json.Encode.dict identity Json.Encode.int) x.commentTags )
         ]

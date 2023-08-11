@@ -12,7 +12,7 @@ import Control.Monad.RWS
 import qualified Data.Text as T
 import Elm.Common
 import Elm.Type
-import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+import Text.PrettyPrint.Leijen.Text hiding ((<$>))
 
 class HasEncoder a where
   render :: a -> RenderM Doc
@@ -155,10 +155,21 @@ instance HasEncoderRef ElmPrimitive where
     let firstName = "m" <> int level
     let secondName = "n" <> int level
     return . parens $ "\\("<> firstName <> "," <+> secondName <> ") -> Json.Encode.list identity [" <+> dx <+> firstName <> "," <+> dy <+> secondName <+> "]"
-  renderRef level (EDict k v) = do
-    dk <- renderRef level k
+  renderRef level (EDict EString v) = do
     dv <- renderRef level v
-    return . parens $ "Json.Encode.dict" <+> dk <+> dv
+    return . parens $ "Json.Encode.dict identity" <+> dv
+  renderRef level (EDict EInt v) = do
+    dv <- renderRef level v
+    return . parens $ "Json.Encode.dict String.fromInt" <+> dv
+  renderRef level (EDict EFloat v) = do
+    dv <- renderRef level v
+    return . parens $ "Json.Encode.dict String.fromFloat" <+> dv
+  renderRef level (EDict k v) = do
+    d <- renderRef level (ETuple2 (ElmPrimitive k) v)
+    return . parens $ "Json.Encode.list " <+> d
+  renderRef level (ESet datatype) = do
+    dd <- renderRef level datatype
+    return . parens $ "Json.Encode.set" <+> dd
 
 toElmEncoderRefWith
   :: ElmType a

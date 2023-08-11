@@ -13,6 +13,7 @@ import Data.Int (Int16, Int32, Int64, Int8)
 import Data.IntMap
 import Data.Map
 import Data.Proxy
+import Data.Set (Set)
 import Data.Text hiding (all)
 import Data.Time
 import GHC.Generics
@@ -40,6 +41,7 @@ data ElmPrimitive
             ElmDatatype
   | EDict ElmPrimitive
           ElmDatatype
+  | ESet ElmPrimitive
   deriving (Show, Eq)
 
 data ElmConstructor
@@ -184,6 +186,11 @@ instance (HasElmComparable k, ElmType v) =>
     ElmPrimitive $
     EDict (toElmComparable (undefined :: k)) (toElmType (Proxy :: Proxy v))
 
+instance (HasElmComparable a, ElmType a) =>
+         ElmType (Set a) where
+  toElmType _ =
+    ElmPrimitive $ ESet (toElmComparable (undefined :: a))
+
 instance (ElmType v) =>
          ElmType (IntMap v) where
   toElmType _ = ElmPrimitive $ EDict EInt (toElmType (Proxy :: Proxy v))
@@ -196,6 +203,24 @@ instance HasElmComparable String where
 
 instance HasElmComparable Text where
   toElmComparable _ = EString
+
+instance HasElmComparable Float where
+  toElmComparable _ = EFloat
+
+instance HasElmComparable Double where
+  toElmComparable _ = EFloat
+
+instance HasElmComparable Int8 where
+  toElmComparable _ = EInt
+
+instance HasElmComparable Int16 where
+  toElmComparable _ = EInt
+
+instance HasElmComparable Int32 where
+  toElmComparable _ = EInt
+
+instance HasElmComparable Int64 where
+  toElmComparable _ = EInt
 
 instance ElmType Int where
   toElmType _ = ElmPrimitive EInt

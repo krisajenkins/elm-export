@@ -5,3 +5,5 @@
 /test/elm-stuff
 /.ghci
 /.shake
+/.direnv
+/dist-newstyle

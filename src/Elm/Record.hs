@@ -12,7 +12,7 @@ import Control.Monad.RWS
 import qualified Data.Text as T
 import Elm.Common
 import Elm.Type
-import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
+import Text.PrettyPrint.Leijen.Text hiding ((<$>))
 
 class HasType a where
   render :: a -> RenderM Doc
@@ -86,6 +86,10 @@ instance HasTypeRef ElmPrimitive where
     dk <- renderRef k
     dv <- renderRef v
     return $ "Dict" <+> parens dk <+> parens dv
+  renderRef (ESet datatype) = do
+    require "Set"
+    dt <- renderRef datatype
+    return $ "Set" <+> parens dt
   renderRef EInt = pure "Int"
   renderRef ETimePosix = do
     require "Time"
@@ -103,6 +107,7 @@ instance HasTypeRef ElmPrimitive where
 elmRefParens :: ElmPrimitive -> Doc -> Doc
 elmRefParens (EList (ElmPrimitive EChar)) = id
 elmRefParens (EList _) = parens
+elmRefParens (ESet _) = parens
 elmRefParens (EMaybe _) = parens
 elmRefParens (EDict _ _) = parens
 elmRefParens _ = id

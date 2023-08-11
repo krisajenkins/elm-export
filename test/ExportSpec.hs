@@ -13,6 +13,7 @@ import Data.IntMap
 import Data.Map
 import Data.Monoid
 import Data.Proxy
+import Data.Set (Set)
 import Data.Text hiding (head, lines, unlines)
 import Data.Time
 import Elm
@@ -59,7 +60,8 @@ data Timing
 data Monstrosity
   = NotSpecial
   | OkayIGuess Monstrosity
-  | Ridiculous Int String [Monstrosity]
+  | Ridiculous Int String [Monstrosity] (Set Float)
+  | Dicts (Map Int64 ()) (Map Float Float)
   deriving (Generic, ElmType)
 
 newtype Useless =
@@ -469,7 +471,7 @@ toElmDecoderSpec =
         "(dict (nullable string))"
       it "toElmDecoderRef (IntMap (Maybe String))" $
         toElmDecoderRef (Proxy :: Proxy (IntMap (Maybe String))) `shouldBe`
-        "(map Dict.fromList (list (map2 Tuple.pair (index 0 int) (index 1 (nullable string)))))"
+        "(Json.Decode.Extra.dict2 int (nullable string))"
 
 toElmEncoderSpec :: Hspec.Spec
 toElmEncoderSpec =
@@ -668,10 +670,10 @@ toElmEncoderSpec =
         "(Json.Encode.list (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
       it "toElmEncoderRef (Map String (Maybe String))" $
         toElmEncoderRef (Proxy :: Proxy (Map String (Maybe String))) `shouldBe`
-        "(Json.Encode.dict Json.Encode.string (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+        "(Json.Encode.dict identity (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
       it "toElmEncoderRef (IntMap (Maybe String))" $
         toElmEncoderRef (Proxy :: Proxy (IntMap (Maybe String))) `shouldBe`
-        "(Json.Encode.dict Json.Encode.int (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+        "(Json.Encode.dict String.fromInt (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
 
 moduleSpecsSpec :: Hspec.Spec
 moduleSpecsSpec =
