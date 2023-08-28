@@ -10,12 +10,13 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE NoGeneralizedNewtypeDeriving #-}
 
-module Elm.Sorter (Sorter, mkRecordSorter, HasElmSorter (..), render) where
+module Elm.Sorter (Sorter, mkRecordSorter, mkCustom, HasElmSorter (..), render) where
 
 import Data.Generics.Product.Fields (HasField')
 import Data.Int (Int64)
 import Data.Proxy
 import Data.Text (Text, pack)
+import Elm.Common (letIn)
 import GHC.Generics
 import GHC.TypeLits
 import Text.PrettyPrint.Leijen.Text hiding ((<$>))
@@ -25,23 +26,29 @@ data Sorter
   | Increasing
   | ByField Text Sorter
   | ByNewtype Text Sorter
+  | Custom Text
   deriving (Eq, Show)
 
 render :: Sorter -> Doc
 render = \case
-  Alphabetical -> "alphabetical"
-  Increasing -> "increasing"
-  ByField field sorter -> "by ." <> pretty field <> " " <> render sorter
+  Alphabetical -> "Sort.alphabetical"
+  Increasing -> "Sort.increasing"
+  ByField field sorter -> parens ("Sort.by ." <> pretty field <> " " <> render sorter)
   ByNewtype constructor sorter ->
-    vsep
-      [ "let unNewtype (" <> pretty constructor <> " value) = value",
-        "in by unNewtype " <> render sorter
-      ]
+    let fnName = "un" <> constructor
+     in parens $
+          letIn
+            [(fnName <> " (" <> constructor <> " value)", "value")]
+            (hsep ["Sort.by", pretty fnName, render sorter])
+  Custom custom -> parens ("Sort.custom" <+> pretty custom)
 
 {-
 >>> render (ByNewtype "SchoolId" (ByField "name" Alphabetical))
-let unNewtype (SchoolId value) = value
-in by unNewtype (by .name alphabetical)
+(let
+     unNewtype (SchoolId value) =
+         value
+ in
+ Sort.by unNewtype (Sort.by .name (Sort.alphabetical)))
 -}
 
 class HasElmSorter a where
@@ -135,3 +142,6 @@ instance HasElmSorter String where
 
 mkRecordSorter :: forall (field :: Symbol) record type_. (HasField' field record type_, KnownSymbol field, HasElmSorter type_) => Proxy record -> Sorter
 mkRecordSorter _ = ByField (pack $ symbolVal (Proxy :: Proxy field)) (elmSorter (Proxy :: Proxy type_))
+
+mkCustom :: Text -> Sorter
+mkCustom = Custom

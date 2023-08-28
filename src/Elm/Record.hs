@@ -102,6 +102,11 @@ instance HasTypeRef ElmPrimitive where
   renderRef EJsonValue = do
     require "Json.Decode"
     pure "Json.Decode.Value"
+  renderRef (ESortDict _ _ k v) = do
+    require "Sort.Dict"
+    keyType <- renderRef k
+    valueType <- renderRef v
+    pure $ "Sort.Dict.Dict" <+> parens keyType <+> parens valueType
 
 -- | Puts parentheses around the doc of an elm ref if it contains spaces.
 elmRefParens :: ElmPrimitive -> Doc -> Doc
@@ -110,6 +115,7 @@ elmRefParens (EList _) = parens
 elmRefParens (ESet _) = parens
 elmRefParens (EMaybe _) = parens
 elmRefParens (EDict _ _) = parens
+elmRefParens (ESortDict _ _ _ _) = parens
 elmRefParens _ = id
 
 toElmTypeRefWith

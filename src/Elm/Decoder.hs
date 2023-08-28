@@ -13,6 +13,7 @@ module Elm.Decoder
 
 import Control.Monad.RWS
 import qualified Data.Text as T
+import qualified Elm.Sorter as Sorter
 import Elm.Common
 import Elm.Type
 import Text.PrettyPrint.Leijen.Text hiding ((<$>))
@@ -99,8 +100,14 @@ renderConstructorArgs i (Values l r) = do
   (iR, rndrR) <- renderConstructorArgs (iL + 1) r
   pure (iR, rndrL <$$> rndrR)
 renderConstructorArgs i val = do
-  rndrVal <- render val
-  let index = parens $ "index" <+> int i <+> rndrVal
+  rndrVal <- case val of
+    ElmPrimitiveRef (ESortDict {}) -> do
+      rnd <- render val
+      pure $ linebreak <> indent 4 rnd
+    _ -> do
+      rnd <- render val
+      pure $ space <> rnd
+  let index = parens $ "index" <+> int i <> rndrVal
   pure (i, "|>" <+> requiredContents <+> index)
 
 instance HasDecoder ElmValue where
@@ -139,6 +146,22 @@ instance HasDecoderRef ElmPrimitive where
     require "Dict"
     d <- renderRef (EList (ElmPrimitive (ETuple2 (ElmPrimitive key) value)))
     return . parens $ "map Dict.fromList" <+> d
+  renderRef (ESortDict sorter encoding key value) = do
+    require "Sort.Dict"
+    require "Sort.Dict.Extra" -- This is from our monolith, should we move it to an elm-package?
+    keyDecoder <- renderRef key
+    valueDecoder <- renderRef value
+    pure $ parens (letIn [renderedSorter]
+                          (decodingFunction <+> "sorter" <+> parens keyDecoder <+> parens valueDecoder))
+    where
+    renderedSorter =
+      ("sorter", Sorter.render sorter)
+    decodingFunction :: Doc
+    decodingFunction =
+      case encoding of
+        List -> "Sort.Dict.Extra.decode"
+        Object -> "Sort.Dict.Extra.decodeFromObject"
+
   renderRef (ESet datatype) = do
     require "Set"
     d <- renderRef (EList (ElmPrimitive datatype))
