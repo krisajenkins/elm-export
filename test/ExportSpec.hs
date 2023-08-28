@@ -1,10 +1,13 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
 
 module ExportSpec where
 
 import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.Types as Aeson
 import qualified Data.Algorithm.Diff as Diff
 import qualified Data.Algorithm.DiffOutput as DiffOutput
 import Data.Char
@@ -57,11 +60,35 @@ data Timing
   | Stop
   deriving (Generic, ElmType)
 
+newtype Id = Id Int
+  deriving (Generic, ElmType, HasElmSorter, Aeson.ToJSON, Aeson.ToJSONKey)
+
+data School = School
+  { schoolId :: Id
+  , schoolName :: String
+  } deriving (Generic, Aeson.ToJSON, Aeson.ToJSONKey, ElmType)
+
+instance HasElmSorter School where
+  elmSorter = mkRecordSorter @"schoolId"
+
+data Color
+  = Red
+  | Green
+  | Blue
+  deriving (Show, Read, Eq, Ord, Generic, Aeson.ToJSON, ElmType)
+
+instance HasElmSorter Color where
+  elmSorter _ = mkCustom "colorSorter"
+
+instance Aeson.ToJSONKey Color where
+  toJSONKey = Aeson.toJSONKeyText (pack . show)
+
 data Monstrosity
   = NotSpecial
   | OkayIGuess Monstrosity
   | Ridiculous Int String [Monstrosity] (Set Float)
   | Dicts (Map Int64 ()) (Map Float Float)
+  | SortDicts (Map Id Text) (Map School ()) (Map Color ())
   deriving (Generic, ElmType)
 
 newtype Useless =
