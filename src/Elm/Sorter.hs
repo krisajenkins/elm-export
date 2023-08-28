@@ -25,6 +25,7 @@ data Sorter
   | Increasing
   | ByField Text Sorter
   | ByNewtype Text Sorter
+  deriving (Eq, Show)
 
 render :: Sorter -> Doc
 render = \case
