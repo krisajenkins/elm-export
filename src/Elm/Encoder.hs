@@ -167,6 +167,25 @@ instance HasEncoderRef ElmPrimitive where
   renderRef level (EDict k v) = do
     d <- renderRef level (ETuple2 (ElmPrimitive k) v)
     return . parens $ "Json.Encode.list " <+> d
+  renderRef level (ESortDict _ encoding key value) = do
+    require "Sort.Dict.Extra"
+    keyEncoder <- renderRef level key
+    valueEncoder <- renderRef level value
+    pure . parens . nest 4 $
+      case encoding of
+        Object -> do
+          vsep
+            [ "\\dict -> dict",
+              indent 4 "|> Sort.Dict.toList",
+              indent 4 $ "|> List.map (\\( k, v ) -> ( Json.Encode.encode 0 (" <> keyEncoder <> " k), " <> valueEncoder <> " v ))",
+              indent 4 "|> Json.Encode.object" <> linebreak
+            ]
+        List -> do
+          vsep
+            [ "\\dict -> dict",
+              indent 4 "|> Sort.Dict.toList",
+              indent 4 $ "|> Json.Encode.list (\\( key, value ) -> Json.Encode.list identity [ " <> keyEncoder <> " key, " <> valueEncoder <> " value ])" <> linebreak
+            ]
   renderRef level (ESet datatype) = do
     dd <- renderRef level datatype
     return . parens $ "Json.Encode.set" <+> dd
