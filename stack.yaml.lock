@@ -3,7 +3,14 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: generic-lens-2.2.2.0@sha256:7e2e9fb6af836c31f7b7fe9ad4d54974acb44f8f2f8b507ca8866c4ccc060f16,3962
+    pantry-tree:
+      sha256: d689de290e2e51b207e78e65378b1142f0617a6ae3ce04d278561100e5ded4f6
+      size: 2470
+  original:
+    hackage: generic-lens-2.2.2.0
 snapshots:
 - completed:
     sha256: 2e7d4a730d8eb5373b2d383fac84efcf7c81e3b7a5fce71b4c2e19a1768f25a6
