@@ -57,6 +57,9 @@ data ElmPrimitive
       MapEncoding
       ElmDatatype
       ElmDatatype
+  | ESortSet
+      Sorter
+      ElmDatatype
   deriving (Show, Eq)
 
 data ElmConstructor
@@ -222,11 +225,39 @@ instance
   toElmType _ = toElmType (undefined :: a)
 
 instance
-  (HasElmComparable a, ElmType a) =>
+  {-# OVERLAPPABLE #-}
+  (HasElmSorter a, ElmType a) =>
   ElmType (Set a)
   where
   toElmType _ =
-    ElmPrimitive $ ESet (toElmComparable (undefined :: a))
+    ElmPrimitive $ ESortSet (elmSorter (Proxy @a)) (toElmType (undefined :: a))
+
+instance ElmType (Set String) where
+  toElmType _ = ElmPrimitive $ ESet EString
+
+instance ElmType (Set Text) where
+  toElmType _ = ElmPrimitive $ ESet EString
+
+instance ElmType (Set Float) where
+  toElmType _ = ElmPrimitive $ ESet EFloat
+
+instance ElmType (Set Double) where
+  toElmType _ = ElmPrimitive $ ESet EFloat
+
+instance ElmType (Set Int) where
+  toElmType _ = ElmPrimitive $ ESet EInt
+
+instance ElmType (Set Int8) where
+  toElmType _ = ElmPrimitive $ ESet EInt
+
+instance ElmType (Set Int16) where
+  toElmType _ = ElmPrimitive $ ESet EInt
+
+instance ElmType (Set Int32) where
+  toElmType _ = ElmPrimitive $ ESet EInt
+
+instance ElmType (Set Int64) where
+  toElmType _ = ElmPrimitive $ ESet EInt
 
 instance
   (ElmType v) =>
@@ -300,33 +331,6 @@ instance
   ElmType (Map Int64 a)
   where
   toElmType _ = ElmPrimitive $ EDict EInt (toElmType (Proxy :: Proxy a))
-
-class HasElmComparable a where
-  toElmComparable :: a -> ElmPrimitive
-
-instance HasElmComparable String where
-  toElmComparable _ = EString
-
-instance HasElmComparable Text where
-  toElmComparable _ = EString
-
-instance HasElmComparable Float where
-  toElmComparable _ = EFloat
-
-instance HasElmComparable Double where
-  toElmComparable _ = EFloat
-
-instance HasElmComparable Int8 where
-  toElmComparable _ = EInt
-
-instance HasElmComparable Int16 where
-  toElmComparable _ = EInt
-
-instance HasElmComparable Int32 where
-  toElmComparable _ = EInt
-
-instance HasElmComparable Int64 where
-  toElmComparable _ = EInt
 
 instance ElmType Int where
   toElmType _ = ElmPrimitive EInt

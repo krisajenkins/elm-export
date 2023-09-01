@@ -59,6 +59,18 @@ decodeMonstrosity =
                                  in
                                  Sort.Dict.Extra.decodeFromObject sorter (decodeColor) ((succeed ()))))
 
+                    "SortSet" ->
+                        succeed SortSet
+                            |> required "contents" (let
+                                                        sorter =
+                                                            (Sort.by .schoolId (let
+                                                                                    unId (Id value) =
+                                                                                        value
+                                                                                in
+                                                                                Sort.by unId Sort.increasing))
+                                                    in
+                                                    map (Sorter.Set.fromList sorter) (list decodeSchool))
+
                     _ ->
                         fail "Constructor not matched"
             )

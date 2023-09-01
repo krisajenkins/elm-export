@@ -46,3 +46,9 @@ encodeMonstrosity x =
                         |> Json.Encode.object
                     ) y2 ] )
                 ]
+
+        SortSet y0 ->
+            Json.Encode.object
+                [ ( "tag", Json.Encode.string "SortSet" )
+                , ( "contents", (Sort.Set.toList >> Json.Encode.list encodeSchool) y0 )
+                ]
