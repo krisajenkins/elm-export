@@ -1,7 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Elm.Record
-  ( toElmTypeRef,
+  ( toElmSorterSource,
+    toElmTypeRef,
     toElmTypeRefWith,
     toElmTypeSource,
     toElmTypeSourceWith,
@@ -10,8 +12,11 @@ module Elm.Record
 where
 
 import Control.Monad.RWS
+import Data.Proxy
 import qualified Data.Text as T
 import Elm.Common
+import Elm.Sorter (HasElmSorter (..))
+import qualified Elm.Sorter as Sorter
 import Elm.Type
 import Text.PrettyPrint.Leijen.Text hiding ((<$>))
 
@@ -145,6 +150,17 @@ toElmTypeSourceWith ::
   T.Text
 toElmTypeSourceWith options x =
   pprinter . fst $ evalRWS (render (toElmType x)) options ()
+
+toElmSorterSource :: (ElmType a, HasElmSorter a) => Proxy a -> T.Text
+toElmSorterSource p =
+  pprinter $
+    vsep
+      [ hcat ["sorter", typeName, " : Sorter ", typeName],
+        hcat ["sorter", typeName, " = ", sorter]
+      ]
+  where
+    typeName = pretty $ toElmTypeRef p
+    sorter = pretty $ Sorter.render (elmSorter p)
 
 toElmTypeSource ::
   (ElmType a) =>
