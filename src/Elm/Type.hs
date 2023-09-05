@@ -272,8 +272,19 @@ instance
   where
   toElmType _ =
     ElmPrimitive $
-      ESortDict (elmSorter (Proxy :: Proxy k)) encodingStrategy (toElmType (Proxy :: Proxy k)) (toElmType (Proxy :: Proxy v))
+      case dictKeyPrimitive of
+        Just primitive ->
+          EDict primitive (toElmType (Proxy :: Proxy v))
+        Nothing ->
+          ESortDict (elmSorter (Proxy :: Proxy k)) encodingStrategy (toElmType (Proxy :: Proxy k)) (toElmType (Proxy :: Proxy v))
     where
+      elmType = toElmType (Proxy :: Proxy k)
+      dictKeyPrimitive = case elmType of
+        ElmPrimitive EChar -> Just EChar
+        ElmPrimitive EString -> Just EString
+        ElmPrimitive EInt -> Just EInt
+        ElmPrimitive EFloat -> Just EFloat
+        _ -> Nothing
       encodingStrategy = case (Aeson.toJSONKey @k) of
         Aeson.ToJSONKeyText _ _ -> Object
         Aeson.ToJSONKeyValue _ _ -> List
