@@ -1,12 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Elm.Record
-  ( toElmTypeRef
-  , toElmTypeRefWith
-  , toElmTypeSource
-  , toElmTypeSourceWith
-  , renderType
-  ) where
+  ( toElmTypeRef,
+    toElmTypeRefWith,
+    toElmTypeSource,
+    toElmTypeSourceWith,
+    renderType,
+  )
+where
 
 import Control.Monad.RWS
 import qualified Data.Text as T
@@ -102,6 +103,15 @@ instance HasTypeRef ElmPrimitive where
   renderRef EJsonValue = do
     require "Json.Decode"
     pure "Json.Decode.Value"
+  renderRef (ESortDict _ _ k v) = do
+    require "Sort.Dict"
+    keyType <- renderRef k
+    valueType <- renderRef v
+    pure $ "Sort.Dict.Dict" <+> parens keyType <+> parens valueType
+  renderRef (ESortSet _ v) = do
+    require "Sort.Set"
+    valueType <- renderRef v
+    pure $ "Sort.Set.Set" <+> parens valueType
 
 -- | Puts parentheses around the doc of an elm ref if it contains spaces.
 elmRefParens :: ElmPrimitive -> Doc -> Doc
@@ -110,31 +120,40 @@ elmRefParens (EList _) = parens
 elmRefParens (ESet _) = parens
 elmRefParens (EMaybe _) = parens
 elmRefParens (EDict _ _) = parens
+elmRefParens (ESortDict _ _ _ _) = parens
+elmRefParens (ESortSet _ _) = parens
 elmRefParens _ = id
 
-toElmTypeRefWith
-  :: ElmType a
-  => Options -> a -> T.Text
+toElmTypeRefWith ::
+  (ElmType a) =>
+  Options ->
+  a ->
+  T.Text
 toElmTypeRefWith options x =
   pprinter . fst $ evalRWS (renderRef (toElmType x)) options ()
 
-toElmTypeRef
-  :: ElmType a
-  => a -> T.Text
+toElmTypeRef ::
+  (ElmType a) =>
+  a ->
+  T.Text
 toElmTypeRef = toElmTypeRefWith defaultOptions
 
-toElmTypeSourceWith
-  :: ElmType a
-  => Options -> a -> T.Text
+toElmTypeSourceWith ::
+  (ElmType a) =>
+  Options ->
+  a ->
+  T.Text
 toElmTypeSourceWith options x =
   pprinter . fst $ evalRWS (render (toElmType x)) options ()
 
-toElmTypeSource
-  :: ElmType a
-  => a -> T.Text
+toElmTypeSource ::
+  (ElmType a) =>
+  a ->
+  T.Text
 toElmTypeSource = toElmTypeSourceWith defaultOptions
 
-renderType
-  :: ElmType a
-  => a -> RenderM ()
+renderType ::
+  (ElmType a) =>
+  a ->
+  RenderM ()
 renderType = collectDeclaration . render . toElmType

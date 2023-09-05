@@ -4,16 +4,18 @@
 {-# LANGUAGE TypeOperators #-}
 
 module Elm.Decoder
-  ( toElmDecoderRef
-  , toElmDecoderRefWith
-  , toElmDecoderSource
-  , toElmDecoderSourceWith
-  , renderDecoder
-  ) where
+  ( toElmDecoderRef,
+    toElmDecoderRefWith,
+    toElmDecoderSource,
+    toElmDecoderSourceWith,
+    renderDecoder,
+  )
+where
 
 import Control.Monad.RWS
 import qualified Data.Text as T
 import Elm.Common
+import qualified Elm.Sorter as Sorter
 import Elm.Type
 import Text.PrettyPrint.Leijen.Text hiding ((<$>))
 
@@ -28,8 +30,8 @@ instance HasDecoder ElmDatatype where
     fnName <- renderRef d
     ctor <- render constructor
     return $
-      (fnName <+> ": Decoder" <+> stext name) <$$>
-      (fnName <+> "=" <$$> indent 4 ctor)
+      (fnName <+> ": Decoder" <+> stext name)
+        <$$> (fnName <+> "=" <$$> indent 4 ctor)
   render (ElmPrimitive primitive) = renderRef primitive
 
 instance HasDecoderRef ElmDatatype where
@@ -45,19 +47,28 @@ instance HasDecoder ElmConstructor where
   render (RecordConstructor name value) = do
     dv <- render value
     return $ "succeed" <+> stext name <$$> indent 4 dv
-
   render mc@(MultipleConstructors constrs) = do
-      cstrs <- mapM renderSum constrs
-      pure $ constructorName <$$> indent 4
-        ("|> andThen" <$$>
-          indent 4 (newlineparens ("\\x ->" <$$>
-            (indent 4 $ "case x of" <$$>
-              (indent 4 $ foldl1 (<$+$>) cstrs <$+$>
-               "_ ->" <$$> indent 4 "fail \"Constructor not matched\""
-              )
-            )
-          ))
-        )
+    cstrs <- mapM renderSum constrs
+    pure $
+      constructorName
+        <$$> indent
+          4
+          ( "|> andThen"
+              <$$> indent
+                4
+                ( newlineparens
+                    ( "\\x ->"
+                        <$$> ( indent 4 $
+                                 "case x of"
+                                   <$$> ( indent 4 $
+                                            foldl1 (<$+$>) cstrs
+                                              <$+$> "_ ->"
+                                              <$$> indent 4 "fail \"Constructor not matched\""
+                                        )
+                             )
+                    )
+                )
+          )
     where
       constructorName :: Doc
       constructorName =
@@ -70,9 +81,11 @@ requiredContents = "required" <+> dquotes "contents"
 -- | "<name>" -> decode <name>
 renderSumCondition :: T.Text -> Doc -> RenderM Doc
 renderSumCondition name contents =
-  pure $ dquotes (stext name) <+> "->" <$$>
-    indent 4
-      ("succeed" <+> stext name <$$> indent 4 contents)
+  pure $
+    dquotes (stext name) <+> "->"
+      <$$> indent
+        4
+        ("succeed" <+> stext name <$$> indent 4 contents)
 
 -- | Render a sum type constructor in context of a data type with multiple
 -- constructors.
@@ -99,8 +112,14 @@ renderConstructorArgs i (Values l r) = do
   (iR, rndrR) <- renderConstructorArgs (iL + 1) r
   pure (iR, rndrL <$$> rndrR)
 renderConstructorArgs i val = do
-  rndrVal <- render val
-  let index = parens $ "index" <+> int i <+> rndrVal
+  rndrVal <- case val of
+    ElmPrimitiveRef (ESortDict {}) -> do
+      rnd <- render val
+      pure $ linebreak <> indent 4 rnd
+    _ -> do
+      rnd <- render val
+      pure $ space <> rnd
+  let index = parens $ "index" <+> int i <> rndrVal
   pure (i, "|>" <+> requiredContents <+> index)
 
 instance HasDecoder ElmValue where
@@ -139,10 +158,41 @@ instance HasDecoderRef ElmPrimitive where
     require "Dict"
     d <- renderRef (EList (ElmPrimitive (ETuple2 (ElmPrimitive key) value)))
     return . parens $ "map Dict.fromList" <+> d
+  renderRef (ESortDict sorter encoding key value) = do
+    require "Sort.Dict"
+    require "Sort.Dict.Extra" -- This is from our monolith, should we move it to an elm-package?
+    keyDecoder <- renderRef key
+    valueDecoder <- renderRef value
+    pure $
+      parens
+        ( letIn
+            [renderedSorter]
+            (decodingFunction <+> "sorter" <+> parens keyDecoder <+> parens valueDecoder)
+        )
+    where
+      renderedSorter =
+        ("sorter", Sorter.render sorter)
+      decodingFunction :: Doc
+      decodingFunction =
+        case encoding of
+          List -> "Sort.Dict.Extra.decode"
+          Object -> "Sort.Dict.Extra.decodeFromObject"
   renderRef (ESet datatype) = do
     require "Set"
     d <- renderRef (EList (ElmPrimitive datatype))
     return . parens $ "map Set.fromList" <+> d
+  renderRef (ESortSet sorter datatype) = do
+    require "Sort.Set"
+    dd <- renderRef (EList datatype)
+    pure $
+      parens
+        ( letIn
+            [renderedSorter]
+            ("map (Sorter.Set.fromList sorter)" <+> dd)
+        )
+    where
+      renderedSorter =
+        ("sorter", Sorter.render sorter)
   renderRef (EMaybe datatype) = do
     dt <- renderRef datatype
     return . parens $ "nullable" <+> dt
@@ -160,31 +210,38 @@ instance HasDecoderRef ElmPrimitive where
   renderRef EString = pure "string"
   renderRef EJsonValue = pure "value"
 
-toElmDecoderRefWith
-  :: ElmType a
-  => Options -> a -> T.Text
+toElmDecoderRefWith ::
+  (ElmType a) =>
+  Options ->
+  a ->
+  T.Text
 toElmDecoderRefWith options x =
   pprinter . fst $ evalRWS (renderRef (toElmType x)) options ()
 
-toElmDecoderRef
-  :: ElmType a
-  => a -> T.Text
+toElmDecoderRef ::
+  (ElmType a) =>
+  a ->
+  T.Text
 toElmDecoderRef = toElmDecoderRefWith defaultOptions
 
-toElmDecoderSourceWith
-  :: ElmType a
-  => Options -> a -> T.Text
+toElmDecoderSourceWith ::
+  (ElmType a) =>
+  Options ->
+  a ->
+  T.Text
 toElmDecoderSourceWith options x =
   pprinter . fst $ evalRWS (render (toElmType x)) options ()
 
-toElmDecoderSource
-  :: ElmType a
-  => a -> T.Text
+toElmDecoderSource ::
+  (ElmType a) =>
+  a ->
+  T.Text
 toElmDecoderSource = toElmDecoderSourceWith defaultOptions
 
-renderDecoder
-  :: ElmType a
-  => a -> RenderM ()
+renderDecoder ::
+  (ElmType a) =>
+  a ->
+  RenderM ()
 renderDecoder x = do
   require "Json.Decode exposing (..)"
   require "Json.Decode.Pipeline exposing (..)"

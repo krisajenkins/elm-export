@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
@@ -16,14 +17,21 @@ import Data.Proxy
 import Data.Set (Set)
 import Data.Text hiding (all)
 import Data.Time
+import Elm.Sorter (HasElmSorter (..), Sorter)
 import GHC.Generics
+import Servant.API (Headers (getResponse))
 import Prelude
-import Servant.API (Headers(getResponse))
 
 data ElmDatatype
-  = ElmDatatype Text
-                ElmConstructor
+  = ElmDatatype
+      Text
+      ElmConstructor
   | ElmPrimitive ElmPrimitive
+  deriving (Show, Eq)
+
+data MapEncoding
+  = List
+  | Object
   deriving (Show, Eq)
 
 data ElmPrimitive
@@ -37,18 +45,30 @@ data ElmPrimitive
   | EJsonValue
   | EList ElmDatatype
   | EMaybe ElmDatatype
-  | ETuple2 ElmDatatype
-            ElmDatatype
-  | EDict ElmPrimitive
-          ElmDatatype
+  | ETuple2
+      ElmDatatype
+      ElmDatatype
+  | EDict
+      ElmPrimitive
+      ElmDatatype
   | ESet ElmPrimitive
+  | ESortDict
+      Sorter
+      MapEncoding
+      ElmDatatype
+      ElmDatatype
+  | ESortSet
+      Sorter
+      ElmDatatype
   deriving (Show, Eq)
 
 data ElmConstructor
-  = NamedConstructor Text
-                     ElmValue
-  | RecordConstructor Text
-                      ElmValue
+  = NamedConstructor
+      Text
+      ElmValue
+  | RecordConstructor
+      Text
+      ElmValue
   | MultipleConstructors [ElmConstructor]
   deriving (Show, Eq)
 
@@ -56,25 +76,31 @@ data ElmValue
   = ElmRef Text
   | ElmEmpty
   | ElmPrimitiveRef ElmPrimitive
-  | Values ElmValue
-           ElmValue
-  | ElmField Text
-             ElmValue
+  | Values
+      ElmValue
+      ElmValue
+  | ElmField
+      Text
+      ElmValue
   deriving (Show, Eq)
 
 ------------------------------------------------------------
 class ElmType a where
   toElmType :: a -> ElmDatatype
   toElmType = genericToElmDatatype . from
-  default toElmType :: (Generic a, GenericElmDatatype (Rep a)) =>
-    a -> ElmDatatype
+  default toElmType ::
+    (Generic a, GenericElmDatatype (Rep a)) =>
+    a ->
+    ElmDatatype
 
 ------------------------------------------------------------
 class GenericElmDatatype f where
   genericToElmDatatype :: f a -> ElmDatatype
 
-instance (Datatype d, GenericElmConstructor f) =>
-         GenericElmDatatype (D1 d f) where
+instance
+  (Datatype d, GenericElmConstructor f) =>
+  GenericElmDatatype (D1 d f)
+  where
   genericToElmDatatype datatype =
     ElmDatatype
       (pack (datatypeName datatype))
@@ -84,8 +110,10 @@ instance (Datatype d, GenericElmConstructor f) =>
 class GenericElmConstructor f where
   genericToElmConstructor :: f a -> ElmConstructor
 
-instance (Constructor c, GenericElmValue f) =>
-         GenericElmConstructor (C1 c f) where
+instance
+  (Constructor c, GenericElmValue f) =>
+  GenericElmConstructor (C1 c f)
+  where
   genericToElmConstructor constructor =
     if conIsRecord constructor
       then RecordConstructor name (genericToElmValue (unM1 constructor))
@@ -93,27 +121,33 @@ instance (Constructor c, GenericElmValue f) =>
     where
       name = pack $ conName constructor
 
-instance (GenericElmConstructor f, GenericElmConstructor g) =>
-         GenericElmConstructor (f :+: g) where
+instance
+  (GenericElmConstructor f, GenericElmConstructor g) =>
+  GenericElmConstructor (f :+: g)
+  where
   genericToElmConstructor _ =
     MultipleConstructors
-      [ genericToElmConstructor (undefined :: f p)
-      , genericToElmConstructor (undefined :: g p)
+      [ genericToElmConstructor (undefined :: f p),
+        genericToElmConstructor (undefined :: g p)
       ]
 
 ------------------------------------------------------------
 class GenericElmValue f where
   genericToElmValue :: f a -> ElmValue
 
-instance (Selector s, GenericElmValue a) =>
-         GenericElmValue (S1 s a) where
+instance
+  (Selector s, GenericElmValue a) =>
+  GenericElmValue (S1 s a)
+  where
   genericToElmValue selector =
     case selName selector of
       "" -> genericToElmValue (undefined :: a p)
       name -> ElmField (pack name) (genericToElmValue (undefined :: a p))
 
-instance (GenericElmValue f, GenericElmValue g) =>
-         GenericElmValue (f :*: g) where
+instance
+  (GenericElmValue f, GenericElmValue g) =>
+  GenericElmValue (f :*: g)
+  where
   genericToElmValue _ =
     Values
       (genericToElmValue (undefined :: f p))
@@ -122,19 +156,25 @@ instance (GenericElmValue f, GenericElmValue g) =>
 instance GenericElmValue U1 where
   genericToElmValue _ = ElmEmpty
 
-instance ElmType a =>
-         GenericElmValue (Rec0 a) where
+instance
+  (ElmType a) =>
+  GenericElmValue (Rec0 a)
+  where
   genericToElmValue _ =
     case toElmType (Proxy :: Proxy a) of
       ElmPrimitive primitive -> ElmPrimitiveRef primitive
       ElmDatatype name _ -> ElmRef name
 
-instance ElmType a =>
-         ElmType [a] where
+instance
+  (ElmType a) =>
+  ElmType [a]
+  where
   toElmType _ = ElmPrimitive (EList (toElmType (Proxy :: Proxy a)))
 
-instance ElmType a =>
-         ElmType (Maybe a) where
+instance
+  (ElmType a) =>
+  ElmType (Maybe a)
+  where
   toElmType _ = ElmPrimitive (EMaybe (toElmType (Proxy :: Proxy a)))
 
 instance ElmType () where
@@ -170,57 +210,127 @@ instance ElmType Int64 where
 instance ElmType Aeson.Value where
   toElmType _ = ElmPrimitive EJsonValue
 
-instance (ElmType a, ElmType b) =>
-         ElmType (a, b) where
+instance
+  (ElmType a, ElmType b) =>
+  ElmType (a, b)
+  where
   toElmType _ =
     ElmPrimitive $
-    ETuple2 (toElmType (Proxy :: Proxy a)) (toElmType (Proxy :: Proxy b))
+      ETuple2 (toElmType (Proxy :: Proxy a)) (toElmType (Proxy :: Proxy b))
 
-instance (ElmType a) =>
-         ElmType (Proxy a) where
+instance
+  (ElmType a) =>
+  ElmType (Proxy a)
+  where
   toElmType _ = toElmType (undefined :: a)
 
-instance (HasElmComparable k, ElmType v) =>
-         ElmType (Map k v) where
+instance
+  {-# OVERLAPPABLE #-}
+  (HasElmSorter a, ElmType a) =>
+  ElmType (Set a)
+  where
   toElmType _ =
-    ElmPrimitive $
-    EDict (toElmComparable (undefined :: k)) (toElmType (Proxy :: Proxy v))
+    ElmPrimitive $ ESortSet (elmSorter (Proxy @a)) (toElmType (undefined :: a))
 
-instance (HasElmComparable a, ElmType a) =>
-         ElmType (Set a) where
-  toElmType _ =
-    ElmPrimitive $ ESet (toElmComparable (undefined :: a))
+instance ElmType (Set String) where
+  toElmType _ = ElmPrimitive $ ESet EString
 
-instance (ElmType v) =>
-         ElmType (IntMap v) where
+instance ElmType (Set Text) where
+  toElmType _ = ElmPrimitive $ ESet EString
+
+instance ElmType (Set Float) where
+  toElmType _ = ElmPrimitive $ ESet EFloat
+
+instance ElmType (Set Double) where
+  toElmType _ = ElmPrimitive $ ESet EFloat
+
+instance ElmType (Set Int) where
+  toElmType _ = ElmPrimitive $ ESet EInt
+
+instance ElmType (Set Int8) where
+  toElmType _ = ElmPrimitive $ ESet EInt
+
+instance ElmType (Set Int16) where
+  toElmType _ = ElmPrimitive $ ESet EInt
+
+instance ElmType (Set Int32) where
+  toElmType _ = ElmPrimitive $ ESet EInt
+
+instance ElmType (Set Int64) where
+  toElmType _ = ElmPrimitive $ ESet EInt
+
+instance
+  (ElmType v) =>
+  ElmType (IntMap v)
+  where
   toElmType _ = ElmPrimitive $ EDict EInt (toElmType (Proxy :: Proxy v))
 
-class HasElmComparable a where
-  toElmComparable :: a -> ElmPrimitive
+instance
+  {-# OVERLAPPABLE #-}
+  (HasElmSorter k, Aeson.ToJSONKey k, ElmType k, ElmType v) =>
+  ElmType (Map k v)
+  where
+  toElmType _ =
+    ElmPrimitive $
+      ESortDict (elmSorter (Proxy :: Proxy k)) encodingStrategy (toElmType (Proxy :: Proxy k)) (toElmType (Proxy :: Proxy v))
+    where
+      encodingStrategy = case (Aeson.toJSONKey @k) of
+        Aeson.ToJSONKeyText _ _ -> Object
+        Aeson.ToJSONKeyValue _ _ -> List
 
-instance HasElmComparable String where
-  toElmComparable _ = EString
+instance
+  (ElmType a) =>
+  ElmType (Map String a)
+  where
+  toElmType _ = ElmPrimitive $ EDict EString (toElmType (Proxy :: Proxy a))
 
-instance HasElmComparable Text where
-  toElmComparable _ = EString
+instance
+  (ElmType a) =>
+  ElmType (Map Text a)
+  where
+  toElmType _ = ElmPrimitive $ EDict EString (toElmType (Proxy :: Proxy a))
 
-instance HasElmComparable Float where
-  toElmComparable _ = EFloat
+instance
+  (ElmType a) =>
+  ElmType (Map Float a)
+  where
+  toElmType _ = ElmPrimitive $ EDict EFloat (toElmType (Proxy :: Proxy a))
 
-instance HasElmComparable Double where
-  toElmComparable _ = EFloat
+instance
+  (ElmType a) =>
+  ElmType (Map Double a)
+  where
+  toElmType _ = ElmPrimitive $ EDict EFloat (toElmType (Proxy :: Proxy a))
 
-instance HasElmComparable Int8 where
-  toElmComparable _ = EInt
+instance
+  (ElmType a) =>
+  ElmType (Map Int a)
+  where
+  toElmType _ = ElmPrimitive $ EDict EInt (toElmType (Proxy :: Proxy a))
 
-instance HasElmComparable Int16 where
-  toElmComparable _ = EInt
+instance
+  (ElmType a) =>
+  ElmType (Map Int8 a)
+  where
+  toElmType _ = ElmPrimitive $ EDict EInt (toElmType (Proxy :: Proxy a))
 
-instance HasElmComparable Int32 where
-  toElmComparable _ = EInt
+instance
+  (ElmType a) =>
+  ElmType (Map Int16 a)
+  where
+  toElmType _ = ElmPrimitive $ EDict EInt (toElmType (Proxy :: Proxy a))
 
-instance HasElmComparable Int64 where
-  toElmComparable _ = EInt
+instance
+  (ElmType a) =>
+  ElmType (Map Int32 a)
+  where
+  toElmType _ = ElmPrimitive $ EDict EInt (toElmType (Proxy :: Proxy a))
+
+instance
+  (ElmType a) =>
+  ElmType (Map Int64 a)
+  where
+  toElmType _ = ElmPrimitive $ EDict EInt (toElmType (Proxy :: Proxy a))
 
 instance ElmType Int where
   toElmType _ = ElmPrimitive EInt
@@ -241,5 +351,5 @@ isEnumeration _ = False
 
 -- We define this instance here because it is an orphan otherwise.
 
-instance ElmType a => ElmType (Headers headers a) where
-   toElmType = toElmType . getResponse
+instance (ElmType a) => ElmType (Headers headers a) where
+  toElmType = toElmType . getResponse

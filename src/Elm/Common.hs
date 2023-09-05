@@ -70,3 +70,20 @@ squarebracks doc = "[" <+> doc <+> "]"
 
 pair :: Doc -> Doc -> Doc
 pair l r = spaceparens $ l <> comma <+> r
+
+letIn :: [(Text, Doc)] -> Doc -> Doc
+letIn vars body =
+  align $
+    vsep
+      [ "let",
+        indent 4 $ vsep $ renderVariable <$> vars,
+        "in",
+        body
+      ]
+  where
+    renderVariable :: (Text, Doc) -> Doc
+    renderVariable (name, value) =
+      vsep
+        [ pretty name <+> "=",
+          indent 4 value
+        ]

@@ -1,12 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Elm.Encoder
-  ( toElmEncoderRef
-  , toElmEncoderRefWith
-  , toElmEncoderSource
-  , toElmEncoderSourceWith
-  , renderEncoder
-  ) where
+  ( toElmEncoderRef,
+    toElmEncoderRefWith,
+    toElmEncoderSource,
+    toElmEncoderSourceWith,
+    renderEncoder,
+  )
+where
 
 import Control.Monad.RWS
 import qualified Data.Text as T
@@ -25,8 +26,8 @@ instance HasEncoder ElmDatatype where
     fnName <- renderRef 0 d
     ctor <- render constructor
     return $
-      (fnName <+> ":" <+> stext name <+> "->" <+> "Json.Encode.Value") <$$>
-      (fnName <+> "x =" <$$> indent 4 ctor)
+      (fnName <+> ":" <+> stext name <+> "->" <+> "Json.Encode.Value")
+        <$$> (fnName <+> "x =" <$$> indent 4 ctor)
   render (ElmPrimitive primitive) = renderRef 0 primitive
 
 instance HasEncoderRef ElmDatatype where
@@ -37,10 +38,8 @@ instance HasEncoder ElmConstructor where
   -- Single constructor, no values: empty array
   render (NamedConstructor _name ElmEmpty) =
     return $ "Json.Encode.list identity []"
-
   render (NamedConstructor _name (ElmPrimitiveRef EUnit)) =
     return $ "Json.Encode.list identity []"
-
   -- Single constructor, multiple values: create array with values
   render (NamedConstructor name value@(Values _ _)) = do
     let ps = constructorParameters 0 value
@@ -48,22 +47,21 @@ instance HasEncoder ElmConstructor where
     (dv, _) <- renderVariable ps value
 
     let cs = stext name <+> foldl1 (<+>) ps <+> "->"
-    return . nest 4 $ "case x of" <$$>
-      (nest 4 $ cs <$$> nest 4 ("Json.Encode.list identity" <$$> "[" <+> dv <$$> "]"))
+    return . nest 4 $
+      "case x of"
+        <$$> (nest 4 $ cs <$$> nest 4 ("Json.Encode.list identity" <$$> "[" <+> dv <$$> "]"))
 
   -- Single constructor, one value: skip constructor and r just the value
   render (NamedConstructor name value) = do
     dv <- render value
 
     let cs = stext name <+> "y0 ->"
-    return . nest 4 $ "case x of" <$$>
-      nest 4 (cs <$$> nest 4 dv <+> "y0")
-
-
+    return . nest 4 $
+      "case x of"
+        <$$> nest 4 (cs <$$> nest 4 dv <+> "y0")
   render (RecordConstructor _ value) = do
     dv <- render value
     return . nest 4 $ "Json.Encode.object" <$$> "[" <+> dv <$$> "]"
-
   render mc@(MultipleConstructors constrs) = do
     let rndr = if isEnumeration mc then renderEnumeration else renderSum
     dc <- mapM rndr constrs
@@ -71,10 +69,15 @@ instance HasEncoder ElmConstructor where
 
 jsonEncodeObject :: Doc -> Doc -> Doc -> Doc
 jsonEncodeObject constructor tag contents =
-  nest 4 $ constructor <$$>
-    nest 4 ("Json.Encode.object" <$$> "[" <+> tag <$$>
-      contents <$$>
-    "]")
+  nest 4 $
+    constructor
+      <$$> nest
+        4
+        ( "Json.Encode.object"
+            <$$> "[" <+> tag
+            <$$> contents
+            <$$> "]"
+        )
 
 renderSum :: ElmConstructor -> RenderM Doc
 renderSum c@(NamedConstructor name ElmEmpty) = do
@@ -84,7 +87,6 @@ renderSum c@(NamedConstructor name ElmEmpty) = do
   let ct = comma <+> pair (dquotes "contents") dc
 
   return $ jsonEncodeObject cs tag ct
-
 renderSum (NamedConstructor name value) = do
   let ps = constructorParameters 0 value
 
@@ -95,36 +97,34 @@ renderSum (NamedConstructor name value) = do
   let ct = comma <+> pair (dquotes "contents") dc'
 
   return $ jsonEncodeObject cs tag ct
-
 renderSum (RecordConstructor name value) = do
   dv <- render value
   let cs = stext name <+> "->"
   let tag = pair (dquotes "tag") (dquotes $ stext name)
   let ct = comma <+> dv
   return $ jsonEncodeObject cs tag ct
-
 renderSum (MultipleConstructors constrs) = do
   dc <- mapM renderSum constrs
   return $ foldl1 (<$+$>) dc
 
-
 renderEnumeration :: ElmConstructor -> RenderM Doc
 renderEnumeration (NamedConstructor name _) =
-  return . nest 4 $ stext name <+> "->" <$$>
-      "Json.Encode.string" <+> dquotes (stext name)
+  return . nest 4 $
+    stext name <+> "->"
+      <$$> "Json.Encode.string" <+> dquotes (stext name)
 renderEnumeration (MultipleConstructors constrs) = do
   dc <- mapM renderEnumeration constrs
   return $ foldl1 (<$+$>) dc
 renderEnumeration c = render c
-
 
 instance HasEncoder ElmValue where
   render (ElmField name value) = do
     fieldModifier <- asks fieldLabelModifier
     valueBody <- render value
     return . spaceparens $
-      dquotes (stext (fieldModifier name)) <> comma <+>
-      (valueBody <+> "x." <> stext (fieldModifier name))
+      dquotes (stext (fieldModifier name))
+        <> comma
+        <+> (valueBody <+> "x." <> stext (fieldModifier name))
   render (ElmPrimitiveRef primitive) = renderRef 0 primitive
   render (ElmRef name) = pure $ "encode" <> stext name
   render (Values x y) = do
@@ -154,7 +154,7 @@ instance HasEncoderRef ElmPrimitive where
     dy <- renderRef (level + 1) y
     let firstName = "m" <> int level
     let secondName = "n" <> int level
-    return . parens $ "\\("<> firstName <> "," <+> secondName <> ") -> Json.Encode.list identity [" <+> dx <+> firstName <> "," <+> dy <+> secondName <+> "]"
+    return . parens $ "\\(" <> firstName <> "," <+> secondName <> ") -> Json.Encode.list identity [" <+> dx <+> firstName <> "," <+> dy <+> secondName <+> "]"
   renderRef level (EDict EString v) = do
     dv <- renderRef level v
     return . parens $ "Json.Encode.dict identity" <+> dv
@@ -167,35 +167,64 @@ instance HasEncoderRef ElmPrimitive where
   renderRef level (EDict k v) = do
     d <- renderRef level (ETuple2 (ElmPrimitive k) v)
     return . parens $ "Json.Encode.list " <+> d
+  renderRef level (ESortDict _ encoding key value) = do
+    require "Sort.Dict.Extra"
+    keyEncoder <- renderRef level key
+    valueEncoder <- renderRef level value
+    pure . parens . nest 4 $
+      case encoding of
+        Object -> do
+          vsep
+            [ "\\dict -> dict",
+              indent 4 "|> Sort.Dict.toList",
+              indent 4 $ "|> List.map (\\( k, v ) -> ( Json.Encode.encode 0 (" <> keyEncoder <> " k), " <> valueEncoder <> " v ))",
+              indent 4 "|> Json.Encode.object" <> linebreak
+            ]
+        List -> do
+          vsep
+            [ "\\dict -> dict",
+              indent 4 "|> Sort.Dict.toList",
+              indent 4 $ "|> Json.Encode.list (\\( key, value ) -> Json.Encode.list identity [ " <> keyEncoder <> " key, " <> valueEncoder <> " value ])" <> linebreak
+            ]
   renderRef level (ESet datatype) = do
     dd <- renderRef level datatype
     return . parens $ "Json.Encode.set" <+> dd
+  renderRef level (ESortSet _ datatype) = do
+    dd <- renderRef level datatype
+    return . parens $ "Sort.Set.toList >> Json.Encode.list" <+> dd
 
-toElmEncoderRefWith
-  :: ElmType a
-  => Options -> a -> T.Text
+toElmEncoderRefWith ::
+  (ElmType a) =>
+  Options ->
+  a ->
+  T.Text
 toElmEncoderRefWith options x =
   pprinter . fst $ evalRWS (renderRef 0 (toElmType x)) options ()
 
-toElmEncoderRef
-  :: ElmType a
-  => a -> T.Text
+toElmEncoderRef ::
+  (ElmType a) =>
+  a ->
+  T.Text
 toElmEncoderRef = toElmEncoderRefWith defaultOptions
 
-toElmEncoderSourceWith
-  :: ElmType a
-  => Options -> a -> T.Text
+toElmEncoderSourceWith ::
+  (ElmType a) =>
+  Options ->
+  a ->
+  T.Text
 toElmEncoderSourceWith options x =
   pprinter . fst $ evalRWS (render (toElmType x)) options ()
 
-toElmEncoderSource
-  :: ElmType a
-  => a -> T.Text
+toElmEncoderSource ::
+  (ElmType a) =>
+  a ->
+  T.Text
 toElmEncoderSource = toElmEncoderSourceWith defaultOptions
 
-renderEncoder
-  :: ElmType a
-  => a -> RenderM ()
+renderEncoder ::
+  (ElmType a) =>
+  a ->
+  RenderM ()
 renderEncoder x = do
   require "Json.Encode"
   collectDeclaration . render . toElmType $ x
@@ -203,14 +232,13 @@ renderEncoder x = do
 -- | Variable names for the members of constructors
 -- Used in pattern matches
 constructorParameters :: Int -> ElmValue -> [Doc]
-constructorParameters _ ElmEmpty = [ empty ]
+constructorParameters _ ElmEmpty = [empty]
 constructorParameters i (Values l r) =
-    left ++ right
+  left ++ right
   where
     left = constructorParameters i l
     right = constructorParameters (length left + i) r
-constructorParameters i _ = [ "y" <> int i ]
-
+constructorParameters i _ = ["y" <> int i]
 
 -- | Encode variables following the recipe of an ElmValue
 renderVariable :: [Doc] -> ElmValue -> RenderM (Doc, [Doc])
