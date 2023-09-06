@@ -230,7 +230,17 @@ instance
   ElmType (Set a)
   where
   toElmType _ =
-    ElmPrimitive $ ESortSet (elmSorter (Proxy @a)) (toElmType (undefined :: a))
+    case setPrimitive of
+      Just primitive -> ElmPrimitive $ ESet primitive
+      Nothing -> ElmPrimitive $ ESortSet (elmSorter (Proxy @a)) (toElmType (undefined :: a))
+    where
+      elmType = toElmType (Proxy :: Proxy a)
+      setPrimitive = case elmType of
+        ElmPrimitive EChar -> Just EChar
+        ElmPrimitive EString -> Just EString
+        ElmPrimitive EInt -> Just EInt
+        ElmPrimitive EFloat -> Just EFloat
+        _ -> Nothing
 
 instance ElmType (Set String) where
   toElmType _ = ElmPrimitive $ ESet EString
