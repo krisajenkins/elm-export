@@ -58,18 +58,20 @@ decodeMonstrosity =
                                          (Sort.custom colorSorter)
                                  in
                                  Sort.Dict.Extra.decodeFromObject sorter (decodeColor) ((succeed ()))))
+                            |> required "contents" (index 3 (Json.Decode.Extra.dict2 int string))
 
                     "SortSet" ->
                         succeed SortSet
-                            |> required "contents" (let
-                                                        sorter =
-                                                            (Sort.by .schoolId (let
-                                                                                    unId (Id value) =
-                                                                                        value
-                                                                                in
-                                                                                Sort.by unId Sort.increasing))
-                                                    in
-                                                    map (Sorter.Set.fromList sorter) (list decodeSchool))
+                            |> required "contents" (index 0 (let
+                                                                 sorter =
+                                                                     (Sort.by .schoolId (let
+                                                                                             unId (Id value) =
+                                                                                                 value
+                                                                                         in
+                                                                                         Sort.by unId Sort.increasing))
+                                                             in
+                                                             map (Sorter.Set.fromList sorter) (list decodeSchool)))
+                            |> required "contents" (index 1 (map Set.fromList (list int)))
 
                     _ ->
                         fail "Constructor not matched"
