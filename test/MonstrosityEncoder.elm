@@ -31,7 +31,7 @@ encodeMonstrosity x =
                 , ( "contents", Json.Encode.list identity [ (Json.Encode.dict String.fromInt Json.Encode.null) y0, (Json.Encode.dict String.fromFloat Json.Encode.float) y1 ] )
                 ]
 
-        SortDicts y0 y1 y2 ->
+        SortDicts y0 y1 y2 y3 ->
             Json.Encode.object
                 [ ( "tag", Json.Encode.string "SortDicts" )
                 , ( "contents", Json.Encode.list identity [ (\dict -> dict
@@ -44,11 +44,11 @@ encodeMonstrosity x =
                         |> Sort.Dict.toList
                         |> List.map (\( k, v ) -> ( Json.Encode.encode 0 (encodeColor k), Json.Encode.null v ))
                         |> Json.Encode.object
-                    ) y2 ] )
+                    ) y2, (Json.Encode.dict String.fromInt Json.Encode.string) y3 ] )
                 ]
 
-        SortSet y0 ->
+        SortSet y0 y1 ->
             Json.Encode.object
                 [ ( "tag", Json.Encode.string "SortSet" )
-                , ( "contents", (Sort.Set.toList >> Json.Encode.list encodeSchool) y0 )
+                , ( "contents", Json.Encode.list identity [ (Sort.Set.toList >> Json.Encode.list encodeSchool) y0, (Json.Encode.set Json.Encode.int) y1 ] )
                 ]

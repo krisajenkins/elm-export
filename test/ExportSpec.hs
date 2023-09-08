@@ -1,6 +1,8 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
 
@@ -86,13 +88,17 @@ instance HasElmSorter Color where
 instance Aeson.ToJSONKey Color where
   toJSONKey = Aeson.toJSONKeyText (pack . show)
 
+newtype AnotherId = AnotherId Int
+  deriving stock (Show, Read, Eq, Ord, Generic)
+  deriving newtype (ElmType, HasElmSorter, Aeson.ToJSON, Aeson.ToJSONKey)
+
 data Monstrosity
   = NotSpecial
   | OkayIGuess Monstrosity
   | Ridiculous Int String [Monstrosity] (Set Float)
   | Dicts (Map Int64 ()) (Map Float Float)
-  | SortDicts (Map Id Text) (Map School ()) (Map Color ())
-  | SortSet (Set School)
+  | SortDicts (Map Id Text) (Map School ()) (Map Color ()) (Map AnotherId Text)
+  | SortSet (Set School) (Set AnotherId)
   deriving (Generic, ElmType)
 
 newtype Useless
@@ -134,7 +140,22 @@ spec = do
   toElmTypeSpec
   toElmDecoderSpec
   toElmEncoderSpec
+  toElmSorterSpec
   moduleSpecsSpec
+
+toElmSorterSpec :: Hspec.Spec
+toElmSorterSpec =
+  describe "Generate Elm sorters" $ do
+    it "toElmSorterSource School" $
+      shouldMatchSorterSource
+        (unlines ["module SchoolSorter exposing (..)", "", "", "%s"])
+        (Proxy :: Proxy School)
+        "test/SchoolSorter.elm"
+    it "toElmSorterSource Id" $
+      shouldMatchSorterSource
+        (unlines ["module IdSorter exposing (..)", "", "", "%s"])
+        (Proxy :: Proxy School)
+        "test/IdSorter.elm"
 
 toElmTypeSpec :: Hspec.Spec
 toElmTypeSpec =
@@ -757,6 +778,15 @@ moduleSpecsSpec =
             "import Json.Decode.Pipeline exposing (..)",
             "import Time"
           ]
+
+shouldMatchSorterSource ::
+  (ElmType a, HasElmSorter a) =>
+  String ->
+  Proxy a ->
+  FilePath ->
+  IO ()
+shouldMatchSorterSource wrapping x =
+  shouldMatchFile . printf wrapping $ toElmSorterSource x
 
 shouldMatchTypeSource ::
   (ElmType a) =>
