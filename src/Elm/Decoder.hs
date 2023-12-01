@@ -33,10 +33,12 @@ instance HasDecoder ElmDatatype where
       (fnName <+> ": Decoder" <+> stext name)
         <$$> (fnName <+> "=" <$$> indent 4 ctor)
   render (ElmPrimitive primitive) = renderRef primitive
+  render (CreatedInElm _) = pure $ stext ""
 
 instance HasDecoderRef ElmDatatype where
   renderRef (ElmDatatype name _) = pure $ "decode" <> stext name
   renderRef (ElmPrimitive primitive) = renderRef primitive
+  renderRef (CreatedInElm (FromElm _ decoderName _)) = pure $ stext decoderName
 
 instance HasDecoder ElmConstructor where
   render (NamedConstructor name ElmEmpty) =

@@ -135,6 +135,16 @@ data AesonValue = AesonValue
   }
   deriving (Generic, ElmType)
 
+data TFromElm = A | B | C | D
+
+instance ElmType TFromElm where
+  toElmType = fromElm (FromElm {typeName = "FromElm", decoderName = "decodeFromElm", encoderName = "encodeFromElm"})
+
+data FieldWithFromElm = FieldWithFromElm
+  { fieldWithFromElm :: TFromElm
+  }
+  deriving (Generic, ElmType)
+
 spec :: Hspec.Spec
 spec = do
   toElmTypeSpec
@@ -295,6 +305,18 @@ toElmTypeSpec =
         defaultOptions
         (Proxy :: Proxy AesonValue)
         "test/AesonValueType.elm"
+    it "toElmTypeSource FieldWithFromElm" $
+      shouldMatchTypeSource
+        ( unlines
+            [ "module FieldWithFromElmType exposing (..)",
+              "",
+              "",
+              "%s"
+            ]
+        )
+        defaultOptions
+        (Proxy :: Proxy FieldWithFromElm)
+        "test/FieldWithFromElmType.elm"
     describe "Convert to Elm type references." $ do
       it "toElmTypeRef Post" $
         toElmTypeRef (Proxy :: Proxy Post) `shouldBe` "Post"
@@ -316,6 +338,8 @@ toElmTypeSpec =
       it "toElmTypeRef (IntMap (Maybe String))" $
         toElmTypeRef (Proxy :: Proxy (IntMap (Maybe String)))
           `shouldBe` "Dict (Int) (Maybe (String))"
+      it "toElmTypeRef TFromElm" $
+        toElmTypeRef (Proxy :: Proxy TFromElm) `shouldBe` "FromElm"
 
 toElmDecoderSpec :: Hspec.Spec
 toElmDecoderSpec =
@@ -518,6 +542,22 @@ toElmDecoderSpec =
         defaultOptions
         (Proxy :: Proxy AesonValue)
         "test/AesonValueDecoder.elm"
+    it "toElmDecoderSource FieldWithFromElm" $
+      shouldMatchDecoderSource
+        ( unlines
+            [ "module FieldWithFromElmDecoder exposing (..)",
+              "",
+              "import Json.Decode exposing (..)",
+              "import Json.Decode.Pipeline exposing (..)",
+              "import FieldWithFromElmType exposing (..)",
+              "",
+              "",
+              "%s"
+            ]
+        )
+        defaultOptions
+        (Proxy :: Proxy FieldWithFromElm)
+        "test/FieldWithFromElmDecoder.elm"
     describe "Convert to Elm decoder references." $ do
       it "toElmDecoderRef Post" $
         toElmDecoderRef (Proxy :: Proxy Post) `shouldBe` "decodePost"
@@ -544,6 +584,8 @@ toElmDecoderSpec =
       it "toElmDecoderRef (IntMap (Maybe String))" $
         toElmDecoderRef (Proxy :: Proxy (IntMap (Maybe String)))
           `shouldBe` "(Json.Decode.Extra.dict2 int (nullable string))"
+      it "toElmDecoderRef TFromElm" $
+        toElmDecoderRef (Proxy :: Proxy TFromElm) `shouldBe` "decodeFromElm"
 
 toElmEncoderSpec :: Hspec.Spec
 toElmEncoderSpec =
@@ -732,6 +774,21 @@ toElmEncoderSpec =
         defaultOptions
         (Proxy :: Proxy AesonValue)
         "test/AesonValueEncoder.elm"
+    it "toElmEncoderSourceWithOptions FieldWithFromElm" $
+      shouldMatchEncoderSource
+        ( unlines
+            [ "module FieldWithFromElmEncoder exposing (..)",
+              "",
+              "import Json.Encode",
+              "import FieldWithFromElmType exposing (..)",
+              "",
+              "",
+              "%s"
+            ]
+        )
+        defaultOptions
+        (Proxy :: Proxy FieldWithFromElm)
+        "test/FieldWithFromElmEncoder.elm"
     describe "Convert to Elm encoder references." $ do
       it "toElmEncoderRef Post" $
         toElmEncoderRef (Proxy :: Proxy Post) `shouldBe` "encodePost"
@@ -758,6 +815,8 @@ toElmEncoderSpec =
       it "toElmEncoderRef (IntMap (Maybe String))" $
         toElmEncoderRef (Proxy :: Proxy (IntMap (Maybe String)))
           `shouldBe` "(Json.Encode.dict String.fromInt (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+      it "toElmEncoderRef TFromElm" $
+        toElmEncoderRef (Proxy :: Proxy TFromElm) `shouldBe` "encodeFromElm"
 
 moduleSpecsSpec :: Hspec.Spec
 moduleSpecsSpec =
