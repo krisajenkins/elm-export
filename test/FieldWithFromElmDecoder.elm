@@ -8,4 +8,4 @@ import FieldWithFromElmType exposing (..)
 decodeFieldWithFromElm : Decoder FieldWithFromElm
 decodeFieldWithFromElm =
     succeed FieldWithFromElm
-        |> required "fieldWithFromElm" decodeFromElm
+        |> required "fieldWithFromElm" existingDecodeFromElm

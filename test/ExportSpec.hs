@@ -138,7 +138,7 @@ data AesonValue = AesonValue
 data TFromElm = A | B | C | D
 
 instance ElmType TFromElm where
-  toElmType = fromElm (FromElm {typeName = "FromElm", decoderName = "decodeFromElm", encoderName = "encodeFromElm"})
+  toElmType = fromElm (FromElm {typeName = "FromElm", decoderName = "existingDecodeFromElm", encoderName = "existingEncodeFromElm"})
 
 data FieldWithFromElm = FieldWithFromElm
   { fieldWithFromElm :: TFromElm
@@ -585,7 +585,7 @@ toElmDecoderSpec =
         toElmDecoderRef (Proxy :: Proxy (IntMap (Maybe String)))
           `shouldBe` "(Json.Decode.Extra.dict2 int (nullable string))"
       it "toElmDecoderRef TFromElm" $
-        toElmDecoderRef (Proxy :: Proxy TFromElm) `shouldBe` "decodeFromElm"
+        toElmDecoderRef (Proxy :: Proxy TFromElm) `shouldBe` "existingDecodeFromElm"
 
 toElmEncoderSpec :: Hspec.Spec
 toElmEncoderSpec =
@@ -816,7 +816,7 @@ toElmEncoderSpec =
         toElmEncoderRef (Proxy :: Proxy (IntMap (Maybe String)))
           `shouldBe` "(Json.Encode.dict String.fromInt (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
       it "toElmEncoderRef TFromElm" $
-        toElmEncoderRef (Proxy :: Proxy TFromElm) `shouldBe` "encodeFromElm"
+        toElmEncoderRef (Proxy :: Proxy TFromElm) `shouldBe` "existingEncodeFromElm"
 
 moduleSpecsSpec :: Hspec.Spec
 moduleSpecsSpec =
