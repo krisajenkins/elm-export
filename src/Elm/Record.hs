@@ -57,7 +57,7 @@ instance HasType ElmConstructor where
     mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
 
 instance HasType ElmValue where
-  render (ElmRef name) = pure (stext name)
+  render (ElmRef elmRefData) = pure (stext (elmRefName elmRefData))
   render (ElmPrimitiveRef primitive) = elmRefParens primitive <$> renderRef primitive
   render ElmEmpty = pure (text "")
   render (Values x y) = do

@@ -128,7 +128,7 @@ instance HasEncoder ElmValue where
         <> comma
         <+> (valueBody <+> "x." <> stext (fieldModifier name))
   render (ElmPrimitiveRef primitive) = renderRef 0 primitive
-  render (ElmRef name) = pure $ "encode" <> stext name
+  render (ElmRef elmRefData) = pure $ stext (elmRefEncoder elmRefData)
   render (Values x y) = do
     dx <- render x
     dy <- render y

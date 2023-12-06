@@ -81,7 +81,7 @@ data ElmConstructor
   deriving (Show, Eq)
 
 data ElmValue
-  = ElmRef Text
+  = ElmRef ElmRefData
   | ElmEmpty
   | ElmPrimitiveRef ElmPrimitive
   | Values
@@ -90,6 +90,13 @@ data ElmValue
   | ElmField
       Text
       ElmValue
+  deriving (Show, Eq)
+
+data ElmRefData = ElmRefData
+  { elmRefName :: Text,
+    elmRefEncoder :: Text,
+    elmRefDecoder :: Text
+  }
   deriving (Show, Eq)
 
 ------------------------------------------------------------
@@ -174,8 +181,22 @@ instance
   genericToElmValue _ =
     case toElmType (Proxy :: Proxy a) of
       ElmPrimitive primitive -> ElmPrimitiveRef primitive
-      ElmDatatype name _ -> ElmRef name
-      CreatedInElm fromElm -> ElmRef (typeName fromElm)
+      ElmDatatype name _ ->
+        ElmRef
+          ( ElmRefData
+              { elmRefName = name,
+                elmRefEncoder = "encode" <> name,
+                elmRefDecoder = "decode" <> name
+              }
+          )
+      CreatedInElm fromElm ->
+        ElmRef
+          ( ElmRefData
+              { elmRefName = typeName fromElm,
+                elmRefEncoder = encoderName fromElm,
+                elmRefDecoder = decoderName fromElm
+              }
+          )
 
 instance
   (ElmType a) =>

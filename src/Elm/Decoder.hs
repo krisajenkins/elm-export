@@ -125,7 +125,7 @@ renderConstructorArgs i val = do
   pure (i, "|>" <+> requiredContents <+> index)
 
 instance HasDecoder ElmValue where
-  render (ElmRef name) = pure $ "decode" <> stext name
+  render (ElmRef elmRefData) = pure $ stext (elmRefDecoder elmRefData)
   render (ElmPrimitiveRef primitive) = renderRef primitive
   render (Values x y) = do
     dx <- render x
