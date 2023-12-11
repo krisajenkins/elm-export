@@ -138,7 +138,7 @@ data AesonValue = AesonValue
 data TFromElm = A | B | C | D
 
 instance ElmType TFromElm where
-  toElmType = fromElm (FromElm {typeName = "FromElm", decoderName = "existingDecodeFromElm", encoderName = "existingEncodeFromElm"})
+  toElmType = fromElm (ElmRefData {typeName = "FromElm", decoderFunction = "existingDecodeFromElm", encoderFunction = "existingEncodeFromElm"})
 
 data FieldWithFromElm = FieldWithFromElm
   { fieldWithFromElm :: TFromElm

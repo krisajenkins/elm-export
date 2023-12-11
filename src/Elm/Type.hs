@@ -22,19 +22,12 @@ import GHC.Generics
 import Servant.API (Headers (getResponse))
 import Prelude
 
-data FromElm = FromElm
-  { typeName :: Text,
-    decoderName :: Text,
-    encoderName :: Text
-  }
-  deriving (Show, Eq)
-
 data ElmDatatype
   = ElmDatatype
       Text
       ElmConstructor
   | ElmPrimitive ElmPrimitive
-  | CreatedInElm FromElm
+  | CreatedInElm ElmRefData
   deriving (Show, Eq)
 
 data MapEncoding
@@ -93,9 +86,9 @@ data ElmValue
   deriving (Show, Eq)
 
 data ElmRefData = ElmRefData
-  { elmRefName :: Text,
-    elmRefEncoder :: Text,
-    elmRefDecoder :: Text
+  { typeName :: Text,
+    encoderFunction :: Text,
+    decoderFunction :: Text
   }
   deriving (Show, Eq)
 
@@ -108,7 +101,7 @@ class ElmType a where
     a ->
     ElmDatatype
 
-fromElm :: FromElm -> a -> ElmDatatype
+fromElm :: ElmRefData -> a -> ElmDatatype
 fromElm x _ = CreatedInElm x
 
 ------------------------------------------------------------
@@ -184,19 +177,13 @@ instance
       ElmDatatype name _ ->
         ElmRef
           ( ElmRefData
-              { elmRefName = name,
-                elmRefEncoder = "encode" <> name,
-                elmRefDecoder = "decode" <> name
+              { typeName = name,
+                encoderFunction = "encode" <> name,
+                decoderFunction = "decode" <> name
               }
           )
-      CreatedInElm fromElm ->
-        ElmRef
-          ( ElmRefData
-              { elmRefName = typeName fromElm,
-                elmRefEncoder = encoderName fromElm,
-                elmRefDecoder = decoderName fromElm
-              }
-          )
+      CreatedInElm elmRefData ->
+        ElmRef elmRefData
 
 instance
   (ElmType a) =>

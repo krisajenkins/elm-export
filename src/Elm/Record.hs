@@ -44,7 +44,7 @@ instance HasType ElmDatatype where
 instance HasTypeRef ElmDatatype where
   renderRef (ElmDatatype typeName _) = pure (stext typeName)
   renderRef (ElmPrimitive primitive) = renderRef primitive
-  renderRef (CreatedInElm (FromElm typeName _ _)) = pure (stext typeName)
+  renderRef (CreatedInElm elmRefData) = pure (stext (typeName elmRefData))
 
 instance HasType ElmConstructor where
   render (RecordConstructor _ value) = do
@@ -57,7 +57,7 @@ instance HasType ElmConstructor where
     mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
 
 instance HasType ElmValue where
-  render (ElmRef elmRefData) = pure (stext (elmRefName elmRefData))
+  render (ElmRef elmRefData) = pure (stext (typeName elmRefData))
   render (ElmPrimitiveRef primitive) = elmRefParens primitive <$> renderRef primitive
   render ElmEmpty = pure (text "")
   render (Values x y) = do

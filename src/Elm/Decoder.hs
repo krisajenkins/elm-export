@@ -38,7 +38,7 @@ instance HasDecoder ElmDatatype where
 instance HasDecoderRef ElmDatatype where
   renderRef (ElmDatatype name _) = pure $ "decode" <> stext name
   renderRef (ElmPrimitive primitive) = renderRef primitive
-  renderRef (CreatedInElm (FromElm _ decoderName _)) = pure $ stext decoderName
+  renderRef (CreatedInElm elmRefData) = pure $ stext (decoderFunction elmRefData)
 
 instance HasDecoder ElmConstructor where
   render (NamedConstructor name ElmEmpty) =
@@ -125,7 +125,7 @@ renderConstructorArgs i val = do
   pure (i, "|>" <+> requiredContents <+> index)
 
 instance HasDecoder ElmValue where
-  render (ElmRef elmRefData) = pure $ stext (elmRefDecoder elmRefData)
+  render (ElmRef elmRefData) = pure $ stext (decoderFunction elmRefData)
   render (ElmPrimitiveRef primitive) = renderRef primitive
   render (Values x y) = do
     dx <- render x
