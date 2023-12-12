@@ -29,10 +29,12 @@ instance HasEncoder ElmDatatype where
       (fnName <+> ":" <+> stext name <+> "->" <+> "Json.Encode.Value")
         <$$> (fnName <+> "x =" <$$> indent 4 ctor)
   render (ElmPrimitive primitive) = renderRef 0 primitive
+  render (CreatedInElm _) = pure $ stext ""
 
 instance HasEncoderRef ElmDatatype where
   renderRef _ (ElmDatatype name _) = pure $ "encode" <> stext name
   renderRef level (ElmPrimitive primitive) = renderRef level primitive
+  renderRef _ (CreatedInElm elmRefData) = pure $ stext (encoderFunction elmRefData)
 
 instance HasEncoder ElmConstructor where
   -- Single constructor, no values: empty array
@@ -126,7 +128,7 @@ instance HasEncoder ElmValue where
         <> comma
         <+> (valueBody <+> "x." <> stext (fieldModifier name))
   render (ElmPrimitiveRef primitive) = renderRef 0 primitive
-  render (ElmRef name) = pure $ "encode" <> stext name
+  render (ElmRef elmRefData) = pure $ stext (encoderFunction elmRefData)
   render (Values x y) = do
     dx <- render x
     dy <- render y

@@ -27,6 +27,7 @@ data ElmDatatype
       Text
       ElmConstructor
   | ElmPrimitive ElmPrimitive
+  | CreatedInElm ElmRefData
   deriving (Show, Eq)
 
 data MapEncoding
@@ -73,7 +74,7 @@ data ElmConstructor
   deriving (Show, Eq)
 
 data ElmValue
-  = ElmRef Text
+  = ElmRef ElmRefData
   | ElmEmpty
   | ElmPrimitiveRef ElmPrimitive
   | Values
@@ -84,6 +85,13 @@ data ElmValue
       ElmValue
   deriving (Show, Eq)
 
+data ElmRefData = ElmRefData
+  { typeName :: Text,
+    encoderFunction :: Text,
+    decoderFunction :: Text
+  }
+  deriving (Show, Eq)
+
 ------------------------------------------------------------
 class ElmType a where
   toElmType :: a -> ElmDatatype
@@ -92,6 +100,9 @@ class ElmType a where
     (Generic a, GenericElmDatatype (Rep a)) =>
     a ->
     ElmDatatype
+
+fromElm :: ElmRefData -> a -> ElmDatatype
+fromElm x _ = CreatedInElm x
 
 ------------------------------------------------------------
 class GenericElmDatatype f where
@@ -163,7 +174,16 @@ instance
   genericToElmValue _ =
     case toElmType (Proxy :: Proxy a) of
       ElmPrimitive primitive -> ElmPrimitiveRef primitive
-      ElmDatatype name _ -> ElmRef name
+      ElmDatatype name _ ->
+        ElmRef
+          ( ElmRefData
+              { typeName = name,
+                encoderFunction = "encode" <> name,
+                decoderFunction = "decode" <> name
+              }
+          )
+      CreatedInElm elmRefData ->
+        ElmRef elmRefData
 
 instance
   (ElmType a) =>

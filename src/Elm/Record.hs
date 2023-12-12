@@ -39,10 +39,12 @@ instance HasType ElmDatatype where
     ctor <- render constructor
     return . nest 4 $ "type" <+> name <$$> "=" <+> ctor
   render (ElmPrimitive primitive) = renderRef primitive
+  render (CreatedInElm _) = pure $ stext ""
 
 instance HasTypeRef ElmDatatype where
   renderRef (ElmDatatype typeName _) = pure (stext typeName)
   renderRef (ElmPrimitive primitive) = renderRef primitive
+  renderRef (CreatedInElm elmRefData) = pure (stext (typeName elmRefData))
 
 instance HasType ElmConstructor where
   render (RecordConstructor _ value) = do
@@ -55,7 +57,7 @@ instance HasType ElmConstructor where
     mintercalate (line <> "|" <> space) <$> sequence (render <$> constructors)
 
 instance HasType ElmValue where
-  render (ElmRef name) = pure (stext name)
+  render (ElmRef elmRefData) = pure (stext (typeName elmRefData))
   render (ElmPrimitiveRef primitive) = elmRefParens primitive <$> renderRef primitive
   render ElmEmpty = pure (text "")
   render (Values x y) = do
