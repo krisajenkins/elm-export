@@ -13,7 +13,7 @@
 module Elm.Sorter (Sorter, mkRecordSorter, mkCustom, HasElmSorter (..), render) where
 
 import Data.Generics.Product.Fields (HasField')
-import Data.Int (Int64)
+import Data.Int (Int32, Int64)
 import Data.Proxy
 import Data.Text (Text, pack)
 import Elm.Common (letIn)
@@ -126,6 +126,9 @@ elmSorterRecord _ =
   ByField (pack $ symbolVal (Proxy :: Proxy fieldName)) (elmSorter (Proxy :: Proxy interior))
 
 instance HasElmSorter Int where
+  elmSorter _ = Increasing
+
+instance HasElmSorter Int32 where
   elmSorter _ = Increasing
 
 instance HasElmSorter Int64 where
